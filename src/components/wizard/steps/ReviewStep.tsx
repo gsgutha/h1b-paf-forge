@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { PAFData } from '@/types/paf';
 import { format } from 'date-fns';
+import { downloadPAF, printPAF } from '@/lib/pdfGenerator';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReviewStepProps {
   data: PAFData;
@@ -59,6 +61,8 @@ function DataRow({ label, value }: { label: string; value?: string | number | bo
 }
 
 export function ReviewStep({ data, onBack, onGenerate, onEdit }: ReviewStepProps) {
+  const { toast } = useToast();
+
   const formatCurrency = (amount: number, unit: string) => {
     const formatted = new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -72,6 +76,35 @@ export function ReviewStep({ data, onBack, onGenerate, onEdit }: ReviewStepProps
       return format(new Date(dateStr), 'MMMM d, yyyy');
     } catch {
       return dateStr;
+    }
+  };
+
+  const handleDownload = () => {
+    try {
+      downloadPAF(data);
+      toast({
+        title: "PAF Downloaded!",
+        description: "Your Public Access File has been saved to your downloads folder.",
+      });
+      onGenerate();
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "There was an error generating the PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePrint = () => {
+    try {
+      printPAF(data);
+    } catch (error) {
+      toast({
+        title: "Print Failed",
+        description: "There was an error opening the print preview. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -171,13 +204,13 @@ export function ReviewStep({ data, onBack, onGenerate, onEdit }: ReviewStepProps
             Back to Edit
           </Button>
           <div className="flex gap-3">
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" />
               Print Preview
             </Button>
-            <Button variant="wizard" size="lg" onClick={onGenerate}>
+            <Button variant="wizard" size="lg" onClick={handleDownload}>
               <Download className="mr-2 h-4 w-4" />
-              Generate PAF
+              Download PAF
             </Button>
           </div>
         </div>
