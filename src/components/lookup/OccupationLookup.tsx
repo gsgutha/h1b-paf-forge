@@ -1,28 +1,45 @@
 import { useState, useEffect } from 'react';
-import { Search, Loader2, ExternalLink } from 'lucide-react';
+import { Search, Loader2, ExternalLink, GraduationCap, FlaskConical, Briefcase } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { loadOccupations, loadOnetOccupations, loadCrosswalk, searchOccupations, getOnetCodesForSoc } from '@/lib/dataLoader';
-import type { OccupationCode, OnetOccupation, CrosswalkEntry } from '@/types/paf';
+import { 
+  loadOccupations, 
+  loadCrosswalk, 
+  loadEducationRequirements,
+  loadACWIACrosswalk,
+  searchOccupations, 
+  getOnetCodesForSoc,
+  getEducationForOnet,
+  getACWIAForOnet 
+} from '@/lib/dataLoader';
+import type { OccupationCode, CrosswalkEntry, EducationRequirement, ACWIACrosswalk } from '@/types/paf';
 
 export function OccupationLookup() {
   const [occupations, setOccupations] = useState<OccupationCode[]>([]);
   const [crosswalk, setCrosswalk] = useState<CrosswalkEntry[]>([]);
+  const [education, setEducation] = useState<EducationRequirement[]>([]);
+  const [acwia, setACWIA] = useState<ACWIACrosswalk[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<OccupationCode[]>([]);
   const [selectedOcc, setSelectedOcc] = useState<OccupationCode | null>(null);
   const [relatedOnet, setRelatedOnet] = useState<CrosswalkEntry[]>([]);
+  const [selectedOnetEducation, setSelectedOnetEducation] = useState<EducationRequirement | null>(null);
+  const [selectedOnetACWIA, setSelectedOnetACWIA] = useState<ACWIACrosswalk[]>([]);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [occs, xwalk] = await Promise.all([
+        const [occs, xwalk, edu, acwiaData] = await Promise.all([
           loadOccupations(),
           loadCrosswalk(),
+          loadEducationRequirements(),
+          loadACWIACrosswalk(),
         ]);
         setOccupations(occs);
         setCrosswalk(xwalk);
+        setEducation(edu);
+        setACWIA(acwiaData);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -45,6 +62,24 @@ export function OccupationLookup() {
     setSelectedOcc(occ);
     const onetCodes = getOnetCodesForSoc(crosswalk, occ.socCode);
     setRelatedOnet(onetCodes);
+    
+    // Get education for first ONET code
+    if (onetCodes.length > 0) {
+      const eduReq = getEducationForOnet(education, onetCodes[0].onetCode);
+      setSelectedOnetEducation(eduReq || null);
+      const acwiaEntries = getACWIAForOnet(acwia, onetCodes[0].onetCode);
+      setSelectedOnetACWIA(acwiaEntries);
+    } else {
+      setSelectedOnetEducation(null);
+      setSelectedOnetACWIA([]);
+    }
+  };
+
+  const handleOnetSelect = (onetCode: string) => {
+    const eduReq = getEducationForOnet(education, onetCode);
+    setSelectedOnetEducation(eduReq || null);
+    const acwiaEntries = getACWIAForOnet(acwia, onetCode);
+    setSelectedOnetACWIA(acwiaEntries);
   };
 
   return (
@@ -63,7 +98,7 @@ export function OccupationLookup() {
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-accent" />
-          <span className="ml-3 text-muted-foreground">Loading occupation database...</span>
+          <span className="ml-3 text-muted-foreground">Loading FLAG.gov occupation database...</span>
         </div>
       )}
 
@@ -122,6 +157,48 @@ export function OccupationLookup() {
                 <p className="text-foreground">{selectedOcc.description}</p>
               </div>
 
+              {/* Education Requirement */}
+              {selectedOnetEducation && (
+                <div className="rounded-lg bg-accent/5 p-4 border border-accent/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GraduationCap className="h-5 w-5 text-accent" />
+                    <h4 className="font-medium text-foreground">Education Requirement</h4>
+                  </div>
+                  <p className="text-foreground font-semibold">{selectedOnetEducation.education}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Source: {selectedOnetEducation.source}</p>
+                </div>
+              )}
+
+              {/* ACWIA R&D Classification */}
+              {selectedOnetACWIA.length > 0 && (
+                <div className="rounded-lg bg-warning/5 p-4 border border-warning/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FlaskConical className="h-5 w-5 text-warning" />
+                    <h4 className="font-medium text-foreground">ACWIA Classification</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    This occupation has special R&D/Non-R&D wage classifications for ACWIA Higher Education purposes.
+                  </p>
+                  <div className="space-y-2">
+                    {selectedOnetACWIA.map((entry, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-sm">
+                        <Badge 
+                          variant="outline" 
+                          className={`font-mono text-xs ${
+                            entry.acwiaTitle.includes('R&D') 
+                              ? 'border-warning/50 bg-warning/10 text-warning' 
+                              : 'border-muted'
+                          }`}
+                        >
+                          {entry.acwiaCode}
+                        </Badge>
+                        <span className="text-foreground">{entry.acwiaTitle}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {relatedOnet.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-3">
@@ -129,9 +206,10 @@ export function OccupationLookup() {
                   </h4>
                   <div className="space-y-2">
                     {relatedOnet.map((onet) => (
-                      <div
+                      <button
                         key={onet.onetCode}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
+                        onClick={() => handleOnetSelect(onet.onetCode)}
+                        className="flex w-full items-center justify-between p-3 rounded-lg bg-muted/50 border border-border hover:border-accent/50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <Badge variant="outline" className="font-mono text-xs">
@@ -144,10 +222,11 @@ export function OccupationLookup() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-accent hover:text-accent/80 transition-colors"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           <ExternalLink className="h-4 w-4" />
                         </a>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
