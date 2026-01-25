@@ -14,7 +14,165 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      paf_records: {
+        Row: {
+          actual_wage: number
+          actual_wage_memo_path: string | null
+          actual_wage_unit: string
+          begin_date: string
+          benefits_comparison_path: string | null
+          created_at: string
+          employer_address1: string
+          employer_address2: string | null
+          employer_city: string
+          employer_country: string
+          employer_fein: string
+          employer_legal_name: string
+          employer_naics_code: string
+          employer_postal_code: string
+          employer_state: string
+          employer_telephone: string
+          employer_trade_name: string | null
+          end_date: string
+          id: string
+          is_full_time: boolean
+          is_h1b_dependent: boolean
+          is_rd: boolean | null
+          is_willful_violator: boolean
+          job_title: string
+          lca_case_number: string | null
+          lca_file_path: string | null
+          notice_posting_proof_path: string | null
+          onet_code: string | null
+          onet_title: string | null
+          prevailing_wage: number
+          prevailing_wage_unit: string
+          soc_code: string
+          soc_title: string
+          updated_at: string
+          visa_type: string
+          wage_level: string
+          wage_rate_from: number
+          wage_rate_to: number | null
+          wage_source: string
+          wage_source_date: string
+          wage_unit: string
+          workers_needed: number
+          worksite_address1: string
+          worksite_address2: string | null
+          worksite_area_code: string | null
+          worksite_area_name: string | null
+          worksite_city: string
+          worksite_county: string | null
+          worksite_postal_code: string
+          worksite_state: string
+        }
+        Insert: {
+          actual_wage: number
+          actual_wage_memo_path?: string | null
+          actual_wage_unit: string
+          begin_date: string
+          benefits_comparison_path?: string | null
+          created_at?: string
+          employer_address1: string
+          employer_address2?: string | null
+          employer_city: string
+          employer_country?: string
+          employer_fein: string
+          employer_legal_name: string
+          employer_naics_code: string
+          employer_postal_code: string
+          employer_state: string
+          employer_telephone: string
+          employer_trade_name?: string | null
+          end_date: string
+          id?: string
+          is_full_time?: boolean
+          is_h1b_dependent?: boolean
+          is_rd?: boolean | null
+          is_willful_violator?: boolean
+          job_title: string
+          lca_case_number?: string | null
+          lca_file_path?: string | null
+          notice_posting_proof_path?: string | null
+          onet_code?: string | null
+          onet_title?: string | null
+          prevailing_wage: number
+          prevailing_wage_unit: string
+          soc_code: string
+          soc_title: string
+          updated_at?: string
+          visa_type?: string
+          wage_level: string
+          wage_rate_from: number
+          wage_rate_to?: number | null
+          wage_source: string
+          wage_source_date: string
+          wage_unit: string
+          workers_needed?: number
+          worksite_address1: string
+          worksite_address2?: string | null
+          worksite_area_code?: string | null
+          worksite_area_name?: string | null
+          worksite_city: string
+          worksite_county?: string | null
+          worksite_postal_code: string
+          worksite_state: string
+        }
+        Update: {
+          actual_wage?: number
+          actual_wage_memo_path?: string | null
+          actual_wage_unit?: string
+          begin_date?: string
+          benefits_comparison_path?: string | null
+          created_at?: string
+          employer_address1?: string
+          employer_address2?: string | null
+          employer_city?: string
+          employer_country?: string
+          employer_fein?: string
+          employer_legal_name?: string
+          employer_naics_code?: string
+          employer_postal_code?: string
+          employer_state?: string
+          employer_telephone?: string
+          employer_trade_name?: string | null
+          end_date?: string
+          id?: string
+          is_full_time?: boolean
+          is_h1b_dependent?: boolean
+          is_rd?: boolean | null
+          is_willful_violator?: boolean
+          job_title?: string
+          lca_case_number?: string | null
+          lca_file_path?: string | null
+          notice_posting_proof_path?: string | null
+          onet_code?: string | null
+          onet_title?: string | null
+          prevailing_wage?: number
+          prevailing_wage_unit?: string
+          soc_code?: string
+          soc_title?: string
+          updated_at?: string
+          visa_type?: string
+          wage_level?: string
+          wage_rate_from?: number
+          wage_rate_to?: number | null
+          wage_source?: string
+          wage_source_date?: string
+          wage_unit?: string
+          workers_needed?: number
+          worksite_address1?: string
+          worksite_address2?: string | null
+          worksite_area_code?: string | null
+          worksite_area_name?: string | null
+          worksite_city?: string
+          worksite_county?: string | null
+          worksite_postal_code?: string
+          worksite_state?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -4,6 +4,7 @@ import { EmployerInfoStep } from './steps/EmployerInfoStep';
 import { JobDetailsStep } from './steps/JobDetailsStep';
 import { WorksiteStep } from './steps/WorksiteStep';
 import { WageInfoStep } from './steps/WageInfoStep';
+import { SupportingDocsStep, type SupportingDocs } from './steps/SupportingDocsStep';
 import { ReviewStep } from './steps/ReviewStep';
 import type { PAFData, Employer, JobDetails, WorksiteLocation, WageInfo } from '@/types/paf';
 import { useToast } from '@/hooks/use-toast';
@@ -13,10 +14,15 @@ const steps = [
   { id: 2, title: 'Job Details', description: 'Position & SOC' },
   { id: 3, title: 'Worksite', description: 'Location' },
   { id: 4, title: 'Wages', description: 'Prevailing wage' },
-  { id: 5, title: 'Review', description: 'Generate PAF' },
+  { id: 5, title: 'Documents', description: 'LCA & Supporting' },
+  { id: 6, title: 'Review', description: 'Generate PAF' },
 ];
 
-const initialPAFData: Partial<PAFData> = {
+export interface ExtendedPAFData extends PAFData {
+  supportingDocs?: SupportingDocs;
+}
+
+const initialPAFData: Partial<ExtendedPAFData> = {
   visaType: 'H-1B',
   isH1BDependent: false,
   isWillfulViolator: false,
@@ -24,11 +30,12 @@ const initialPAFData: Partial<PAFData> = {
   job: {} as JobDetails,
   worksite: {} as WorksiteLocation,
   wage: {} as WageInfo,
+  supportingDocs: undefined,
 };
 
 export function PAFWizard() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [pafData, setPafData] = useState<Partial<PAFData>>(initialPAFData);
+  const [pafData, setPafData] = useState<Partial<ExtendedPAFData>>(initialPAFData);
   const { toast } = useToast();
 
   const handleEmployerNext = (employer: Employer) => {
@@ -51,6 +58,11 @@ export function PAFWizard() {
     setCurrentStep(5);
   };
 
+  const handleSupportingDocsNext = (supportingDocs: SupportingDocs) => {
+    setPafData((prev) => ({ ...prev, supportingDocs }));
+    setCurrentStep(6);
+  };
+
   const handleEdit = (step: number) => {
     setCurrentStep(step);
   };
@@ -60,7 +72,6 @@ export function PAFWizard() {
       title: "PAF Generated Successfully!",
       description: "Your Public Access File has been created and is ready for download.",
     });
-    // In a real implementation, this would generate and download the PAF document
   };
 
   const goBack = () => {
@@ -109,9 +120,18 @@ export function PAFWizard() {
           />
         )}
 
-        {currentStep === 5 && pafData.employer && pafData.job && pafData.worksite && pafData.wage && (
+        {currentStep === 5 && (
+          <SupportingDocsStep
+            data={pafData.supportingDocs || {}}
+            onNext={handleSupportingDocsNext}
+            onBack={goBack}
+          />
+        )}
+
+        {currentStep === 6 && pafData.employer && pafData.job && pafData.worksite && pafData.wage && (
           <ReviewStep 
             data={pafData as PAFData}
+            supportingDocs={pafData.supportingDocs}
             onBack={goBack}
             onGenerate={handleGenerate}
             onEdit={handleEdit}

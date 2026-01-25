@@ -1,13 +1,15 @@
-import { FileText, Download, Printer, Edit2, CheckCircle } from 'lucide-react';
+import { FileText, Download, Printer, Edit2, CheckCircle, Bell, Users, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { PAFData } from '@/types/paf';
 import { format } from 'date-fns';
 import { downloadPAF, printPAF } from '@/lib/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
+import type { SupportingDocs } from './SupportingDocsStep';
 
 interface ReviewStepProps {
   data: PAFData;
+  supportingDocs?: SupportingDocs;
   onBack: () => void;
   onGenerate: () => void;
   onEdit: (step: number) => void;
@@ -47,7 +49,7 @@ function SectionCard({
 function DataRow({ label, value }: { label: string; value?: string | number | boolean }) {
   if (value === undefined || value === '') return null;
   
-  let displayValue = value;
+  let displayValue = String(value);
   if (typeof value === 'boolean') {
     displayValue = value ? 'Yes' : 'No';
   }
@@ -60,7 +62,7 @@ function DataRow({ label, value }: { label: string; value?: string | number | bo
   );
 }
 
-export function ReviewStep({ data, onBack, onGenerate, onEdit }: ReviewStepProps) {
+export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }: ReviewStepProps) {
   const { toast } = useToast();
 
   const formatCurrency = (amount: number, unit: string) => {
@@ -123,7 +125,7 @@ export function ReviewStep({ data, onBack, onGenerate, onEdit }: ReviewStepProps
       <div className="space-y-6">
         {/* Visa Type Banner */}
         <div className="rounded-lg hero-gradient p-6 text-primary-foreground">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <Badge variant="secondary" className="mb-2 bg-white/20 text-white border-white/30">
                 {data.visaType}
@@ -132,6 +134,11 @@ export function ReviewStep({ data, onBack, onGenerate, onEdit }: ReviewStepProps
               <p className="mt-1 text-primary-foreground/80">
                 SOC: {data.job.socCode} - {data.job.socTitle}
               </p>
+              {supportingDocs?.lcaCaseNumber && (
+                <p className="mt-2 text-sm text-primary-foreground/70">
+                  LCA Case: {supportingDocs.lcaCaseNumber}
+                </p>
+              )}
             </div>
             <div className="text-right">
               <p className="text-sm text-primary-foreground/70">Employment Period</p>
@@ -198,6 +205,24 @@ export function ReviewStep({ data, onBack, onGenerate, onEdit }: ReviewStepProps
             </div>
           </SectionCard>
         </div>
+
+        {/* Supporting Documents Summary */}
+        {supportingDocs && (
+          <div className="grid gap-6 md:grid-cols-2">
+            <SectionCard title="LCA & Wage Documentation" icon={Building2} onEdit={() => onEdit(5)}>
+              <DataRow label="LCA Case Number" value={supportingDocs.lcaCaseNumber} />
+              <DataRow label="LCA Document" value={supportingDocs.lcaFile?.name || 'Not uploaded'} />
+              <DataRow label="Wage Memo" value={supportingDocs.actualWageMemo ? 'Documented' : 'Not provided'} />
+            </SectionCard>
+
+            <SectionCard title="Notice & Benefits" icon={Bell} onEdit={() => onEdit(5)}>
+              <DataRow label="Notice Posted" value={supportingDocs.noticePostingDate ? formatDate(supportingDocs.noticePostingDate) : 'Not recorded'} />
+              <DataRow label="Posting Location" value={supportingDocs.noticePostingLocation} />
+              <DataRow label="Posting Proof" value={supportingDocs.noticePostingProof?.name || 'Not uploaded'} />
+              <DataRow label="Benefits Comparison" value={supportingDocs.benefitsNotes ? 'Documented' : 'Not provided'} />
+            </SectionCard>
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6">
           <Button type="button" variant="wizardOutline" size="lg" onClick={onBack}>
