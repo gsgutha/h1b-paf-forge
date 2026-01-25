@@ -1,4 +1,4 @@
-import type { OccupationCode, OnetOccupation, GeographyArea, CrosswalkEntry } from '@/types/paf';
+import type { OccupationCode, OnetOccupation, GeographyArea, CrosswalkEntry, EducationRequirement, ACWIACrosswalk } from '@/types/paf';
 
 // Parse CSV string into array of objects
 function parseCSV<T>(csvString: string, mapper: (row: string[]) => T): T[] {
@@ -44,6 +44,8 @@ let occupationsCache: OccupationCode[] | null = null;
 let onetCache: OnetOccupation[] | null = null;
 let geographyCache: GeographyArea[] | null = null;
 let crosswalkCache: CrosswalkEntry[] | null = null;
+let educationCache: EducationRequirement[] | null = null;
+let acwiaCache: ACWIACrosswalk[] | null = null;
 
 export async function loadOccupations(): Promise<OccupationCode[]> {
   if (occupationsCache) return occupationsCache;
@@ -109,6 +111,38 @@ export async function loadCrosswalk(): Promise<CrosswalkEntry[]> {
   return crosswalkCache;
 }
 
+export async function loadEducationRequirements(): Promise<EducationRequirement[]> {
+  if (educationCache) return educationCache;
+  
+  const response = await fetch('/src/data/education_requirements.csv');
+  const text = await response.text();
+  
+  educationCache = parseCSV(text, (row) => ({
+    onetCode: row[0] || '',
+    occupation: row[1] || '',
+    education: row[2] || '',
+    source: row[3] || '',
+  }));
+  
+  return educationCache;
+}
+
+export async function loadACWIACrosswalk(): Promise<ACWIACrosswalk[]> {
+  if (acwiaCache) return acwiaCache;
+  
+  const response = await fetch('/src/data/acwia_crosswalk.csv');
+  const text = await response.text();
+  
+  acwiaCache = parseCSV(text, (row) => ({
+    onetCode: row[0] || '',
+    onetTitle: row[1] || '',
+    acwiaCode: row[2] || '',
+    acwiaTitle: row[3] || '',
+  }));
+  
+  return acwiaCache;
+}
+
 export function searchOccupations(occupations: OccupationCode[], query: string): OccupationCode[] {
   const lowerQuery = query.toLowerCase();
   return occupations.filter(occ => 
@@ -143,4 +177,17 @@ export function getUniqueStates(geography: GeographyArea[]): string[] {
 
 export function getAreasForState(geography: GeographyArea[], state: string): GeographyArea[] {
   return geography.filter(g => g.stateName === state || g.stateAbbr === state);
+}
+
+export function getEducationForOnet(education: EducationRequirement[], onetCode: string): EducationRequirement | undefined {
+  return education.find(e => e.onetCode === onetCode);
+}
+
+export function getACWIAForOnet(acwia: ACWIACrosswalk[], onetCode: string): ACWIACrosswalk[] {
+  return acwia.filter(a => a.onetCode === onetCode);
+}
+
+export function hasRDClassification(acwia: ACWIACrosswalk[], onetCode: string): boolean {
+  const entries = getACWIAForOnet(acwia, onetCode);
+  return entries.some(e => e.acwiaTitle.includes('R&D'));
 }

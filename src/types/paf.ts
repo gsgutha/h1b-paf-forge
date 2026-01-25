@@ -40,6 +40,7 @@ export interface JobDetails {
   wageRateTo?: number;
   wageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
   workersNeeded: number;
+  isRD?: boolean; // R&D classification for ACWIA
 }
 
 export interface WorksiteLocation {
@@ -104,4 +105,18 @@ export interface CrosswalkEntry {
   truncOnetCode: string;
   onetCode: string;
   onetTitle: string;
+}
+
+export interface EducationRequirement {
+  onetCode: string;
+  occupation: string;
+  education: string;
+  source: string;
+}
+
+export interface ACWIACrosswalk {
+  onetCode: string;
+  onetTitle: string;
+  acwiaCode: string;
+  acwiaTitle: string;
 }
