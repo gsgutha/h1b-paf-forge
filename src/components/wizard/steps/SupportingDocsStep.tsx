@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FileText, Upload, X, Check, AlertCircle, FileUp, Building2, Bell, Users } from 'lucide-react';
+import { FileText, Upload, X, Check, AlertCircle, FileUp, Building2, Bell, Users, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,7 @@ export interface SupportingDocs {
   noticePostingLocation: string;
   benefitsComparisonFile: File | null;
   benefitsNotes: string;
+  employeeName: string;
 }
 
 interface SupportingDocsStepProps {
@@ -125,6 +126,7 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
     noticePostingLocation: data.noticePostingLocation || '',
     benefitsComparisonFile: data.benefitsComparisonFile || null,
     benefitsNotes: data.benefitsNotes || getDefaultBenefitsNotes(),
+    employeeName: data.employeeName || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -136,7 +138,7 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const isComplete = (section: 'lca' | 'wage' | 'notice' | 'benefits') => {
+  const isComplete = (section: 'lca' | 'wage' | 'notice' | 'benefits' | 'employee') => {
     switch (section) {
       case 'lca':
         return !!formData.lcaCaseNumber || !!formData.lcaFile;
@@ -146,6 +148,8 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
         return !!formData.noticePostingDate || !!formData.noticePostingProof;
       case 'benefits':
         return !!formData.benefitsNotes || !!formData.benefitsComparisonFile;
+      case 'employee':
+        return !!formData.employeeName && formData.employeeName.trim().length > 0;
       default:
         return false;
     }
@@ -167,7 +171,7 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Tabs defaultValue="lca" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="lca" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">LCA</span>
@@ -175,7 +179,7 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
             </TabsTrigger>
             <TabsTrigger value="wage" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Wage Memo</span>
+              <span className="hidden sm:inline">Wage</span>
               {isComplete('wage') && <Badge variant="secondary" className="h-5 w-5 p-0 justify-center bg-success/20 text-success"><Check className="h-3 w-3" /></Badge>}
             </TabsTrigger>
             <TabsTrigger value="notice" className="flex items-center gap-2">
@@ -187,6 +191,11 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Benefits</span>
               {isComplete('benefits') && <Badge variant="secondary" className="h-5 w-5 p-0 justify-center bg-success/20 text-success"><Check className="h-3 w-3" /></Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="employee" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Employee</span>
+              {isComplete('employee') && <Badge variant="secondary" className="h-5 w-5 p-0 justify-center bg-success/20 text-success"><Check className="h-3 w-3" /></Badge>}
             </TabsTrigger>
           </TabsList>
 
@@ -372,6 +381,47 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
                     onFileChange={(file) => updateField('benefitsComparisonFile', file)}
                     onRemove={() => updateField('benefitsComparisonFile', null)}
                   />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Employee Name Tab */}
+          <TabsContent value="employee" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-accent" />
+                  Employee Information
+                </CardTitle>
+                <CardDescription>
+                  Enter the H-1B worker's name for the acknowledgement document
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="employeeName">Employee Full Name *</Label>
+                  <Input
+                    id="employeeName"
+                    placeholder="e.g., John A. Smith"
+                    value={formData.employeeName}
+                    onChange={(e) => updateField('employeeName', e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This name will appear on the Worker Receipt Acknowledgement page
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-accent mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">Worker Receipt Statement</p>
+                    <p className="text-muted-foreground">
+                      The employee name will be used in the Statement of Receipt of Certified Labor 
+                      Condition Application, which must be signed by the H-1B worker on or before 
+                      they begin work.
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
