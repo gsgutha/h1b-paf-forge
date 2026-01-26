@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      oflc_prevailing_wages: {
+        Row: {
+          area_code: string
+          area_name: string
+          created_at: string
+          id: string
+          level_1_annual: number | null
+          level_1_hourly: number | null
+          level_2_annual: number | null
+          level_2_hourly: number | null
+          level_3_annual: number | null
+          level_3_hourly: number | null
+          level_4_annual: number | null
+          level_4_hourly: number | null
+          mean_annual: number | null
+          mean_hourly: number | null
+          soc_code: string
+          soc_title: string
+          wage_year: string
+        }
+        Insert: {
+          area_code: string
+          area_name: string
+          created_at?: string
+          id?: string
+          level_1_annual?: number | null
+          level_1_hourly?: number | null
+          level_2_annual?: number | null
+          level_2_hourly?: number | null
+          level_3_annual?: number | null
+          level_3_hourly?: number | null
+          level_4_annual?: number | null
+          level_4_hourly?: number | null
+          mean_annual?: number | null
+          mean_hourly?: number | null
+          soc_code: string
+          soc_title: string
+          wage_year: string
+        }
+        Update: {
+          area_code?: string
+          area_name?: string
+          created_at?: string
+          id?: string
+          level_1_annual?: number | null
+          level_1_hourly?: number | null
+          level_2_annual?: number | null
+          level_2_hourly?: number | null
+          level_3_annual?: number | null
+          level_3_hourly?: number | null
+          level_4_annual?: number | null
+          level_4_hourly?: number | null
+          mean_annual?: number | null
+          mean_hourly?: number | null
+          soc_code?: string
+          soc_title?: string
+          wage_year?: string
+        }
+        Relationships: []
+      }
       paf_records: {
         Row: {
           actual_wage: number
