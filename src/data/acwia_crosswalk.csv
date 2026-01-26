@@ -1,72 +1,51 @@
-OnetCode,OnetTitle,ACWIACode,ACWIATitle
-13-1011.00,"Agents and Business Managers of Artists, Performers, and Athletes",27-2012,Producers and Directors
-15-1211.00,Computer Systems Analysts,15-1217,"Computer Systems Analysts, Non R&D"
-15-1211.00,Computer Systems Analysts,15-1218,"Computer Systems Analysts, R&D"
-15-1241.00,Computer Network Architects,15-1247,"Computer Network Architects, Non R&D"
-15-1241.00,Computer Network Architects,15-1248,"Computer Network Architects, R&D"
-15-1241.01,Telecommunications Engineering Specialists,15-1248,"Computer Network Architects, R&D"
-15-1241.01,Telecommunications Engineering Specialists,15-1247,"Computer Network Architects, Non R&D"
-15-1251.00,Computer Programmers,15-1293,"Computer Programmers, Non R&D"
-15-1251.00,Computer Programmers,15-1294,"Computer Programmers, R&D"
-15-1252.00,Software Developers,15-1295,"Software Developers, Non R&D"
-15-1252.00,Software Developers,15-1296,"Software Developers, R&D"
-15-1253.00,Software Quality Assurance Analysts and Testers,15-1297,"Software Quality Assurance Analysts and Testers, Non R&D"
-15-1253.00,Software Quality Assurance Analysts and Testers,15-1298,"Software Quality Assurance Analysts and Testers, R&D"
+onetCode,onetTitle,acwiaCode,acwiaTitle
+13-1011.00,Agents and Business Managers of Artists Performers and Athletes,27-2012,Producers and Directors
+15-1211.00,Computer Systems Analysts,15-1217,Computer Systems Analysts Non R&D
+15-1211.00,Computer Systems Analysts,15-1218,Computer Systems Analysts R&D
+15-1241.00,Computer Network Architects,15-1247,Computer Network Architects Non R&D
+15-1241.00,Computer Network Architects,15-1248,Computer Network Architects R&D
+15-1241.01,Telecommunications Engineering Specialists,15-1247,Computer Network Architects Non R&D
+15-1241.01,Telecommunications Engineering Specialists,15-1248,Computer Network Architects R&D
+15-1251.00,Computer Programmers,15-1293,Computer Programmers Non R&D
+15-1251.00,Computer Programmers,15-1294,Computer Programmers R&D
+15-1252.00,Software Developers,15-1295,Software Developers Non R&D
+15-1252.00,Software Developers,15-1296,Software Developers R&D
+15-1253.00,Software Quality Assurance Analysts and Testers,15-1297,Software Quality Assurance Analysts and Testers Non R&D
+15-1253.00,Software Quality Assurance Analysts and Testers,15-1298,Software Quality Assurance Analysts and Testers R&D
 15-2011.00,Actuaries,15-2041,Statisticians
-17-2051.00,Civil Engineers,17-2052,"Civil Engineers, Non-R&D"
-17-2051.00,Civil Engineers,17-2053,"Civil Engineers, R&D"
-17-2051.01,Transportation Engineers,17-2053,"Civil Engineers, R&D"
-17-2051.01,Transportation Engineers,17-2052,"Civil Engineers, Non-R&D"
-17-2051.02,Water/Wastewater Engineers,17-2053,"Civil Engineers, R&D"
-17-2051.02,Water/Wastewater Engineers,17-2052,"Civil Engineers, Non-R&D"
-17-2061.00,Computer Hardware Engineers,17-2062,"Computer Hardware Engineers, Non-R&D"
-17-2061.00,Computer Hardware Engineers,17-2063,"Computer Hardware Engineers, R&D"
-17-2071.00,Electrical Engineers,17-2073,"Electrical Engineers, Non-R&D"
-17-2071.00,Electrical Engineers,17-2074,"Electrical Engineers, R&D"
-17-2072.00,"Electronics Engineers, Except Computer",17-2076,"Electronics Engineers, Except Computer, R&D"
-17-2072.00,"Electronics Engineers, Except Computer",17-2075,"Electronics Engineers, Except Computer, Non-R&D"
-17-2081.00,Environmental Engineers,17-2082,"Environmental Engineers, Non-R&D"
-17-2081.00,Environmental Engineers,17-2083,"Environmental Engineers, R&D"
-17-2112.00,Industrial Engineers,17-2113,"Industrial Engineers, Non-R&D"
-17-2112.00,Industrial Engineers,17-2114,"Industrial Engineers, R&D"
-17-2112.01,Human Factors Engineers and Ergonomists,17-2113,"Industrial Engineers, Non-R&D"
-17-2112.01,Human Factors Engineers and Ergonomists,17-2114,"Industrial Engineers, R&D"
-17-2112.02,Validation Engineers,17-2114,"Industrial Engineers, R&D"
-17-2112.02,Validation Engineers,17-2113,"Industrial Engineers, Non-R&D"
-17-2112.03,Manufacturing Engineers,17-2114,"Industrial Engineers, R&D"
-17-2112.03,Manufacturing Engineers,17-2113,"Industrial Engineers, Non-R&D"
-17-2131.00,Materials Engineers,17-2132,"Materials Engineers, Non-R&D"
-17-2131.00,Materials Engineers,17-2133,"Materials Engineers, R&D"
-17-2141.00,Mechanical Engineers,17-2142,"Mechanical Engineers, Non-R&D"
-17-2141.00,Mechanical Engineers,17-2143,"Mechanical Engineers, R&D"
-17-2141.01,Fuel Cell Engineers,17-2142,"Mechanical Engineers, Non-R&D"
-17-2141.01,Fuel Cell Engineers,17-2143,"Mechanical Engineers, R&D"
-17-2141.02,Automotive Engineers,17-2142,"Mechanical Engineers, Non-R&D"
-17-2141.02,Automotive Engineers,17-2143,"Mechanical Engineers, R&D"
-17-2199.00,"Engineers, All Other",17-2198,"Engineers, All Other, Non-R&D"
-17-2199.00,"Engineers, All Other",17-2197,"Engineers, All Other, R&D"
-17-2199.01,Biochemical Engineers,17-2198,"Engineers, All Other, Non-R&D"
-17-2199.01,Biochemical Engineers,17-2197,"Engineers, All Other, R&D"
-17-2199.03,Energy Engineers,17-2198,"Engineers, All Other, Non-R&D"
-17-2199.03,Energy Engineers,17-2197,"Engineers, All Other, R&D"
-17-2199.05,Mechatronics Engineers,17-2198,"Engineers, All Other, Non-R&D"
-17-2199.05,Mechatronics Engineers,17-2197,"Engineers, All Other, R&D"
-17-2199.06,Microsystems Engineers,17-2198,"Engineers, All Other, Non-R&D"
-17-2199.06,Microsystems Engineers,17-2197,"Engineers, All Other, R&D"
-17-2199.07,Photonics Engineers,17-2198,"Engineers, All Other, Non-R&D"
-17-2199.07,Photonics Engineers,17-2197,"Engineers, All Other, R&D"
-17-2199.08,Robotics Engineers,17-2198,"Engineers, All Other, Non-R&D"
-17-2199.08,Robotics Engineers,17-2197,"Engineers, All Other, R&D"
-17-2199.09,Nanosystems Engineers,17-2198,"Engineers, All Other, Non-R&D"
-17-2199.09,Nanosystems Engineers,17-2197,"Engineers, All Other, R&D"
-17-2199.10,Wind Energy Engineers,17-2198,"Engineers, All Other, Non-R&D"
-17-2199.10,Wind Energy Engineers,17-2197,"Engineers, All Other, R&D"
-17-2199.11,Solar Energy Systems Engineers,17-2198,"Engineers, All Other, Non-R&D"
-17-2199.11,Solar Energy Systems Engineers,17-2197,"Engineers, All Other, R&D"
-19-1041.00,Epidemiologists,19-1099,"Life Scientists, All Other"
-19-1042.00,Medical Scientists,19-1043,"Medical Scientists, Non R&D"
-19-1042.00,Medical Scientists,19-1044,"Medical Scientists, R&D"
-19-2032.00,Materials Scientists,19-2033,"Materials Scientists, Non R&D"
-19-2032.00,Materials Scientists,19-2034,"Materials Scientists, R&D"
-19-2099.01,Remote Sensing Scientists and Technologists,19-2099,"Physical Scientists, All Other"
-25-4031.00,Library Technicians,25-4021,Librarians and Media Collections Specialists
+17-2051.00,Civil Engineers,17-2052,Civil Engineers Non-R&D
+17-2051.00,Civil Engineers,17-2053,Civil Engineers R&D
+17-2051.01,Transportation Engineers,17-2052,Civil Engineers Non-R&D
+17-2051.01,Transportation Engineers,17-2053,Civil Engineers R&D
+17-2051.02,Water/Wastewater Engineers,17-2052,Civil Engineers Non-R&D
+17-2051.02,Water/Wastewater Engineers,17-2053,Civil Engineers R&D
+17-2061.00,Computer Hardware Engineers,17-2062,Computer Hardware Engineers Non-R&D
+17-2061.00,Computer Hardware Engineers,17-2063,Computer Hardware Engineers R&D
+17-2071.00,Electrical Engineers,17-2073,Electrical Engineers Non-R&D
+17-2071.00,Electrical Engineers,17-2074,Electrical Engineers R&D
+17-2072.00,Electronics Engineers Except Computer,17-2075,Electronics Engineers Except Computer Non-R&D
+17-2072.00,Electronics Engineers Except Computer,17-2076,Electronics Engineers Except Computer R&D
+17-2072.01,Radio Frequency Identification Device Specialists,17-2075,Electronics Engineers Except Computer Non-R&D
+17-2072.01,Radio Frequency Identification Device Specialists,17-2076,Electronics Engineers Except Computer R&D
+17-2141.00,Mechanical Engineers,17-2143,Mechanical Engineers Non-R&D
+17-2141.00,Mechanical Engineers,17-2144,Mechanical Engineers R&D
+17-2141.01,Fuel Cell Engineers,17-2143,Mechanical Engineers Non-R&D
+17-2141.01,Fuel Cell Engineers,17-2144,Mechanical Engineers R&D
+17-2141.02,Automotive Engineers,17-2143,Mechanical Engineers Non-R&D
+17-2141.02,Automotive Engineers,17-2144,Mechanical Engineers R&D
+17-2151.00,Mining and Geological Engineers Including Mining Safety Engineers,17-2199,Engineers All Other
+17-2171.00,Petroleum Engineers,17-2199,Engineers All Other
+19-3032.00,Industrial-Organizational Psychologists,19-3039,Psychologists All Other
+25-2055.00,Special Education Teachers Kindergarten,25-2059,Special Education Teachers All Other
+25-2056.00,Special Education Teachers Elementary School,25-2059,Special Education Teachers All Other
+25-2057.00,Special Education Teachers Middle School,25-2059,Special Education Teachers All Other
+25-2058.00,Special Education Teachers Secondary School,25-2059,Special Education Teachers All Other
+29-1011.00,Chiropractors,29-1123,Physical Therapists
+29-1022.00,Oral and Maxillofacial Surgeons,29-1249,Surgeons All Other
+29-1023.00,Orthodontists,29-1021,Dentists General
+29-1024.00,Prosthodontists,29-1021,Dentists General
+29-1029.00,Dentists All Other Specialists,29-1021,Dentists General
+29-1081.00,Podiatrists,29-1229,Physicians All Other
+29-1131.00,Veterinarians,29-1229,Physicians All Other
+29-1217.00,Neurologists,29-1229,Physicians All Other
+29-1243.00,Pediatric Surgeons,29-1249,Surgeons All Other
