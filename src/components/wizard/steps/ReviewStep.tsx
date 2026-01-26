@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Download, Printer, Edit2, CheckCircle, Bell, Building2, Loader2 } from 'lucide-react';
+import { FileText, Download, Printer, Edit2, CheckCircle, Bell, Building2, Loader2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { PAFData } from '@/types/paf';
@@ -230,6 +230,19 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
               <DataRow label="Posting Location" value={supportingDocs.noticePostingLocation} />
               <DataRow label="Posting Proof" value={supportingDocs.noticePostingProof?.name || 'Not uploaded'} />
               <DataRow label="Benefits Comparison" value={supportingDocs.benefitsNotes ? 'Documented' : 'Not provided'} />
+            </SectionCard>
+
+            <SectionCard title="Employee & Signing Authority" icon={User} onEdit={() => onEdit(5)}>
+              <DataRow label="H-1B Worker Name" value={supportingDocs.employeeName || 'Not provided'} />
+              <div className="border-t border-border mt-3 pt-3">
+                <DataRow label="Signing Authority" value={supportingDocs.signingAuthorityName || 'Not provided'} />
+                <DataRow label="Title" value={supportingDocs.signingAuthorityTitle || 'Not provided'} />
+              </div>
+              {!supportingDocs.signingAuthorityName && (
+                <div className="mt-3 p-2 rounded text-xs bg-muted text-muted-foreground">
+                  ⚠ Documents will show "Authorized Representative" as default
+                </div>
+              )}
             </SectionCard>
           </div>
         )}
