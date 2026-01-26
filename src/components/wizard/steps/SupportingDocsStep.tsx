@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FileText, Upload, X, Check, AlertCircle, FileUp, Building2, Bell, Users, User } from 'lucide-react';
+import { FileText, Upload, X, Check, AlertCircle, FileUp, Building2, Bell, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,13 +13,11 @@ export interface SupportingDocs {
   lcaFile: File | null;
   actualWageMemo: string;
   noticePostingProof: File | null;
-  noticePostingDate: string;
+  noticePostingStartDate: string;
+  noticePostingEndDate: string;
   noticePostingLocation: string;
   benefitsComparisonFile: File | null;
   benefitsNotes: string;
-  employeeName: string;
-  signingAuthorityName: string;
-  signingAuthorityTitle: string;
 }
 
 interface SupportingDocsStepProps {
@@ -124,13 +122,11 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
     lcaFile: data.lcaFile || null,
     actualWageMemo: data.actualWageMemo || getDefaultWageMemo(),
     noticePostingProof: data.noticePostingProof || null,
-    noticePostingDate: data.noticePostingDate || '',
+    noticePostingStartDate: data.noticePostingStartDate || '',
+    noticePostingEndDate: data.noticePostingEndDate || '',
     noticePostingLocation: data.noticePostingLocation || '',
     benefitsComparisonFile: data.benefitsComparisonFile || null,
     benefitsNotes: data.benefitsNotes || getDefaultBenefitsNotes(),
-    employeeName: data.employeeName || '',
-    signingAuthorityName: data.signingAuthorityName || '',
-    signingAuthorityTitle: data.signingAuthorityTitle || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -142,18 +138,16 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const isComplete = (section: 'lca' | 'wage' | 'notice' | 'benefits' | 'employee') => {
+  const isComplete = (section: 'lca' | 'wage' | 'notice' | 'benefits') => {
     switch (section) {
       case 'lca':
         return !!formData.lcaCaseNumber || !!formData.lcaFile;
       case 'wage':
         return !!formData.actualWageMemo && formData.actualWageMemo.length > 50;
       case 'notice':
-        return !!formData.noticePostingDate || !!formData.noticePostingProof;
+        return !!formData.noticePostingStartDate || !!formData.noticePostingProof;
       case 'benefits':
         return !!formData.benefitsNotes || !!formData.benefitsComparisonFile;
-      case 'employee':
-        return !!formData.employeeName && formData.employeeName.trim().length > 0;
       default:
         return false;
     }
@@ -175,7 +169,7 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Tabs defaultValue="lca" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="lca" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">LCA</span>
@@ -195,11 +189,6 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Benefits</span>
               {isComplete('benefits') && <Badge variant="secondary" className="h-5 w-5 p-0 justify-center bg-success/20 text-success"><Check className="h-3 w-3" /></Badge>}
-            </TabsTrigger>
-            <TabsTrigger value="employee" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Employee</span>
-              {isComplete('employee') && <Badge variant="secondary" className="h-5 w-5 p-0 justify-center bg-success/20 text-success"><Check className="h-3 w-3" /></Badge>}
             </TabsTrigger>
           </TabsList>
 
@@ -309,23 +298,38 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
               <CardContent className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="noticePostingDate">Posting Date</Label>
+                    <Label htmlFor="noticePostingStartDate">Posting Start Date</Label>
                     <Input
-                      id="noticePostingDate"
+                      id="noticePostingStartDate"
                       type="date"
-                      value={formData.noticePostingDate}
-                      onChange={(e) => updateField('noticePostingDate', e.target.value)}
+                      value={formData.noticePostingStartDate}
+                      onChange={(e) => updateField('noticePostingStartDate', e.target.value)}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Date the LCA notice was first posted
+                    </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="noticePostingLocation">Posting Location</Label>
+                    <Label htmlFor="noticePostingEndDate">Posting End Date</Label>
                     <Input
-                      id="noticePostingLocation"
-                      placeholder="e.g., Company intranet, break room bulletin board"
-                      value={formData.noticePostingLocation}
-                      onChange={(e) => updateField('noticePostingLocation', e.target.value)}
+                      id="noticePostingEndDate"
+                      type="date"
+                      value={formData.noticePostingEndDate}
+                      onChange={(e) => updateField('noticePostingEndDate', e.target.value)}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Date the LCA notice was removed (after 10 business days)
+                    </p>
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="noticePostingLocation">Posting Location</Label>
+                  <Input
+                    id="noticePostingLocation"
+                    placeholder="e.g., Company intranet, break room bulletin board"
+                    value={formData.noticePostingLocation}
+                    onChange={(e) => updateField('noticePostingLocation', e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -385,82 +389,6 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
                     onFileChange={(file) => updateField('benefitsComparisonFile', file)}
                     onRemove={() => updateField('benefitsComparisonFile', null)}
                   />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Employee & Signing Authority Tab */}
-          <TabsContent value="employee" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-accent" />
-                  Employee & Signing Authority
-                </CardTitle>
-                <CardDescription>
-                  Enter the H-1B worker's name and the employer's signing authority
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Employee Section */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-foreground border-b pb-2">H-1B Worker Information</h4>
-                  <div className="space-y-2">
-                    <Label htmlFor="employeeName">Employee Full Name *</Label>
-                    <Input
-                      id="employeeName"
-                      placeholder="e.g., John A. Smith"
-                      value={formData.employeeName}
-                      onChange={(e) => updateField('employeeName', e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      This name will appear on the Worker Receipt Acknowledgement page
-                    </p>
-                  </div>
-                </div>
-
-                {/* Signing Authority Section */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-foreground border-b pb-2">Employer Signing Authority</h4>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="signingAuthorityName">Signing Authority Name *</Label>
-                      <Input
-                        id="signingAuthorityName"
-                        placeholder="e.g., Jane M. Doe"
-                        value={formData.signingAuthorityName}
-                        onChange={(e) => updateField('signingAuthorityName', e.target.value)}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Person authorized to sign on behalf of the employer
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signingAuthorityTitle">Title / Position</Label>
-                      <Input
-                        id="signingAuthorityTitle"
-                        placeholder="e.g., HR Director, CEO, Immigration Manager"
-                        value={formData.signingAuthorityTitle}
-                        onChange={(e) => updateField('signingAuthorityTitle', e.target.value)}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Job title of the signing authority
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
-                  <AlertCircle className="h-5 w-5 text-accent mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-medium text-foreground">Document Signatures</p>
-                    <p className="text-muted-foreground">
-                      The signing authority name will appear on LCA Display Details, Wage Memorandum, 
-                      Benefits Summary, H-1B Dependency Attestation, and other employer documents 
-                      requiring an authorized signature.
-                    </p>
-                  </div>
                 </div>
               </CardContent>
             </Card>

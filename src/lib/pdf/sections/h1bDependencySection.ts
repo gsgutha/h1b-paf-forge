@@ -134,8 +134,8 @@ export function addH1BDependencySection(
   addParagraph(ctx, certStatement);
   
   // Signature
-  const signerName = supportingDocs?.signingAuthorityName || 'Authorized Representative';
-  const signerTitle = supportingDocs?.signingAuthorityTitle || undefined;
+  const signerName = data.employer.signingAuthorityName || 'Authorized Representative';
+  const signerTitle = data.employer.signingAuthorityTitle || undefined;
   addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
   addDateLine(ctx);
 }

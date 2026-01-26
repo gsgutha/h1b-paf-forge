@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Download, Printer, Edit2, CheckCircle, Bell, Building2, Loader2, User } from 'lucide-react';
+import { FileText, Download, Printer, Edit2, CheckCircle, Bell, Building2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { PAFData } from '@/types/paf';
@@ -168,6 +168,16 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
             <DataRow label="Telephone" value={data.employer.telephone} />
             <DataRow label="FEIN" value={data.employer.fein} />
             <DataRow label="NAICS Code" value={data.employer.naicsCode} />
+            <div className="border-t border-border mt-3 pt-3">
+              <DataRow label="H-1B Worker" value={data.employer.employeeName || 'Not provided'} />
+              <DataRow label="Signing Authority" value={data.employer.signingAuthorityName || 'Not provided'} />
+              <DataRow label="Authority Title" value={data.employer.signingAuthorityTitle || 'Not provided'} />
+            </div>
+            {!data.employer.signingAuthorityName && (
+              <div className="mt-3 p-2 rounded text-xs bg-muted text-muted-foreground">
+                ⚠ Documents will show "Authorized Representative" as default
+              </div>
+            )}
           </SectionCard>
 
           <SectionCard title="Job Details" icon={FileText} onEdit={() => onEdit(2)}>
@@ -188,6 +198,7 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
           </SectionCard>
 
           <SectionCard title="Worksite Location" icon={FileText} onEdit={() => onEdit(3)}>
+            <DataRow label="Worksite Name" value={data.worksite.worksiteName} />
             <DataRow label="Address" value={`${data.worksite.address1}${data.worksite.address2 ? `, ${data.worksite.address2}` : ''}`} />
             <DataRow label="City, State ZIP" value={`${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`} />
             <DataRow label="County" value={data.worksite.county} />
@@ -226,23 +237,11 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
             </SectionCard>
 
             <SectionCard title="Notice & Benefits" icon={Bell} onEdit={() => onEdit(5)}>
-              <DataRow label="Notice Posted" value={supportingDocs.noticePostingDate ? formatDate(supportingDocs.noticePostingDate) : 'Not recorded'} />
+              <DataRow label="Posting Start" value={supportingDocs.noticePostingStartDate ? formatDate(supportingDocs.noticePostingStartDate) : 'Not recorded'} />
+              <DataRow label="Posting End" value={supportingDocs.noticePostingEndDate ? formatDate(supportingDocs.noticePostingEndDate) : 'Not recorded'} />
               <DataRow label="Posting Location" value={supportingDocs.noticePostingLocation} />
               <DataRow label="Posting Proof" value={supportingDocs.noticePostingProof?.name || 'Not uploaded'} />
               <DataRow label="Benefits Comparison" value={supportingDocs.benefitsNotes ? 'Documented' : 'Not provided'} />
-            </SectionCard>
-
-            <SectionCard title="Employee & Signing Authority" icon={User} onEdit={() => onEdit(5)}>
-              <DataRow label="H-1B Worker Name" value={supportingDocs.employeeName || 'Not provided'} />
-              <div className="border-t border-border mt-3 pt-3">
-                <DataRow label="Signing Authority" value={supportingDocs.signingAuthorityName || 'Not provided'} />
-                <DataRow label="Title" value={supportingDocs.signingAuthorityTitle || 'Not provided'} />
-              </div>
-              {!supportingDocs.signingAuthorityName && (
-                <div className="mt-3 p-2 rounded text-xs bg-muted text-muted-foreground">
-                  ⚠ Documents will show "Authorized Representative" as default
-                </div>
-              )}
             </SectionCard>
           </div>
         )}

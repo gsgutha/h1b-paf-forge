@@ -38,6 +38,7 @@ const secondaryWorksiteSchema = z.object({
 });
 
 const worksiteSchema = z.object({
+  worksiteName: z.string().optional(),
   address1: z.string().min(1, 'Address is required'),
   address2: z.string().optional(),
   city: z.string().min(1, 'City is required'),
@@ -166,6 +167,19 @@ export function WorksiteStep({ data, onNext, onBack }: WorksiteStepProps) {
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <Label htmlFor="worksiteName">Worksite Name (Company/Client Name)</Label>
+              <Input
+                id="worksiteName"
+                {...register('worksiteName')}
+                className="mt-1.5"
+                placeholder="e.g., ABC Corporation Headquarters"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Name of the worksite location (optional)
+              </p>
+            </div>
+
             <div className="md:col-span-2">
               <Label htmlFor="address1">Address Line 1 *</Label>
               <Input

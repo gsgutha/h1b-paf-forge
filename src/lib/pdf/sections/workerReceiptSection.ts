@@ -11,8 +11,8 @@ import {
 export function addWorkerReceiptSection(ctx: PDFContext, data: PAFData, supportingDocs?: SupportingDocs): void {
   const { doc, margin } = ctx;
   
-  // Get employee name from supporting docs or use placeholder
-  const employeeName = supportingDocs?.employeeName?.trim() || '[Worker Name]';
+  // Get employee name from employer data or use placeholder
+  const employeeName = data.employer.employeeName?.trim() || '[Worker Name]';
   
   // Start new page
   doc.addPage();
