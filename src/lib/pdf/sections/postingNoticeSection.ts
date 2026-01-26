@@ -52,9 +52,20 @@ export function addPostingNoticeSection(
   ctx.yPos += 5;
   
   // Location section
-  addSubsectionHeader(ctx, 'Location');
+  addSubsectionHeader(ctx, 'Worksite Location(s)');
   const clientLocation = `${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`;
-  addLabelValue(ctx, 'Client Location', clientLocation, 45);
+  addLabelValue(ctx, 'Primary Worksite', clientLocation, 50);
+  
+  // Secondary worksite if present
+  if (data.worksite.hasSecondaryWorksite && data.worksite.secondaryWorksite) {
+    const secondary = data.worksite.secondaryWorksite;
+    const secondaryLocation = `${secondary.address1}${secondary.address2 ? ', ' + secondary.address2 : ''}, ${secondary.city}, ${secondary.state} ${secondary.postalCode}`;
+    addLabelValue(ctx, 'Secondary Worksite', secondaryLocation, 50);
+    
+    if (secondary.county) {
+      addLabelValue(ctx, 'Secondary County', secondary.county, 50);
+    }
+  }
   
   ctx.yPos += 5;
   

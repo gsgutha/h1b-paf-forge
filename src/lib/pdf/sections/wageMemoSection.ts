@@ -34,6 +34,26 @@ export function addWageMemoSection(
   
   ctx.yPos += 5;
   
+  // Higher of Actual or Prevailing Wage Confirmation
+  ctx.yPos += 5;
+  const actualWage = data.wage.actualWage;
+  const prevailingWage = data.wage.prevailingWage;
+  const higherWage = Math.max(actualWage, prevailingWage);
+  const wageSource = actualWage >= prevailingWage ? 'actual wage' : 'prevailing wage';
+  
+  const wageConfirmation = `WAGE CONFIRMATION: The H-1B worker will be paid ${formatCurrency(higherWage, data.wage.actualWageUnit)}, which is the HIGHER of the actual wage (${formatCurrency(actualWage, data.wage.actualWageUnit)}) or the prevailing wage (${formatCurrency(prevailingWage, data.wage.prevailingWageUnit)}), as required by 20 CFR § 655.731(a).`;
+  
+  // Draw highlighted confirmation box
+  doc.setFillColor(...PDF_CONFIG.colors.lightGray);
+  const confirmLines = doc.splitTextToSize(wageConfirmation, pageWidth - margin * 2 - 10);
+  doc.rect(margin, ctx.yPos - 3, pageWidth - margin * 2, confirmLines.length * 5 + 8, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text(confirmLines, margin + 5, ctx.yPos + 2);
+  ctx.yPos += confirmLines.length * 5 + 12;
+  
+  doc.setFont('helvetica', 'normal');
+  
   // Wage statement
   const wageStatement = `Pursuant to the LCA, the ${data.job.jobTitle} will be paid at a rate of ${formatCurrency(data.job.wageRateFrom, data.job.wageUnit)}. In determining the wage for the position the following factors were considered:`;
   addParagraph(ctx, wageStatement);
