@@ -14,6 +14,7 @@ import {
   addDateLine,
   checkPageBreak,
   formatDate,
+  parseLocalDate,
 } from '../pdfHelpers';
 
 export function addRecruitmentSummarySection(
@@ -105,7 +106,7 @@ export function addRecruitmentSummarySection(
   // Section 3: Timeframes
   addSectionHeader(ctx, '3. Recruitment Timeframe');
   
-  const beginDate = new Date(data.job.beginDate);
+  const beginDate = parseLocalDate(data.job.beginDate);
   const recruitmentStart = new Date(beginDate);
   recruitmentStart.setDate(recruitmentStart.getDate() - 60);
   
