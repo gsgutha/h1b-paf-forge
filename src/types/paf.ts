@@ -70,6 +70,16 @@ export interface WorksiteLocation {
   secondaryWorksite?: SecondaryWorksite;
 }
 
+export interface SecondaryWageInfo {
+  prevailingWage: number;
+  prevailingWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
+  wageLevel: 'Level I' | 'Level II' | 'Level III' | 'Level IV';
+  wageSource: string;
+  wageSourceDate: string;
+  areaCode?: string;
+  areaName?: string;
+}
+
 export interface WageInfo {
   prevailingWage: number;
   prevailingWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
@@ -78,6 +88,9 @@ export interface WageInfo {
   wageSourceDate: string;
   actualWage: number;
   actualWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
+  // Secondary worksite wage (when in different county)
+  hasSecondaryWage?: boolean;
+  secondaryWage?: SecondaryWageInfo;
 }
 
 export interface PAFData {
