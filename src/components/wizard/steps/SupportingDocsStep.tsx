@@ -18,6 +18,8 @@ export interface SupportingDocs {
   benefitsComparisonFile: File | null;
   benefitsNotes: string;
   employeeName: string;
+  signingAuthorityName: string;
+  signingAuthorityTitle: string;
 }
 
 interface SupportingDocsStepProps {
@@ -127,6 +129,8 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
     benefitsComparisonFile: data.benefitsComparisonFile || null,
     benefitsNotes: data.benefitsNotes || getDefaultBenefitsNotes(),
     employeeName: data.employeeName || '',
+    signingAuthorityName: data.signingAuthorityName || '',
+    signingAuthorityTitle: data.signingAuthorityTitle || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -386,40 +390,75 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
             </Card>
           </TabsContent>
 
-          {/* Employee Name Tab */}
+          {/* Employee & Signing Authority Tab */}
           <TabsContent value="employee" className="mt-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5 text-accent" />
-                  Employee Information
+                  Employee & Signing Authority
                 </CardTitle>
                 <CardDescription>
-                  Enter the H-1B worker's name for the acknowledgement document
+                  Enter the H-1B worker's name and the employer's signing authority
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="employeeName">Employee Full Name *</Label>
-                  <Input
-                    id="employeeName"
-                    placeholder="e.g., John A. Smith"
-                    value={formData.employeeName}
-                    onChange={(e) => updateField('employeeName', e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    This name will appear on the Worker Receipt Acknowledgement page
-                  </p>
+              <CardContent className="space-y-6">
+                {/* Employee Section */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-foreground border-b pb-2">H-1B Worker Information</h4>
+                  <div className="space-y-2">
+                    <Label htmlFor="employeeName">Employee Full Name *</Label>
+                    <Input
+                      id="employeeName"
+                      placeholder="e.g., John A. Smith"
+                      value={formData.employeeName}
+                      onChange={(e) => updateField('employeeName', e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This name will appear on the Worker Receipt Acknowledgement page
+                    </p>
+                  </div>
+                </div>
+
+                {/* Signing Authority Section */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-foreground border-b pb-2">Employer Signing Authority</h4>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="signingAuthorityName">Signing Authority Name *</Label>
+                      <Input
+                        id="signingAuthorityName"
+                        placeholder="e.g., Jane M. Doe"
+                        value={formData.signingAuthorityName}
+                        onChange={(e) => updateField('signingAuthorityName', e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Person authorized to sign on behalf of the employer
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signingAuthorityTitle">Title / Position</Label>
+                      <Input
+                        id="signingAuthorityTitle"
+                        placeholder="e.g., HR Director, CEO, Immigration Manager"
+                        value={formData.signingAuthorityTitle}
+                        onChange={(e) => updateField('signingAuthorityTitle', e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Job title of the signing authority
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
                   <AlertCircle className="h-5 w-5 text-accent mt-0.5" />
                   <div className="text-sm">
-                    <p className="font-medium text-foreground">Worker Receipt Statement</p>
+                    <p className="font-medium text-foreground">Document Signatures</p>
                     <p className="text-muted-foreground">
-                      The employee name will be used in the Statement of Receipt of Certified Labor 
-                      Condition Application, which must be signed by the H-1B worker on or before 
-                      they begin work.
+                      The signing authority name will appear on LCA Display Details, Wage Memorandum, 
+                      Benefits Summary, H-1B Dependency Attestation, and other employer documents 
+                      requiring an authorized signature.
                     </p>
                   </div>
                 </div>

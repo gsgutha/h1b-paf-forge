@@ -166,6 +166,8 @@ export function addRecruitmentSummarySection(
   addParagraph(ctx, certStatement);
   
   // Signature
-  addSignatureLine(ctx, 'Authorized Representative', data.employer.legalBusinessName);
+  const signerName = supportingDocs?.signingAuthorityName || 'Authorized Representative';
+  const signerTitle = supportingDocs?.signingAuthorityTitle || undefined;
+  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
   addDateLine(ctx);
 }

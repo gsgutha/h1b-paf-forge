@@ -87,9 +87,9 @@ export function addPostingNoticeSection(
   
   // Signature
   ctx.yPos += 10;
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.employer.legalBusinessName, margin, ctx.yPos);
-  addSignatureLine(ctx, 'Authorized Representative');
+  const signerName = supportingDocs?.signingAuthorityName || 'Authorized Representative';
+  const signerTitle = supportingDocs?.signingAuthorityTitle || undefined;
+  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
   
   // ----- Page 2: LCA Posting Notice -----
   doc.addPage();

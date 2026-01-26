@@ -1,4 +1,5 @@
 import type { PAFData } from '@/types/paf';
+import type { SupportingDocs } from '@/components/wizard/steps/SupportingDocsStep';
 import { 
   PDFContext, 
   PDF_CONFIG,
@@ -14,7 +15,11 @@ import {
   checkPageBreak,
 } from '../pdfHelpers';
 
-export function addH1BDependencySection(ctx: PDFContext, data: PAFData): void {
+export function addH1BDependencySection(
+  ctx: PDFContext, 
+  data: PAFData,
+  supportingDocs?: SupportingDocs
+): void {
   const { doc, pageWidth, margin } = ctx;
   
   // Start new page
@@ -129,6 +134,8 @@ export function addH1BDependencySection(ctx: PDFContext, data: PAFData): void {
   addParagraph(ctx, certStatement);
   
   // Signature
-  addSignatureLine(ctx, 'Authorized Representative', data.employer.legalBusinessName);
+  const signerName = supportingDocs?.signingAuthorityName || 'Authorized Representative';
+  const signerTitle = supportingDocs?.signingAuthorityTitle || undefined;
+  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
   addDateLine(ctx);
 }
