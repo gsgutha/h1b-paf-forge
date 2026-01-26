@@ -50,7 +50,7 @@ let acwiaCache: ACWIACrosswalk[] | null = null;
 export async function loadOccupations(): Promise<OccupationCode[]> {
   if (occupationsCache) return occupationsCache;
   
-  const response = await fetch('/src/data/oes_soc_occs.csv');
+  const response = await fetch('/data/oes_soc_occs.csv');
   const text = await response.text();
   
   occupationsCache = parseCSV(text, (row) => ({
@@ -65,7 +65,7 @@ export async function loadOccupations(): Promise<OccupationCode[]> {
 export async function loadOnetOccupations(): Promise<OnetOccupation[]> {
   if (onetCache) return onetCache;
   
-  const response = await fetch('/src/data/onet_occs.csv');
+  const response = await fetch('/data/onet_occs.csv');
   const text = await response.text();
   
   onetCache = parseCSV(text, (row) => ({
@@ -80,7 +80,7 @@ export async function loadOnetOccupations(): Promise<OnetOccupation[]> {
 export async function loadGeography(): Promise<GeographyArea[]> {
   if (geographyCache) return geographyCache;
   
-  const response = await fetch('/src/data/geography.csv');
+  const response = await fetch('/data/geography.csv');
   const text = await response.text();
   
   geographyCache = parseCSV(text, (row) => ({
@@ -97,7 +97,7 @@ export async function loadGeography(): Promise<GeographyArea[]> {
 export async function loadCrosswalk(): Promise<CrosswalkEntry[]> {
   if (crosswalkCache) return crosswalkCache;
   
-  const response = await fetch('/src/data/xwalk_plus.csv');
+  const response = await fetch('/data/xwalk_plus.csv');
   const text = await response.text();
   
   crosswalkCache = parseCSV(text, (row) => ({
@@ -114,7 +114,7 @@ export async function loadCrosswalk(): Promise<CrosswalkEntry[]> {
 export async function loadEducationRequirements(): Promise<EducationRequirement[]> {
   if (educationCache) return educationCache;
   
-  const response = await fetch('/src/data/education_requirements.csv');
+  const response = await fetch('/data/education_requirements.csv');
   const text = await response.text();
   
   educationCache = parseCSV(text, (row) => ({
@@ -130,7 +130,7 @@ export async function loadEducationRequirements(): Promise<EducationRequirement[
 export async function loadACWIACrosswalk(): Promise<ACWIACrosswalk[]> {
   if (acwiaCache) return acwiaCache;
   
-  const response = await fetch('/src/data/acwia_crosswalk.csv');
+  const response = await fetch('/data/acwia_crosswalk.csv');
   const text = await response.text();
   
   acwiaCache = parseCSV(text, (row) => ({
