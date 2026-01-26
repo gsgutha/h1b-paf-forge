@@ -29,6 +29,7 @@ const US_STATES = [
 ];
 
 const secondaryWorksiteSchema = z.object({
+  worksiteName: z.string().optional(),
   address1: z.string().min(1, 'Address is required'),
   address2: z.string().optional(),
   city: z.string().min(1, 'City is required'),
@@ -312,6 +313,19 @@ export function WorksiteStep({ data, onNext, onBack }: WorksiteStepProps) {
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <Label htmlFor="secondary-worksiteName">Worksite Name (Company/Client Name)</Label>
+                  <Input
+                    id="secondary-worksiteName"
+                    {...register('secondaryWorksite.worksiteName')}
+                    className="mt-1.5"
+                    placeholder="e.g., Client Site, Branch Office"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Name of the secondary worksite location (optional)
+                  </p>
+                </div>
+
                 <div className="md:col-span-2">
                   <Label htmlFor="secondary-address1">Address Line 1 *</Label>
                   <Input

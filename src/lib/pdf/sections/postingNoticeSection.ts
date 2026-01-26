@@ -56,13 +56,15 @@ export function addPostingNoticeSection(
   
   // Location section
   addSubsectionHeader(ctx, 'Worksite Location(s)');
-  const clientLocation = `${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`;
+  const worksiteNameText = data.worksite.worksiteName ? `${data.worksite.worksiteName}: ` : '';
+  const clientLocation = `${worksiteNameText}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`;
   addLabelValue(ctx, 'Primary Worksite', clientLocation, 50);
   
   // Secondary worksite if present
   if (data.worksite.hasSecondaryWorksite && data.worksite.secondaryWorksite) {
     const secondary = data.worksite.secondaryWorksite;
-    const secondaryLocation = `${secondary.address1}${secondary.address2 ? ', ' + secondary.address2 : ''}, ${secondary.city}, ${secondary.state} ${secondary.postalCode}`;
+    const secondaryNameText = secondary.worksiteName ? `${secondary.worksiteName}: ` : '';
+    const secondaryLocation = `${secondaryNameText}${secondary.address1}${secondary.address2 ? ', ' + secondary.address2 : ''}, ${secondary.city}, ${secondary.state} ${secondary.postalCode}`;
     addLabelValue(ctx, 'Secondary Worksite', secondaryLocation, 50);
     
     if (secondary.county) {
@@ -72,11 +74,12 @@ export function addPostingNoticeSection(
   
   ctx.yPos += 5;
   
-  // Display Areas
-  addSubsectionHeader(ctx, 'Display Areas');
-  const location1 = supportingDocs?.noticePostingLocation || `${data.employer.legalBusinessName} Notice Board`;
+  // Display Areas - Two conspicuous locations as per DOL requirements
+  addSubsectionHeader(ctx, 'Display Areas (Two Conspicuous Locations)');
+  const location1 = supportingDocs?.noticePostingLocation || `${data.employer.legalBusinessName} - Location 1`;
+  const location2 = supportingDocs?.noticePostingLocation2 || `${data.employer.legalBusinessName} - Location 2`;
   addLabelValue(ctx, 'Display Area 1', location1, 45);
-  addLabelValue(ctx, 'Display Area 2', 'Company Intranet / Electronic Posting', 45);
+  addLabelValue(ctx, 'Display Area 2', location2, 45);
   
   ctx.yPos += 10;
   

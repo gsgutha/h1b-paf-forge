@@ -47,6 +47,7 @@ export interface JobDetails {
 }
 
 export interface SecondaryWorksite {
+  worksiteName?: string;
   address1: string;
   address2?: string;
   city: string;

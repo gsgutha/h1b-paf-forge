@@ -132,7 +132,7 @@ export function addBoldParagraph(ctx: PDFContext, text: string, fontSize: number
   ctx.yPos += lines.length * 5 + 3;
 }
 
-export function addSignatureLine(ctx: PDFContext, name: string, title?: string, companyName?: string): void {
+export function addSignatureLine(ctx: PDFContext, name: string, title?: string, companyName?: string, includeDate: boolean = true): void {
   checkPageBreak(ctx, 35);
   ctx.yPos += 10;
   ctx.doc.setDrawColor(...PDF_CONFIG.colors.black);

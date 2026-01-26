@@ -204,6 +204,15 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
             <DataRow label="County" value={data.worksite.county} />
             <DataRow label="Wage Area" value={data.worksite.areaName} />
             <DataRow label="Area Code" value={data.worksite.areaCode} />
+            {data.worksite.hasSecondaryWorksite && data.worksite.secondaryWorksite && (
+              <div className="border-t border-border mt-3 pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Secondary Worksite</p>
+                <DataRow label="Worksite Name" value={data.worksite.secondaryWorksite.worksiteName} />
+                <DataRow label="Address" value={`${data.worksite.secondaryWorksite.address1}${data.worksite.secondaryWorksite.address2 ? `, ${data.worksite.secondaryWorksite.address2}` : ''}`} />
+                <DataRow label="City, State ZIP" value={`${data.worksite.secondaryWorksite.city}, ${data.worksite.secondaryWorksite.state} ${data.worksite.secondaryWorksite.postalCode}`} />
+                <DataRow label="County" value={data.worksite.secondaryWorksite.county} />
+              </div>
+            )}
           </SectionCard>
 
           <SectionCard title="Wage Information" icon={FileText} onEdit={() => onEdit(4)}>
@@ -239,7 +248,8 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
             <SectionCard title="Notice & Benefits" icon={Bell} onEdit={() => onEdit(5)}>
               <DataRow label="Posting Start" value={supportingDocs.noticePostingStartDate ? formatDate(supportingDocs.noticePostingStartDate) : 'Not recorded'} />
               <DataRow label="Posting End" value={supportingDocs.noticePostingEndDate ? formatDate(supportingDocs.noticePostingEndDate) : 'Not recorded'} />
-              <DataRow label="Posting Location" value={supportingDocs.noticePostingLocation} />
+              <DataRow label="Posting Location 1" value={supportingDocs.noticePostingLocation || 'Not provided'} />
+              <DataRow label="Posting Location 2" value={supportingDocs.noticePostingLocation2 || 'Not provided'} />
               <DataRow label="Posting Proof" value={supportingDocs.noticePostingProof?.name || 'Not uploaded'} />
               <DataRow label="Benefits Comparison" value={supportingDocs.benefitsNotes ? 'Documented' : 'Not provided'} />
             </SectionCard>
