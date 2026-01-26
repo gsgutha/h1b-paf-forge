@@ -3,7 +3,7 @@ import type { PDFContext } from './pdfHelpers';
 import { PDF_CONFIG, checkPageBreak, addPageHeader } from './pdfHelpers';
 
 // Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 /**
  * Converts a File to an ArrayBuffer
