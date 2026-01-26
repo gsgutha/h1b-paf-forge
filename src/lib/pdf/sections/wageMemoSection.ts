@@ -10,6 +10,7 @@ import {
   addSignatureLine,
   checkPageBreak,
   formatCurrency,
+  formatDate,
 } from '../pdfHelpers';
 
 export function addWageMemoSection(
@@ -28,9 +29,36 @@ export function addWageMemoSection(
   
   ctx.yPos += 10;
   
-  // Introduction paragraph
-  const introPara = `This memorandum is prepared in accordance with the regulations of the U.S. Department of Labor (DOL) at 20 CFR Section 655.700 regarding the Labor Condition Application (LCA) filed by ${data.employer.legalBusinessName} for the position of ${data.job.jobTitle} located at: ${data.worksite.address1}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`;
+  // Employee name for personalization
+  const employeeName = data.employer.employeeName || 'the H-1B worker';
+  
+  // Introduction paragraph with populated data
+  const introPara = `This memorandum is prepared in accordance with the regulations of the U.S. Department of Labor (DOL) at 20 CFR Section 655.700 regarding the Labor Condition Application (LCA) filed by ${data.employer.legalBusinessName} for the position of ${data.job.jobTitle} for ${employeeName} located at: ${data.worksite.worksiteName ? data.worksite.worksiteName + ', ' : ''}${data.worksite.address1}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`;
   addParagraph(ctx, introPara);
+  
+  ctx.yPos += 5;
+  
+  // Position Details Section
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('POSITION DETAILS', margin, ctx.yPos);
+  ctx.yPos += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  
+  const positionDetails = [
+    `Position Title: ${data.job.jobTitle}`,
+    `SOC Code: ${data.job.socCode} - ${data.job.socTitle}`,
+    data.job.onetCode ? `O*NET Code: ${data.job.onetCode}${data.job.onetTitle ? ' - ' + data.job.onetTitle : ''}` : '',
+    `Employment Period: ${formatDate(data.job.beginDate)} to ${formatDate(data.job.endDate)}`,
+    `Employment Type: ${data.job.isFullTime ? 'Full-Time' : 'Part-Time'}`,
+    `Workers Needed: ${data.job.workersNeeded}`,
+  ].filter(Boolean);
+  
+  positionDetails.forEach(detail => {
+    doc.text(detail, margin, ctx.yPos);
+    ctx.yPos += 6;
+  });
   
   ctx.yPos += 5;
   
@@ -41,7 +69,7 @@ export function addWageMemoSection(
   const higherWage = Math.max(actualWage, prevailingWage);
   const wageSource = actualWage >= prevailingWage ? 'actual wage' : 'prevailing wage';
   
-  const wageConfirmation = `WAGE CONFIRMATION: The H-1B worker will be paid ${formatCurrency(higherWage, data.wage.actualWageUnit)}, which is the HIGHER of the actual wage (${formatCurrency(actualWage, data.wage.actualWageUnit)}) or the prevailing wage (${formatCurrency(prevailingWage, data.wage.prevailingWageUnit)}), as required by 20 CFR § 655.731(a).`;
+  const wageConfirmation = `WAGE CONFIRMATION: ${employeeName} will be paid ${formatCurrency(higherWage, data.wage.actualWageUnit)}, which is the HIGHER of the actual wage (${formatCurrency(actualWage, data.wage.actualWageUnit)}) or the prevailing wage (${formatCurrency(prevailingWage, data.wage.prevailingWageUnit)}), as required by 20 CFR § 655.731(a).`;
   
   // Draw highlighted confirmation box
   doc.setFillColor(...PDF_CONFIG.colors.lightGray);
@@ -54,8 +82,32 @@ export function addWageMemoSection(
   
   doc.setFont('helvetica', 'normal');
   
+  // Prevailing Wage Details
+  ctx.yPos += 5;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('PREVAILING WAGE INFORMATION', margin, ctx.yPos);
+  ctx.yPos += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  
+  const pwDetails = [
+    `Prevailing Wage: ${formatCurrency(prevailingWage, data.wage.prevailingWageUnit)}`,
+    `Wage Level: ${data.wage.wageLevel}`,
+    `Wage Source: ${data.wage.wageSource}`,
+    `Wage Source Date: ${formatDate(data.wage.wageSourceDate)}`,
+    `Wage Area: ${data.worksite.areaName || data.worksite.city + ', ' + data.worksite.state}`,
+  ];
+  
+  pwDetails.forEach(detail => {
+    doc.text(detail, margin, ctx.yPos);
+    ctx.yPos += 6;
+  });
+  
+  ctx.yPos += 5;
+  
   // Wage statement
-  const wageStatement = `Pursuant to the LCA, the ${data.job.jobTitle} will be paid at a rate of ${formatCurrency(data.job.wageRateFrom, data.job.wageUnit)}. In determining the wage for the position the following factors were considered:`;
+  const wageStatement = `Pursuant to the LCA, ${employeeName} for the position of ${data.job.jobTitle} will be paid at a rate of ${formatCurrency(data.job.wageRateFrom, data.job.wageUnit)}${data.job.wageRateTo ? ' to ' + formatCurrency(data.job.wageRateTo, data.job.wageUnit) : ''}. In determining the wage for the position the following factors were considered:`;
   addParagraph(ctx, wageStatement);
   
   ctx.yPos += 5;
@@ -110,9 +162,9 @@ export function addWageMemoSection(
     });
   }
   
-  // Signature
+  // Signature without date
   ctx.yPos += 15;
   const signerName = data.employer.signingAuthorityName || 'Authorized Representative';
   const signerTitle = data.employer.signingAuthorityTitle || undefined;
-  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
+  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName, false);
 }

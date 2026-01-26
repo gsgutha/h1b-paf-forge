@@ -16,6 +16,7 @@ export interface SupportingDocs {
   noticePostingStartDate: string;
   noticePostingEndDate: string;
   noticePostingLocation: string;
+  noticePostingLocation2: string;
   benefitsComparisonFile: File | null;
   benefitsNotes: string;
 }
@@ -125,6 +126,7 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
     noticePostingStartDate: data.noticePostingStartDate || '',
     noticePostingEndDate: data.noticePostingEndDate || '',
     noticePostingLocation: data.noticePostingLocation || '',
+    noticePostingLocation2: data.noticePostingLocation2 || '',
     benefitsComparisonFile: data.benefitsComparisonFile || null,
     benefitsNotes: data.benefitsNotes || getDefaultBenefitsNotes(),
   });
@@ -322,14 +324,31 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
                     </p>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="noticePostingLocation">Posting Location</Label>
-                  <Input
-                    id="noticePostingLocation"
-                    placeholder="e.g., Company intranet, break room bulletin board"
-                    value={formData.noticePostingLocation}
-                    onChange={(e) => updateField('noticePostingLocation', e.target.value)}
-                  />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="noticePostingLocation">Posting Location 1 *</Label>
+                    <Input
+                      id="noticePostingLocation"
+                      placeholder="e.g., Main lobby bulletin board"
+                      value={formData.noticePostingLocation}
+                      onChange={(e) => updateField('noticePostingLocation', e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      First conspicuous location
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="noticePostingLocation2">Posting Location 2 *</Label>
+                    <Input
+                      id="noticePostingLocation2"
+                      placeholder="e.g., Break room bulletin board"
+                      value={formData.noticePostingLocation2}
+                      onChange={(e) => updateField('noticePostingLocation2', e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Second conspicuous location
+                    </p>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
