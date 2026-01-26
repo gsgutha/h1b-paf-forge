@@ -83,10 +83,10 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
 
   const handleDownload = () => {
     try {
-      downloadPAF(data);
+      downloadPAF(data, supportingDocs);
       toast({
         title: "PAF Downloaded!",
-        description: "Your Public Access File has been saved to your downloads folder.",
+        description: "Your complete Public Access File has been saved to your downloads folder.",
       });
       onGenerate();
     } catch (error) {
@@ -100,7 +100,7 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
 
   const handlePrint = () => {
     try {
-      printPAF(data);
+      printPAF(data, supportingDocs);
     } catch (error) {
       toast({
         title: "Print Failed",
