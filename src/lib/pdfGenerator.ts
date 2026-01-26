@@ -10,6 +10,8 @@ import { addPrevailingWageSection } from './pdf/sections/prevailingWageSection';
 import { addPostingNoticeSection } from './pdf/sections/postingNoticeSection';
 import { addBenefitsSection } from './pdf/sections/benefitsSection';
 import { addWorkerReceiptSection } from './pdf/sections/workerReceiptSection';
+import { addH1BDependencySection } from './pdf/sections/h1bDependencySection';
+import { addRecruitmentSummarySection } from './pdf/sections/recruitmentSummarySection';
 
 export interface PAFDocumentOptions {
   includeLCA?: boolean;
@@ -18,6 +20,8 @@ export interface PAFDocumentOptions {
   includePostingNotice?: boolean;
   includeBenefits?: boolean;
   includeWorkerReceipt?: boolean;
+  includeH1BDependency?: boolean;
+  includeRecruitmentSummary?: boolean;
 }
 
 const defaultOptions: PAFDocumentOptions = {
@@ -27,6 +31,8 @@ const defaultOptions: PAFDocumentOptions = {
   includePostingNotice: true,
   includeBenefits: true,
   includeWorkerReceipt: true,
+  includeH1BDependency: true,
+  includeRecruitmentSummary: true,
 };
 
 /**
@@ -70,7 +76,17 @@ export async function generatePAFDocument(
     await addBenefitsSection(ctx, data, supportingDocs);
   }
   
-  // 7. Worker Receipt Statement
+  // 7. H-1B Dependency and Willful Violator Status
+  if (mergedOptions.includeH1BDependency) {
+    addH1BDependencySection(ctx, data);
+  }
+  
+  // 8. Recruitment Summary (only for H-1B dependent employers)
+  if (mergedOptions.includeRecruitmentSummary) {
+    addRecruitmentSummarySection(ctx, data, supportingDocs);
+  }
+  
+  // 9. Worker Receipt Statement
   if (mergedOptions.includeWorkerReceipt) {
     addWorkerReceiptSection(ctx, data, supportingDocs);
   }
