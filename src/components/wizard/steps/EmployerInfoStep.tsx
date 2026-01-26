@@ -37,6 +37,9 @@ const employerSchema = z.object({
   telephone: z.string().min(10, 'Valid phone number required'),
   fein: z.string().min(9, 'Valid FEIN required').max(11),
   naicsCode: z.string().min(4, 'Valid NAICS code required'),
+  signingAuthorityName: z.string().optional(),
+  signingAuthorityTitle: z.string().optional(),
+  employeeName: z.string().optional(),
 });
 
 interface EmployerInfoStepProps {
@@ -208,6 +211,48 @@ export function EmployerInfoStep({ data, onNext }: EmployerInfoStepProps) {
             {errors.naicsCode && (
               <p className="mt-1 text-sm text-destructive">{errors.naicsCode.message}</p>
             )}
+          </div>
+        </div>
+
+        {/* Employee & Signing Authority Section */}
+        <div className="border-t border-border pt-6 mt-6">
+          <h3 className="text-lg font-medium text-foreground mb-4">Employee & Signing Authority</h3>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <Label htmlFor="employeeName">H-1B Worker Full Name</Label>
+              <Input
+                id="employeeName"
+                {...register('employeeName')}
+                className="mt-1.5"
+                placeholder="e.g., John A. Smith"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                This name will appear on the Worker Receipt Acknowledgement
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="signingAuthorityName">Signing Authority Name</Label>
+              <Input
+                id="signingAuthorityName"
+                {...register('signingAuthorityName')}
+                className="mt-1.5"
+                placeholder="e.g., Jane Doe"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Person authorized to sign employer documents
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="signingAuthorityTitle">Signing Authority Title</Label>
+              <Input
+                id="signingAuthorityTitle"
+                {...register('signingAuthorityTitle')}
+                className="mt-1.5"
+                placeholder="e.g., HR Director"
+              />
+            </div>
           </div>
         </div>
 

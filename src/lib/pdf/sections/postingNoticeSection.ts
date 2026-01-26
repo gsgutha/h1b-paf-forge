@@ -41,13 +41,15 @@ export function addPostingNoticeSection(
     ctx.yPos += 10;
   }
   
-  // Posting certification
-  const postingDate = supportingDocs?.noticePostingDate 
-    ? parseLocalDate(supportingDocs.noticePostingDate)
+  // Posting dates - use manual dates if provided, otherwise fall back to defaults
+  const postingStartDate = supportingDocs?.noticePostingStartDate 
+    ? parseLocalDate(supportingDocs.noticePostingStartDate)
     : new Date();
-  const postingEndDate = addDays(postingDate, 14); // 10 business days ≈ 14 calendar days
+  const postingEndDate = supportingDocs?.noticePostingEndDate
+    ? parseLocalDate(supportingDocs.noticePostingEndDate)
+    : addDays(postingStartDate, 14); // Default: 10 business days ≈ 14 calendar days
   
-  const certText = `This is to certify that Labor Condition Application for the position of ${data.job.jobTitle} was posted for 10 business days from ${format(postingDate, 'MM/dd/yyyy')} to ${format(postingEndDate, 'MM/dd/yyyy')} in the below mentioned place of employment.`;
+  const certText = `This is to certify that Labor Condition Application for the position of ${data.job.jobTitle} was posted for 10 business days from ${format(postingStartDate, 'MM/dd/yyyy')} to ${format(postingEndDate, 'MM/dd/yyyy')} in the below mentioned place of employment.`;
   addParagraph(ctx, certText);
   
   ctx.yPos += 5;
@@ -88,8 +90,8 @@ export function addPostingNoticeSection(
   
   // Signature
   ctx.yPos += 10;
-  const signerName = supportingDocs?.signingAuthorityName || 'Authorized Representative';
-  const signerTitle = supportingDocs?.signingAuthorityTitle || undefined;
+  const signerName = data.employer.signingAuthorityName || 'Authorized Representative';
+  const signerTitle = data.employer.signingAuthorityTitle || undefined;
   addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
   
   // ----- Page 2: LCA Posting Notice -----

@@ -10,6 +10,9 @@ export interface Employer {
   telephone: string;
   fein: string;
   naicsCode: string;
+  signingAuthorityName?: string;
+  signingAuthorityTitle?: string;
+  employeeName?: string;
 }
 
 export interface EmployerContact {
@@ -53,6 +56,7 @@ export interface SecondaryWorksite {
 }
 
 export interface WorksiteLocation {
+  worksiteName?: string;
   address1: string;
   address2?: string;
   city: string;
