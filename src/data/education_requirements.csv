@@ -1,4 +1,4 @@
-OnetCode,Occupation,Education,Source
+onetCode,occupation,education,source
 11-1011.00,Chief Executives,Bachelor's degree,BLS Data
 11-1011.03,Chief Sustainability Officers,Bachelor's degree,BLS Data
 11-1021.00,General and Operations Managers,Bachelor's degree,BLS Data
@@ -26,30 +26,30 @@ OnetCode,Occupation,Education,Source
 11-3121.00,Human Resources Managers,Bachelor's degree,BLS Data
 11-3131.00,Training and Development Managers,Bachelor's degree,BLS Data
 11-9021.00,Construction Managers,Bachelor's degree,BLS Data
-11-9031.00,"Education and Childcare Administrators, Preschool and Daycare",Bachelor's degree,BLS Data
-11-9032.00,"Education Administrators, Kindergarten through Secondary",Master's degree,BLS Data
-11-9033.00,"Education Administrators, Postsecondary",Master's degree,BLS Data
-11-9039.00,"Education Administrators, All Other",Bachelor's degree,BLS Data
+11-9031.00,Education and Childcare Administrators Preschool and Daycare,Bachelor's degree,BLS Data
+11-9032.00,Education Administrators Kindergarten through Secondary,Master's degree,BLS Data
+11-9033.00,Education Administrators Postsecondary,Master's degree,BLS Data
+11-9039.00,Education Administrators All Other,Bachelor's degree,BLS Data
 11-9041.00,Architectural and Engineering Managers,Bachelor's degree,BLS Data
 11-9041.01,Biofuels/Biodiesel Technology and Product Development Managers,Bachelor's degree,BLS Data
-11-9072.00,"Entertainment and Recreation Managers, Except Gambling",Bachelor's degree,BLS Data
+11-9072.00,Entertainment and Recreation Managers Except Gambling,Bachelor's degree,BLS Data
 11-9111.00,Medical and Health Services Managers,Bachelor's degree,BLS Data
 11-9121.00,Natural Sciences Managers,Bachelor's degree,BLS Data
 11-9121.01,Clinical Research Coordinators,Bachelor's degree,BLS Data
 11-9121.02,Water Resource Specialists,Bachelor's degree,BLS Data
 11-9151.00,Social and Community Service Managers,Bachelor's degree,BLS Data
 11-9161.00,Emergency Management Directors,Bachelor's degree,BLS Data
-11-9199.00,"Managers, All Other",Bachelor's degree,BLS Data
+11-9199.00,Managers All Other,Bachelor's degree,BLS Data
 11-9199.01,Regulatory Affairs Managers,Bachelor's degree,BLS Data
 11-9199.02,Compliance Managers,Bachelor's degree,BLS Data
 11-9199.08,Loss Prevention Managers,Bachelor's degree,BLS Data
 11-9199.09,Wind Energy Operations Managers,Bachelor's degree,BLS Data
 11-9199.10,Wind Energy Development Managers,Bachelor's degree,BLS Data
 11-9199.11,Brownfield Redevelopment Specialists and Site Managers,Bachelor's degree,BLS Data
-13-1011.00,"Agents and Business Managers of Artists, Performers, and Athletes",Bachelor's degree,BLS Data
-13-1021.00,"Buyers and Purchasing Agents, Farm Products",Bachelor's degree,SOC Broad Occupation Group
-13-1022.00,"Wholesale and Retail Buyers, Except Farm Products",Bachelor's degree,SOC Broad Occupation Group
-13-1023.00,"Purchasing Agents, Except Wholesale, Retail, and Farm Products",Bachelor's degree,SOC Broad Occupation Group
+13-1011.00,Agents and Business Managers of Artists Performers and Athletes,Bachelor's degree,BLS Data
+13-1021.00,Buyers and Purchasing Agents Farm Products,Bachelor's degree,SOC Broad Occupation Group
+13-1022.00,Wholesale and Retail Buyers Except Farm Products,Bachelor's degree,SOC Broad Occupation Group
+13-1023.00,Purchasing Agents Except Wholesale Retail and Farm Products,Bachelor's degree,SOC Broad Occupation Group
 13-1041.00,Compliance Officers,Bachelor's degree,BLS Data
 13-1041.01,Environmental Compliance Inspectors,Bachelor's degree,BLS Data
 13-1041.03,Equal Opportunity Representatives and Officers,Bachelor's degree,BLS Data
@@ -65,20 +65,20 @@ OnetCode,Occupation,Education,Source
 13-1081.02,Logistics Analysts,Bachelor's degree,BLS Data
 13-1082.00,Project Management Specialists,Bachelor's degree,BLS Data
 13-1111.00,Management Analysts,Bachelor's degree,BLS Data
-13-1121.00,Meeting and Event Planners,Bachelor's degree,BLS Data
+13-1121.00,Meeting Convention and Event Planners,Bachelor's degree,BLS Data
 13-1131.00,Fundraisers,Bachelor's degree,BLS Data
-13-1141.00,Compensation and Benefits Specialists,Bachelor's degree,BLS Data
+13-1141.00,Compensation Benefits and Job Analysis Specialists,Bachelor's degree,BLS Data
 13-1151.00,Training and Development Specialists,Bachelor's degree,BLS Data
 13-1161.00,Market Research Analysts and Marketing Specialists,Bachelor's degree,BLS Data
 13-1161.01,Search Marketing Strategists,Bachelor's degree,BLS Data
-13-1199.00,"Business Operations Specialists, All Other",Bachelor's degree,BLS Data
-13-1199.01,Energy Auditors,Bachelor's degree,BLS Data
-13-1199.02,Security Management Specialists,Bachelor's degree,BLS Data
+13-1199.00,Business Operations Specialists All Other,Bachelor's degree,BLS Data
 13-1199.04,Business Continuity Planners,Bachelor's degree,BLS Data
 13-1199.05,Sustainability Specialists,Bachelor's degree,BLS Data
 13-1199.06,Online Merchants,Bachelor's degree,BLS Data
+13-1199.07,Security Management Specialists,Bachelor's degree,BLS Data
 13-2011.00,Accountants and Auditors,Bachelor's degree,BLS Data
-13-2022.00,Appraisers of Personal and Business Property,Bachelor's degree,BLS Data
+13-2022.00,Appraisers of Personal and Business Property,Bachelor's degree,SOC Broad Occupation Group
+13-2023.00,Appraisers and Assessors of Real Estate,Bachelor's degree,SOC Broad Occupation Group
 13-2031.00,Budget Analysts,Bachelor's degree,BLS Data
 13-2041.00,Credit Analysts,Bachelor's degree,BLS Data
 13-2051.00,Financial and Investment Analysts,Bachelor's degree,BLS Data
@@ -86,43 +86,53 @@ OnetCode,Occupation,Education,Source
 13-2053.00,Insurance Underwriters,Bachelor's degree,BLS Data
 13-2054.00,Financial Risk Specialists,Bachelor's degree,BLS Data
 13-2061.00,Financial Examiners,Bachelor's degree,BLS Data
+13-2071.00,Credit Counselors,Bachelor's degree,BLS Data
 13-2072.00,Loan Officers,Bachelor's degree,BLS Data
 13-2081.00,Tax Examiners and Collectors and Revenue Agents,Bachelor's degree,BLS Data
-13-2082.00,Tax Preparers,High school diploma or equivalent,BLS Data
-13-2099.00,"Financial Specialists, All Other",Bachelor's degree,BLS Data
+13-2099.00,Financial Specialists All Other,Bachelor's degree,BLS Data
+13-2099.01,Financial Quantitative Analysts,Bachelor's degree,BLS Data
+13-2099.04,Fraud Examiners Investigators and Analysts,Bachelor's degree,BLS Data
 15-1211.00,Computer Systems Analysts,Bachelor's degree,BLS Data
+15-1211.01,Health Informatics Specialists,Bachelor's degree,BLS Data
 15-1212.00,Information Security Analysts,Bachelor's degree,BLS Data
 15-1221.00,Computer and Information Research Scientists,Master's degree,BLS Data
-15-1231.00,Computer Network Support Specialists,Associate's degree,BLS Data
-15-1232.00,Computer User Support Specialists,Some college no degree,BLS Data
 15-1241.00,Computer Network Architects,Bachelor's degree,BLS Data
 15-1241.01,Telecommunications Engineering Specialists,Bachelor's degree,BLS Data
+15-1242.00,Database Administrators,Bachelor's degree,BLS Data
+15-1243.00,Database Architects,Bachelor's degree,BLS Data
+15-1243.01,Data Warehousing Specialists,Bachelor's degree,BLS Data
 15-1244.00,Network and Computer Systems Administrators,Bachelor's degree,BLS Data
 15-1251.00,Computer Programmers,Bachelor's degree,BLS Data
 15-1252.00,Software Developers,Bachelor's degree,BLS Data
 15-1253.00,Software Quality Assurance Analysts and Testers,Bachelor's degree,BLS Data
-15-1254.00,Web Developers,Associate's degree,BLS Data
-15-1255.00,Web and Digital Interface Designers,Associate's degree,BLS Data
+15-1254.00,Web Developers,Bachelor's degree,BLS Data
+15-1255.00,Web and Digital Interface Designers,Bachelor's degree,BLS Data
 15-1255.01,Video Game Designers,Bachelor's degree,BLS Data
-15-1299.00,"Computer Occupations, All Other",Bachelor's degree,BLS Data
+15-1299.00,Computer Occupations All Other,Bachelor's degree,BLS Data
 15-1299.01,Web Administrators,Bachelor's degree,BLS Data
 15-1299.02,Geographic Information Systems Technologists and Technicians,Bachelor's degree,BLS Data
 15-1299.03,Document Management Specialists,Bachelor's degree,BLS Data
 15-1299.04,Penetration Testers,Bachelor's degree,BLS Data
-15-1299.05,Information Technology Project Managers,Bachelor's degree,BLS Data
+15-1299.05,Information Security Engineers,Bachelor's degree,BLS Data
 15-1299.06,Digital Forensics Analysts,Bachelor's degree,BLS Data
 15-1299.07,Blockchain Engineers,Bachelor's degree,BLS Data
 15-1299.08,Computer Systems Engineers/Architects,Bachelor's degree,BLS Data
-15-1299.09,Data Warehousing Specialists,Bachelor's degree,BLS Data
+15-1299.09,Information Technology Project Managers,Bachelor's degree,BLS Data
 15-2011.00,Actuaries,Bachelor's degree,BLS Data
 15-2021.00,Mathematicians,Master's degree,BLS Data
 15-2031.00,Operations Research Analysts,Bachelor's degree,BLS Data
 15-2041.00,Statisticians,Master's degree,BLS Data
+15-2041.01,Biostatisticians,Master's degree,BLS Data
 15-2051.00,Data Scientists,Bachelor's degree,BLS Data
-15-2099.00,"Mathematical Science Occupations, All Other",Bachelor's degree,BLS Data
-17-1011.00,Architects,Bachelor's degree,BLS Data
+15-2051.01,Business Intelligence Analysts,Bachelor's degree,BLS Data
+15-2051.02,Clinical Data Managers,Bachelor's degree,BLS Data
+15-2099.00,Mathematical Science Occupations All Other,Bachelor's degree,BLS Data
+15-2099.01,Bioinformatics Technicians,Bachelor's degree,BLS Data
+17-1011.00,Architects Except Landscape and Naval,Bachelor's degree,BLS Data
 17-1012.00,Landscape Architects,Bachelor's degree,BLS Data
+17-1021.00,Cartographers and Photogrammetrists,Bachelor's degree,BLS Data
 17-1022.00,Surveyors,Bachelor's degree,BLS Data
+17-1022.01,Geodetic Surveyors,Bachelor's degree,BLS Data
 17-2011.00,Aerospace Engineers,Bachelor's degree,BLS Data
 17-2021.00,Agricultural Engineers,Bachelor's degree,BLS Data
 17-2031.00,Bioengineers and Biomedical Engineers,Bachelor's degree,BLS Data
@@ -132,10 +142,11 @@ OnetCode,Occupation,Education,Source
 17-2051.02,Water/Wastewater Engineers,Bachelor's degree,BLS Data
 17-2061.00,Computer Hardware Engineers,Bachelor's degree,BLS Data
 17-2071.00,Electrical Engineers,Bachelor's degree,BLS Data
-17-2072.00,"Electronics Engineers, Except Computer",Bachelor's degree,BLS Data
+17-2072.00,Electronics Engineers Except Computer,Bachelor's degree,BLS Data
 17-2072.01,Radio Frequency Identification Device Specialists,Bachelor's degree,BLS Data
 17-2081.00,Environmental Engineers,Bachelor's degree,BLS Data
-17-2111.00,"Health and Safety Engineers, Except Mining Safety Engineers",Bachelor's degree,BLS Data
+17-2111.00,Health and Safety Engineers Except Mining Safety Engineers and Inspectors,Bachelor's degree,BLS Data
+17-2111.02,Fire-Prevention and Protection Engineers,Bachelor's degree,BLS Data
 17-2112.00,Industrial Engineers,Bachelor's degree,BLS Data
 17-2112.01,Human Factors Engineers and Ergonomists,Bachelor's degree,BLS Data
 17-2112.02,Validation Engineers,Bachelor's degree,BLS Data
@@ -145,12 +156,11 @@ OnetCode,Occupation,Education,Source
 17-2141.00,Mechanical Engineers,Bachelor's degree,BLS Data
 17-2141.01,Fuel Cell Engineers,Bachelor's degree,BLS Data
 17-2141.02,Automotive Engineers,Bachelor's degree,BLS Data
-17-2151.00,Mining and Geological Engineers,Bachelor's degree,BLS Data
+17-2151.00,Mining and Geological Engineers Including Mining Safety Engineers,Bachelor's degree,BLS Data
 17-2161.00,Nuclear Engineers,Bachelor's degree,BLS Data
 17-2171.00,Petroleum Engineers,Bachelor's degree,BLS Data
-17-2199.00,"Engineers, All Other",Bachelor's degree,BLS Data
-17-2199.01,Biochemical Engineers,Bachelor's degree,BLS Data
-17-2199.03,Energy Engineers,Bachelor's degree,BLS Data
+17-2199.00,Engineers All Other,Bachelor's degree,BLS Data
+17-2199.03,Energy Engineers Except Wind and Solar,Bachelor's degree,BLS Data
 17-2199.05,Mechatronics Engineers,Bachelor's degree,BLS Data
 17-2199.06,Microsystems Engineers,Bachelor's degree,BLS Data
 17-2199.07,Photonics Engineers,Bachelor's degree,BLS Data
@@ -158,47 +168,239 @@ OnetCode,Occupation,Education,Source
 17-2199.09,Nanosystems Engineers,Bachelor's degree,BLS Data
 17-2199.10,Wind Energy Engineers,Bachelor's degree,BLS Data
 17-2199.11,Solar Energy Systems Engineers,Bachelor's degree,BLS Data
-19-1011.00,Animal Scientists,Doctoral or professional degree,BLS Data
+19-1011.00,Animal Scientists,Bachelor's degree,BLS Data
 19-1012.00,Food Scientists and Technologists,Bachelor's degree,BLS Data
 19-1013.00,Soil and Plant Scientists,Bachelor's degree,BLS Data
 19-1021.00,Biochemists and Biophysicists,Doctoral or professional degree,BLS Data
 19-1022.00,Microbiologists,Bachelor's degree,BLS Data
 19-1023.00,Zoologists and Wildlife Biologists,Bachelor's degree,BLS Data
-19-1029.00,"Biological Scientists, All Other",Bachelor's degree,BLS Data
-19-1029.01,Bioinformatics Scientists,Master's degree,BLS Data
-19-1029.02,Molecular and Cellular Biologists,Doctoral or professional degree,BLS Data
+19-1029.00,Biological Scientists All Other,Bachelor's degree,BLS Data
+19-1029.01,Bioinformatics Scientists,Bachelor's degree,BLS Data
+19-1029.02,Molecular and Cellular Biologists,Bachelor's degree,BLS Data
+19-1029.03,Geneticists,Bachelor's degree,BLS Data
+19-1029.04,Biologists,Bachelor's degree,BLS Data
 19-1031.00,Conservation Scientists,Bachelor's degree,BLS Data
+19-1031.02,Range Managers,Bachelor's degree,BLS Data
+19-1031.03,Park Naturalists,Bachelor's degree,BLS Data
 19-1032.00,Foresters,Bachelor's degree,BLS Data
 19-1041.00,Epidemiologists,Master's degree,BLS Data
-19-1042.00,Medical Scientists,Doctoral or professional degree,BLS Data
+19-1042.00,Medical Scientists Except Epidemiologists,Doctoral or professional degree,BLS Data
+19-1099.00,Life Scientists All Other,Bachelor's degree,BLS Data
 19-2011.00,Astronomers,Doctoral or professional degree,BLS Data
 19-2012.00,Physicists,Doctoral or professional degree,BLS Data
 19-2021.00,Atmospheric and Space Scientists,Bachelor's degree,BLS Data
 19-2031.00,Chemists,Bachelor's degree,BLS Data
 19-2032.00,Materials Scientists,Bachelor's degree,BLS Data
-19-2041.00,Environmental Scientists and Specialists,Bachelor's degree,BLS Data
-19-2041.01,Climate Change Policy Analysts,Master's degree,BLS Data
+19-2041.00,Environmental Scientists and Specialists Including Health,Bachelor's degree,BLS Data
+19-2041.01,Climate Change Policy Analysts,Bachelor's degree,BLS Data
 19-2041.02,Environmental Restoration Planners,Bachelor's degree,BLS Data
 19-2041.03,Industrial Ecologists,Bachelor's degree,BLS Data
-19-2042.00,Geoscientists,Bachelor's degree,BLS Data
+19-2042.00,Geoscientists Except Hydrologists and Geographers,Bachelor's degree,BLS Data
 19-2043.00,Hydrologists,Bachelor's degree,BLS Data
-19-2099.00,"Physical Scientists, All Other",Bachelor's degree,BLS Data
+19-2099.00,Physical Scientists All Other,Bachelor's degree,BLS Data
 19-2099.01,Remote Sensing Scientists and Technologists,Bachelor's degree,BLS Data
 19-3011.00,Economists,Master's degree,BLS Data
+19-3011.01,Environmental Economists,Master's degree,BLS Data
 19-3022.00,Survey Researchers,Master's degree,BLS Data
 19-3032.00,Industrial-Organizational Psychologists,Master's degree,BLS Data
-19-3039.00,"Psychologists, All Other",Master's degree,BLS Data
-19-3039.01,Neuropsychologists,Doctoral or professional degree,BLS Data
-19-3039.02,Clinical Neuropsychologists,Doctoral or professional degree,BLS Data
+19-3033.00,Clinical and Counseling Psychologists,Doctoral or professional degree,BLS Data
+19-3034.00,School Psychologists,Master's degree,BLS Data
+19-3039.00,Psychologists All Other,Master's degree,BLS Data
+19-3039.02,Neuropsychologists,Master's degree,BLS Data
+19-3039.03,Clinical Neuropsychologists,Master's degree,BLS Data
+19-3041.00,Sociologists,Master's degree,BLS Data
+19-3051.00,Urban and Regional Planners,Master's degree,BLS Data
 19-3091.00,Anthropologists and Archeologists,Master's degree,BLS Data
+19-3092.00,Geographers,Bachelor's degree,BLS Data
+19-3093.00,Historians,Master's degree,BLS Data
 19-3094.00,Political Scientists,Master's degree,BLS Data
-19-3099.00,"Social Scientists and Related Workers, All Other",Master's degree,BLS Data
-19-4012.00,Agricultural Technicians,Associate's degree,BLS Data
-19-4013.00,Food Science Technicians,Bachelor's degree,BLS Data
+19-3099.00,Social Scientists and Related Workers All Other,Bachelor's degree,BLS Data
+19-3099.01,Transportation Planners,Bachelor's degree,BLS Data
 19-4021.00,Biological Technicians,Bachelor's degree,BLS Data
-19-4031.00,Chemical Technicians,Associate's degree,BLS Data
-19-4042.00,Environmental Science and Protection Technicians,Associate's degree,BLS Data
-19-4044.00,Hydrologic Technicians,Associate's degree,BLS Data
-19-4051.00,Nuclear Technicians,Associate's degree,BLS Data
-19-4071.00,Forest and Conservation Technicians,Associate's degree,BLS Data
-19-4099.00,"Life, Physical, and Social Science Technicians, All Other",Associate's degree,BLS Data
+19-4061.00,Social Science Research Assistants,Bachelor's degree,BLS Data
+19-4092.00,Forensic Science Technicians,Bachelor's degree,BLS Data
+19-5011.00,Occupational Health and Safety Specialists,Bachelor's degree,BLS Data
+21-1011.00,Substance Abuse and Behavioral Disorder Counselors,Bachelor's degree,SOC Broad Occupation Group
+21-1012.00,Educational Guidance and Career Counselors and Advisors,Master's degree,BLS Data
+21-1013.00,Marriage and Family Therapists,Master's degree,BLS Data
+21-1014.00,Mental Health Counselors,Bachelor's degree,SOC Broad Occupation Group
+21-1015.00,Rehabilitation Counselors,Master's degree,BLS Data
+21-1019.00,Counselors All Other,Master's degree,BLS Data
+21-1021.00,Child Family and School Social Workers,Bachelor's degree,BLS Data
+21-1022.00,Healthcare Social Workers,Master's degree,BLS Data
+21-1023.00,Mental Health and Substance Abuse Social Workers,Master's degree,BLS Data
+21-1029.00,Social Workers All Other,Bachelor's degree,BLS Data
+21-1091.00,Health Education Specialists,Bachelor's degree,BLS Data
+21-1092.00,Probation Officers and Correctional Treatment Specialists,Bachelor's degree,BLS Data
+21-1099.00,Community and Social Service Specialists All Other,Bachelor's degree,BLS Data
+21-2011.00,Clergy,Bachelor's degree,BLS Data
+21-2021.00,Directors Religious Activities and Education,Bachelor's degree,BLS Data
+21-2099.00,Religious Workers All Other,Bachelor's degree,BLS Data
+23-1011.00,Lawyers,Doctoral or professional degree,BLS Data
+23-1012.00,Judicial Law Clerks,Doctoral or professional degree,BLS Data
+23-1021.00,Administrative Law Judges Adjudicators and Hearing Officers,Doctoral or professional degree,BLS Data
+23-1022.00,Arbitrators Mediators and Conciliators,Bachelor's degree,BLS Data
+23-1023.00,Judges Magistrate Judges and Magistrates,Doctoral or professional degree,BLS Data
+25-1011.00,Business Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1021.00,Computer Science Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1022.00,Mathematical Science Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1031.00,Architecture Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1032.00,Engineering Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1041.00,Agricultural Sciences Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1042.00,Biological Science Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1043.00,Forestry and Conservation Science Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1051.00,Atmospheric Earth Marine and Space Sciences Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1052.00,Chemistry Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1053.00,Environmental Science Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1054.00,Physics Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1061.00,Anthropology and Archeology Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1062.00,Area Ethnic and Cultural Studies Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1063.00,Economics Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1064.00,Geography Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1065.00,Political Science Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1066.00,Psychology Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1067.00,Sociology Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1069.00,Social Sciences Teachers Postsecondary All Other,Doctoral or professional degree,BLS Data
+25-1071.00,Health Specialties Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1072.00,Nursing Instructors and Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1081.00,Education Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1082.00,Library Science Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1111.00,Criminal Justice and Law Enforcement Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1112.00,Law Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1113.00,Social Work Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1121.00,Art Drama and Music Teachers Postsecondary,Master's degree,BLS Data
+25-1122.00,Communications Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1123.00,English Language and Literature Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1124.00,Foreign Language and Literature Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1125.00,History Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1126.00,Philosophy and Religion Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1192.00,Family and Consumer Sciences Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1193.00,Recreation and Fitness Studies Teachers Postsecondary,Doctoral or professional degree,BLS Data
+25-1194.00,Career/Technical Education Teachers Postsecondary,Bachelor's degree,BLS Data
+25-1199.00,Postsecondary Teachers All Other,Doctoral or professional degree,BLS Data
+25-2012.00,Kindergarten Teachers Except Special Education,Bachelor's degree,BLS Data
+25-2021.00,Elementary School Teachers Except Special Education,Bachelor's degree,BLS Data
+25-2022.00,Middle School Teachers Except Special and Career/Technical Education,Bachelor's degree,BLS Data
+25-2023.00,Career/Technical Education Teachers Middle School,Bachelor's degree,BLS Data
+25-2031.00,Secondary School Teachers Except Special and Career/Technical Education,Bachelor's degree,BLS Data
+25-2032.00,Career/Technical Education Teachers Secondary School,Bachelor's degree,BLS Data
+25-2051.00,Special Education Teachers Preschool,Bachelor's degree,BLS Data
+25-2055.00,Special Education Teachers Kindergarten,Bachelor's degree,SOC Broad Occupation Group
+25-2056.00,Special Education Teachers Elementary School,Bachelor's degree,SOC Broad Occupation Group
+25-2057.00,Special Education Teachers Middle School,Bachelor's degree,BLS Data
+25-2058.00,Special Education Teachers Secondary School,Bachelor's degree,BLS Data
+25-2059.00,Special Education Teachers All Other,Bachelor's degree,BLS Data
+25-2059.01,Adapted Physical Education Specialists,Bachelor's degree,BLS Data
+25-3011.00,Adult Basic Education Adult Secondary Education and English as a Second Language Instructors,Bachelor's degree,BLS Data
+25-3031.00,Substitute Teachers Short-Term,Bachelor's degree,BLS Data
+25-3099.00,Teachers and Instructors All Other,Bachelor's degree,BLS Data
+25-4011.00,Archivists,Master's degree,BLS Data
+25-4012.00,Curators,Master's degree,BLS Data
+25-4013.00,Museum Technicians and Conservators,Bachelor's degree,BLS Data
+25-4022.00,Librarians and Media Collections Specialists,Master's degree,BLS Data
+25-9021.00,Farm and Home Management Educators,Master's degree,BLS Data
+25-9031.00,Instructional Coordinators,Master's degree,BLS Data
+25-9044.00,Teaching Assistants Postsecondary,Bachelor's degree,BLS Data
+25-9099.00,Educational Instruction and Library Workers All Other,Bachelor's degree,BLS Data
+27-1011.00,Art Directors,Bachelor's degree,BLS Data
+27-1013.00,Fine Artists Including Painters Sculptors and Illustrators,Bachelor's degree,BLS Data
+27-1014.00,Special Effects Artists and Animators,Bachelor's degree,BLS Data
+27-1021.00,Commercial and Industrial Designers,Bachelor's degree,BLS Data
+27-1022.00,Fashion Designers,Bachelor's degree,BLS Data
+27-1024.00,Graphic Designers,Bachelor's degree,BLS Data
+27-1025.00,Interior Designers,Bachelor's degree,BLS Data
+27-1027.00,Set and Exhibit Designers,Bachelor's degree,BLS Data
+27-1029.00,Designers All Other,Bachelor's degree,BLS Data
+27-2012.00,Producers and Directors,Bachelor's degree,BLS Data
+27-2012.03,Media Programming Directors,Bachelor's degree,BLS Data
+27-2012.04,Talent Directors,Bachelor's degree,BLS Data
+27-2012.05,Media Technical Directors/Managers,Bachelor's degree,BLS Data
+27-2022.00,Coaches and Scouts,Bachelor's degree,BLS Data
+27-2041.00,Music Directors and Composers,Bachelor's degree,BLS Data
+27-3011.00,Broadcast Announcers and Radio Disc Jockeys,Bachelor's degree,BLS Data
+27-3023.00,News Analysts Reporters and Journalists,Bachelor's degree,BLS Data
+27-3031.00,Public Relations Specialists,Bachelor's degree,BLS Data
+27-3041.00,Editors,Bachelor's degree,BLS Data
+27-3042.00,Technical Writers,Bachelor's degree,BLS Data
+27-3043.00,Writers and Authors,Bachelor's degree,BLS Data
+27-3043.05,Poets Lyricists and Creative Writers,Bachelor's degree,BLS Data
+27-3091.00,Interpreters and Translators,Bachelor's degree,BLS Data
+27-4031.00,Camera Operators Television Video and Film,Bachelor's degree,BLS Data
+27-4032.00,Film and Video Editors,Bachelor's degree,BLS Data
+29-1011.00,Chiropractors,Doctoral or professional degree,BLS Data
+29-1021.00,Dentists General,Doctoral or professional degree,BLS Data
+29-1022.00,Oral and Maxillofacial Surgeons,Doctoral or professional degree,BLS Data
+29-1023.00,Orthodontists,Doctoral or professional degree,BLS Data
+29-1024.00,Prosthodontists,Doctoral or professional degree,BLS Data
+29-1029.00,Dentists All Other Specialists,Doctoral or professional degree,BLS Data
+29-1031.00,Dietitians and Nutritionists,Bachelor's degree,BLS Data
+29-1041.00,Optometrists,Doctoral or professional degree,BLS Data
+29-1051.00,Pharmacists,Doctoral or professional degree,BLS Data
+29-1071.00,Physician Assistants,Master's degree,BLS Data
+29-1071.01,Anesthesiologist Assistants,Master's degree,BLS Data
+29-1081.00,Podiatrists,Doctoral or professional degree,BLS Data
+29-1122.00,Occupational Therapists,Master's degree,BLS Data
+29-1122.01,Low Vision Therapists Orientation and Mobility Specialists and Vision Rehabilitation Therapists,Master's degree,BLS Data
+29-1123.00,Physical Therapists,Doctoral or professional degree,BLS Data
+29-1125.00,Recreational Therapists,Bachelor's degree,BLS Data
+29-1127.00,Speech-Language Pathologists,Master's degree,BLS Data
+29-1128.00,Exercise Physiologists,Bachelor's degree,BLS Data
+29-1129.00,Therapists All Other,Bachelor's degree,BLS Data
+29-1129.01,Art Therapists,Bachelor's degree,BLS Data
+29-1129.02,Music Therapists,Bachelor's degree,BLS Data
+29-1131.00,Veterinarians,Doctoral or professional degree,BLS Data
+29-1141.00,Registered Nurses,Bachelor's degree,BLS Data
+29-1141.01,Acute Care Nurses,Bachelor's degree,BLS Data
+29-1141.02,Advanced Practice Psychiatric Nurses,Bachelor's degree,BLS Data
+29-1141.03,Critical Care Nurses,Bachelor's degree,BLS Data
+29-1141.04,Clinical Nurse Specialists,Bachelor's degree,BLS Data
+29-1151.00,Nurse Anesthetists,Master's degree,BLS Data
+29-1161.00,Nurse Midwives,Master's degree,BLS Data
+29-1171.00,Nurse Practitioners,Master's degree,BLS Data
+29-1181.00,Audiologists,Doctoral or professional degree,BLS Data
+29-1211.00,Anesthesiologists,Doctoral or professional degree,BLS Data
+29-1212.00,Cardiologists,Doctoral or professional degree,BLS Data
+29-1213.00,Dermatologists,Doctoral or professional degree,BLS Data
+29-1214.00,Emergency Medicine Physicians,Doctoral or professional degree,BLS Data
+29-1215.00,Family Medicine Physicians,Doctoral or professional degree,BLS Data
+29-1216.00,General Internal Medicine Physicians,Doctoral or professional degree,BLS Data
+29-1217.00,Neurologists,Doctoral or professional degree,BLS Data
+29-1218.00,Obstetricians and Gynecologists,Doctoral or professional degree,BLS Data
+29-1221.00,Pediatricians General,Doctoral or professional degree,BLS Data
+29-1222.00,Physicians Pathologists,Doctoral or professional degree,BLS Data
+29-1223.00,Psychiatrists,Doctoral or professional degree,BLS Data
+29-1224.00,Radiologists,Doctoral or professional degree,BLS Data
+29-1229.00,Physicians All Other,Doctoral or professional degree,BLS Data
+29-1229.01,Allergists and Immunologists,Doctoral or professional degree,BLS Data
+29-1229.02,Hospitalists,Doctoral or professional degree,BLS Data
+29-1229.03,Urologists,Doctoral or professional degree,BLS Data
+29-1229.04,Physical Medicine and Rehabilitation Physicians,Doctoral or professional degree,BLS Data
+29-1229.05,Preventive Medicine Physicians,Doctoral or professional degree,BLS Data
+29-1229.06,Sports Medicine Physicians,Doctoral or professional degree,BLS Data
+29-1241.00,Ophthalmologists Except Pediatric,Doctoral or professional degree,BLS Data
+29-1242.00,Orthopedic Surgeons Except Pediatric,Doctoral or professional degree,BLS Data
+29-1243.00,Pediatric Surgeons,Doctoral or professional degree,BLS Data
+29-1249.00,Surgeons All Other,Doctoral or professional degree,BLS Data
+29-1291.00,Acupuncturists,Master's degree,BLS Data
+29-1299.00,Healthcare Diagnosing or Treating Practitioners All Other,Master's degree,BLS Data
+29-1299.01,Naturopathic Physicians,Master's degree,BLS Data
+29-1299.02,Orthoptists,Master's degree,BLS Data
+29-2011.00,Medical and Clinical Laboratory Technologists,Bachelor's degree,SOC Broad Occupation Group
+29-2011.01,Cytogenetic Technologists,Bachelor's degree,SOC Broad Occupation Group
+29-2011.02,Cytotechnologists,Bachelor's degree,SOC Broad Occupation Group
+29-2011.04,Histotechnologists,Bachelor's degree,SOC Broad Occupation Group
+29-2012.00,Medical and Clinical Laboratory Technicians,Bachelor's degree,SOC Broad Occupation Group
+29-2012.01,Histology Technicians,Bachelor's degree,SOC Broad Occupation Group
+29-2036.00,Medical Dosimetrists,Bachelor's degree,BLS Data
+29-2091.00,Orthotists and Prosthetists,Master's degree,BLS Data
+29-9091.00,Athletic Trainers,Master's degree,BLS Data
+29-9092.00,Genetic Counselors,Master's degree,BLS Data
+33-3031.00,Fish and Game Wardens,Bachelor's degree,BLS Data
+41-3031.00,Securities Commodities and Financial Services Sales Agents,Bachelor's degree,BLS Data
+41-4011.00,Sales Representatives Wholesale and Manufacturing Technical and Scientific Products,Bachelor's degree,BLS Data
+41-4011.07,Solar Sales Representatives and Assessors,Bachelor's degree,BLS Data
+41-9031.00,Sales Engineers,Bachelor's degree,BLS Data
+43-9081.00,Proofreaders and Copy Markers,Bachelor's degree,BLS Data
+43-9111.00,Statistical Assistants,Bachelor's degree,BLS Data
+45-2011.00,Agricultural Inspectors,Bachelor's degree,BLS Data
+53-2011.00,Airline Pilots Copilots and Flight Engineers,Bachelor's degree,BLS Data
