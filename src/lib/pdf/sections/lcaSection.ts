@@ -12,12 +12,13 @@ import {
   formatDate,
   formatCurrency,
 } from '../pdfHelpers';
+import { embedFile } from '../embedPdf';
 
-export function addLCASection(
+export async function addLCASection(
   ctx: PDFContext, 
   data: PAFData, 
   supportingDocs?: SupportingDocs
-): void {
+): Promise<void> {
   const { doc, pageWidth, margin } = ctx;
   
   // Start new page for LCA
@@ -115,5 +116,10 @@ export function addLCASection(
     doc.text(`Status: Certified`, margin + 100, ctx.yPos);
     doc.text(`Period: ${formatDate(data.job.beginDate)} to ${formatDate(data.job.endDate)}`, margin + 5, ctx.yPos + 6);
     ctx.yPos += 15;
+  }
+  
+  // EMBED THE UPLOADED LCA PDF
+  if (supportingDocs?.lcaFile) {
+    await embedFile(ctx, supportingDocs.lcaFile, 'Certified LCA (ETA Form 9035/9035E)');
   }
 }
