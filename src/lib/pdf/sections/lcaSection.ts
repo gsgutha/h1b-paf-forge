@@ -78,8 +78,12 @@ export async function addLCASection(
   checkPageBreak(ctx, 60);
   addSectionHeader(ctx, 'F. Employment and Wage Information');
   
-  addSubsectionHeader(ctx, 'Place of Employment Information');
+  // Primary Worksite
+  addSubsectionHeader(ctx, 'Place of Employment Information - Primary Worksite');
   addLabelValue(ctx, 'Number of Workers', data.job.workersNeeded);
+  if (data.worksite.worksiteName) {
+    addLabelValue(ctx, 'Worksite Name', data.worksite.worksiteName);
+  }
   addLabelValue(ctx, 'Address', `${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}`);
   addLabelValue(ctx, 'City', data.worksite.city);
   if (data.worksite.county) {
@@ -97,6 +101,45 @@ export async function addLCASection(
   addLabelValue(ctx, 'Wage Level', data.wage.wageLevel);
   addLabelValue(ctx, 'Wage Source', data.wage.wageSource);
   addLabelValue(ctx, 'Source Year/Date', formatDate(data.wage.wageSourceDate));
+  
+  // Secondary Worksite (if present)
+  if (data.worksite.hasSecondaryWorksite && data.worksite.secondaryWorksite) {
+    const secondary = data.worksite.secondaryWorksite;
+    
+    ctx.yPos += 10;
+    checkPageBreak(ctx, 60);
+    addSubsectionHeader(ctx, 'Place of Employment Information - Secondary Worksite');
+    
+    if (secondary.worksiteName) {
+      addLabelValue(ctx, 'Worksite Name', secondary.worksiteName);
+    }
+    addLabelValue(ctx, 'Address', `${secondary.address1}${secondary.address2 ? ', ' + secondary.address2 : ''}`);
+    addLabelValue(ctx, 'City', secondary.city);
+    if (secondary.county) {
+      addLabelValue(ctx, 'County', secondary.county);
+    }
+    addLabelValue(ctx, 'State', secondary.state);
+    addLabelValue(ctx, 'Postal Code', secondary.postalCode);
+    
+    // Secondary worksite wage info (if different county with separate wage)
+    if (data.wage.hasSecondaryWage && data.wage.secondaryWage) {
+      const secondaryWage = data.wage.secondaryWage;
+      ctx.yPos += 5;
+      addLabelValue(ctx, 'Wage Rate Paid', wageDisplay); // Same actual wage for both
+      addLabelValue(ctx, 'Prevailing Wage', formatCurrency(secondaryWage.prevailingWage, secondaryWage.prevailingWageUnit));
+      addLabelValue(ctx, 'Wage Level', secondaryWage.wageLevel);
+      addLabelValue(ctx, 'Wage Source', secondaryWage.wageSource);
+      addLabelValue(ctx, 'Source Year/Date', formatDate(secondaryWage.wageSourceDate));
+    } else {
+      // Same wage info as primary
+      ctx.yPos += 5;
+      addLabelValue(ctx, 'Wage Rate Paid', wageDisplay);
+      addLabelValue(ctx, 'Prevailing Wage', formatCurrency(data.wage.prevailingWage, data.wage.prevailingWageUnit));
+      addLabelValue(ctx, 'Wage Level', data.wage.wageLevel);
+      addLabelValue(ctx, 'Wage Source', data.wage.wageSource);
+      addLabelValue(ctx, 'Source Year/Date', formatDate(data.wage.wageSourceDate));
+    }
+  }
   
   // Section H: H-1B Dependency
   checkPageBreak(ctx, 40);
