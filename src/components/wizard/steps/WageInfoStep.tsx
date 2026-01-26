@@ -1,10 +1,11 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { DollarSign, Info } from 'lucide-react';
+import { DollarSign, Info, MapPin, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -17,7 +18,24 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import type { WageInfo } from '@/types/paf';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import type { WageInfo, WorksiteLocation } from '@/types/paf';
+
+const secondaryWageSchema = z.object({
+  prevailingWage: z.number().min(0.01, 'Prevailing wage is required'),
+  prevailingWageUnit: z.enum(['Hour', 'Week', 'Bi-Weekly', 'Month', 'Year']),
+  wageLevel: z.enum(['Level I', 'Level II', 'Level III', 'Level IV']),
+  wageSource: z.string().min(1, 'Wage source is required'),
+  wageSourceDate: z.string().min(1, 'Source date is required'),
+  areaCode: z.string().optional(),
+  areaName: z.string().optional(),
+});
 
 const wageSchema = z.object({
   prevailingWage: z.number().min(0.01, 'Prevailing wage is required'),
@@ -27,6 +45,8 @@ const wageSchema = z.object({
   wageSourceDate: z.string().min(1, 'Source date is required'),
   actualWage: z.number().min(0.01, 'Actual wage is required'),
   actualWageUnit: z.enum(['Hour', 'Week', 'Bi-Weekly', 'Month', 'Year']),
+  hasSecondaryWage: z.boolean().optional(),
+  secondaryWage: secondaryWageSchema.optional(),
 });
 
 const wageLevelDescriptions = {
@@ -38,11 +58,17 @@ const wageLevelDescriptions = {
 
 interface WageInfoStepProps {
   data: Partial<WageInfo>;
+  worksite?: WorksiteLocation;
   onNext: (data: WageInfo) => void;
   onBack: () => void;
 }
 
-export function WageInfoStep({ data, onNext, onBack }: WageInfoStepProps) {
+export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepProps) {
+  const hasSecondaryWorksite = worksite?.hasSecondaryWorksite && worksite?.secondaryWorksite;
+  const primaryCounty = worksite?.county || '';
+  const secondaryCounty = worksite?.secondaryWorksite?.county || '';
+  const isDifferentCounty = hasSecondaryWorksite && primaryCounty !== secondaryCounty;
+
   const {
     register,
     handleSubmit,
@@ -57,6 +83,16 @@ export function WageInfoStep({ data, onNext, onBack }: WageInfoStepProps) {
       actualWageUnit: data.actualWageUnit || 'Year',
       wageLevel: data.wageLevel || 'Level I',
       wageSource: data.wageSource || 'OES',
+      hasSecondaryWage: data.hasSecondaryWage ?? isDifferentCounty,
+      secondaryWage: data.secondaryWage || {
+        prevailingWage: 0,
+        prevailingWageUnit: 'Year',
+        wageLevel: 'Level I',
+        wageSource: 'OES',
+        wageSourceDate: '',
+        areaCode: '',
+        areaName: secondaryCounty ? `${worksite?.secondaryWorksite?.city}, ${worksite?.secondaryWorksite?.state}` : '',
+      },
     },
   });
 
@@ -66,7 +102,14 @@ export function WageInfoStep({ data, onNext, onBack }: WageInfoStepProps) {
 
   const prevailingWage = watch('prevailingWage');
   const actualWage = watch('actualWage');
-  const isWageCompliant = actualWage >= prevailingWage;
+  const hasSecondaryWage = watch('hasSecondaryWage');
+  const secondaryPrevailingWage = watch('secondaryWage.prevailingWage');
+  
+  // Check compliance: actual wage must be >= MAX of both prevailing wages
+  const maxPrevailingWage = hasSecondaryWage && secondaryPrevailingWage 
+    ? Math.max(prevailingWage || 0, secondaryPrevailingWage) 
+    : prevailingWage;
+  const isWageCompliant = actualWage >= maxPrevailingWage;
 
   return (
     <div className="fade-in">
@@ -94,163 +137,339 @@ export function WageInfoStep({ data, onNext, onBack }: WageInfoStepProps) {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="md:col-span-2 border-b border-border pb-4">
-            <h3 className="text-lg font-medium text-foreground mb-4">Prevailing Wage</h3>
-          </div>
-
-          <div>
-            <Label htmlFor="prevailingWage">Prevailing Wage Rate *</Label>
-            <div className="relative mt-1.5">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <Input
-                id="prevailingWage"
-                type="number"
-                step="0.01"
-                {...register('prevailingWage', { valueAsNumber: true })}
-                className="pl-7"
-                placeholder="0.00"
-              />
-            </div>
-            {errors.prevailingWage && (
-              <p className="mt-1 text-sm text-destructive">{errors.prevailingWage.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Label>Wage Unit *</Label>
-            <Select
-              value={watch('prevailingWageUnit')}
-              onValueChange={(value: WageInfo['prevailingWageUnit']) => 
-                setValue('prevailingWageUnit', value)
-              }
-            >
-              <SelectTrigger className="mt-1.5">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Hour">Per Hour</SelectItem>
-                <SelectItem value="Week">Per Week</SelectItem>
-                <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
-                <SelectItem value="Month">Per Month</SelectItem>
-                <SelectItem value="Year">Per Year</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
+        {/* Primary Worksite Prevailing Wage */}
+        <Card>
+          <CardHeader className="pb-4">
             <div className="flex items-center gap-2">
-              <Label>Wage Level *</Label>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-4 w-4 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <div className="space-y-2">
-                    {Object.entries(wageLevelDescriptions).map(([level, desc]) => (
-                      <div key={level}>
-                        <span className="font-medium">{level}:</span> {desc}
+              <MapPin className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Primary Worksite Prevailing Wage</CardTitle>
+            </div>
+            {worksite && (
+              <CardDescription>
+                {worksite.worksiteName && `${worksite.worksiteName}, `}
+                {worksite.city}, {worksite.state}
+                {worksite.county && ` (${worksite.county} County)`}
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <Label htmlFor="prevailingWage">Prevailing Wage Rate *</Label>
+                <div className="relative mt-1.5">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="prevailingWage"
+                    type="number"
+                    step="0.01"
+                    {...register('prevailingWage', { valueAsNumber: true })}
+                    className="pl-7"
+                    placeholder="0.00"
+                  />
+                </div>
+                {errors.prevailingWage && (
+                  <p className="mt-1 text-sm text-destructive">{errors.prevailingWage.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label>Wage Unit *</Label>
+                <Select
+                  value={watch('prevailingWageUnit')}
+                  onValueChange={(value: WageInfo['prevailingWageUnit']) => 
+                    setValue('prevailingWageUnit', value)
+                  }
+                >
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Hour">Per Hour</SelectItem>
+                    <SelectItem value="Week">Per Week</SelectItem>
+                    <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
+                    <SelectItem value="Month">Per Month</SelectItem>
+                    <SelectItem value="Year">Per Year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2">
+                  <Label>Wage Level *</Label>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <div className="space-y-2">
+                        {Object.entries(wageLevelDescriptions).map(([level, desc]) => (
+                          <div key={level}>
+                            <span className="font-medium">{level}:</span> {desc}
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Select
+                  value={watch('wageLevel')}
+                  onValueChange={(value: WageInfo['wageLevel']) => setValue('wageLevel', value)}
+                >
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Level I">Level I (Entry)</SelectItem>
+                    <SelectItem value="Level II">Level II (Qualified)</SelectItem>
+                    <SelectItem value="Level III">Level III (Experienced)</SelectItem>
+                    <SelectItem value="Level IV">Level IV (Fully Competent)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="wageSource">Wage Source *</Label>
+                <Select
+                  value={watch('wageSource')}
+                  onValueChange={(value) => setValue('wageSource', value)}
+                >
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="OES">OES (OEWS)</SelectItem>
+                    <SelectItem value="CBA">Collective Bargaining Agreement</SelectItem>
+                    <SelectItem value="DBA">Davis-Bacon Act</SelectItem>
+                    <SelectItem value="SCA">Service Contract Act</SelectItem>
+                    <SelectItem value="Other">Other Survey</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.wageSource && (
+                  <p className="mt-1 text-sm text-destructive">{errors.wageSource.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="wageSourceDate">Wage Source Date *</Label>
+                <Input
+                  id="wageSourceDate"
+                  type="date"
+                  {...register('wageSourceDate')}
+                  className="mt-1.5"
+                />
+                {errors.wageSourceDate && (
+                  <p className="mt-1 text-sm text-destructive">{errors.wageSourceDate.message}</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Secondary Worksite Prevailing Wage */}
+        {hasSecondaryWorksite && (
+          <Card className={hasSecondaryWage ? 'border-primary/50' : ''}>
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-secondary" />
+                  <CardTitle className="text-lg">Secondary Worksite Prevailing Wage</CardTitle>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="hasSecondaryWage" className="text-sm">
+                    Different Wage Area
+                  </Label>
+                  <Switch
+                    id="hasSecondaryWage"
+                    checked={hasSecondaryWage}
+                    onCheckedChange={(checked) => setValue('hasSecondaryWage', checked)}
+                  />
+                </div>
+              </div>
+              <CardDescription>
+                {worksite?.secondaryWorksite?.worksiteName && `${worksite.secondaryWorksite.worksiteName}, `}
+                {worksite?.secondaryWorksite?.city}, {worksite?.secondaryWorksite?.state}
+                {worksite?.secondaryWorksite?.county && ` (${worksite.secondaryWorksite.county} County)`}
+              </CardDescription>
+              {isDifferentCounty && (
+                <div className="mt-2 p-2 bg-warning/10 rounded text-xs text-warning-foreground">
+                  <strong>Note:</strong> Secondary worksite is in a different county ({secondaryCounty} vs {primaryCounty}). 
+                  Enable this to specify a separate prevailing wage for compliance.
+                </div>
+              )}
+            </CardHeader>
+            
+            {hasSecondaryWage && (
+              <CardContent>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="secondaryPrevailingWage">Prevailing Wage Rate *</Label>
+                    <div className="relative mt-1.5">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                      <Input
+                        id="secondaryPrevailingWage"
+                        type="number"
+                        step="0.01"
+                        {...register('secondaryWage.prevailingWage', { valueAsNumber: true })}
+                        className="pl-7"
+                        placeholder="0.00"
+                      />
+                    </div>
                   </div>
-                </TooltipContent>
-              </Tooltip>
+
+                  <div>
+                    <Label>Wage Unit *</Label>
+                    <Select
+                      value={watch('secondaryWage.prevailingWageUnit')}
+                      onValueChange={(value: WageInfo['prevailingWageUnit']) => 
+                        setValue('secondaryWage.prevailingWageUnit', value)
+                      }
+                    >
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Hour">Per Hour</SelectItem>
+                        <SelectItem value="Week">Per Week</SelectItem>
+                        <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
+                        <SelectItem value="Month">Per Month</SelectItem>
+                        <SelectItem value="Year">Per Year</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Label>Wage Level *</Label>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <div className="space-y-2">
+                            {Object.entries(wageLevelDescriptions).map(([level, desc]) => (
+                              <div key={level}>
+                                <span className="font-medium">{level}:</span> {desc}
+                              </div>
+                            ))}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Select
+                      value={watch('secondaryWage.wageLevel')}
+                      onValueChange={(value: WageInfo['wageLevel']) => 
+                        setValue('secondaryWage.wageLevel', value)
+                      }
+                    >
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Level I">Level I (Entry)</SelectItem>
+                        <SelectItem value="Level II">Level II (Qualified)</SelectItem>
+                        <SelectItem value="Level III">Level III (Experienced)</SelectItem>
+                        <SelectItem value="Level IV">Level IV (Fully Competent)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Wage Source *</Label>
+                    <Select
+                      value={watch('secondaryWage.wageSource')}
+                      onValueChange={(value) => setValue('secondaryWage.wageSource', value)}
+                    >
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="OES">OES (OEWS)</SelectItem>
+                        <SelectItem value="CBA">Collective Bargaining Agreement</SelectItem>
+                        <SelectItem value="DBA">Davis-Bacon Act</SelectItem>
+                        <SelectItem value="SCA">Service Contract Act</SelectItem>
+                        <SelectItem value="Other">Other Survey</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="secondaryWageSourceDate">Wage Source Date *</Label>
+                    <Input
+                      id="secondaryWageSourceDate"
+                      type="date"
+                      {...register('secondaryWage.wageSourceDate')}
+                      className="mt-1.5"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="secondaryAreaName">Wage Area Name</Label>
+                    <Input
+                      id="secondaryAreaName"
+                      {...register('secondaryWage.areaName')}
+                      placeholder="e.g., New York-Newark-Jersey City, NY-NJ-PA"
+                      className="mt-1.5"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
+        {/* Actual Wage Section */}
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Actual Wage</CardTitle>
+            <CardDescription>
+              The wage you will pay the H-1B worker (must be the higher of actual or prevailing wage)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <Label htmlFor="actualWage">Actual Wage Rate *</Label>
+                <div className="relative mt-1.5">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    id="actualWage"
+                    type="number"
+                    step="0.01"
+                    {...register('actualWage', { valueAsNumber: true })}
+                    className="pl-7"
+                    placeholder="0.00"
+                  />
+                </div>
+                {errors.actualWage && (
+                  <p className="mt-1 text-sm text-destructive">{errors.actualWage.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label>Wage Unit *</Label>
+                <Select
+                  value={watch('actualWageUnit')}
+                  onValueChange={(value: WageInfo['actualWageUnit']) => 
+                    setValue('actualWageUnit', value)
+                  }
+                >
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Hour">Per Hour</SelectItem>
+                    <SelectItem value="Week">Per Week</SelectItem>
+                    <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
+                    <SelectItem value="Month">Per Month</SelectItem>
+                    <SelectItem value="Year">Per Year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <Select
-              value={watch('wageLevel')}
-              onValueChange={(value: WageInfo['wageLevel']) => setValue('wageLevel', value)}
-            >
-              <SelectTrigger className="mt-1.5">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Level I">Level I (Entry)</SelectItem>
-                <SelectItem value="Level II">Level II (Qualified)</SelectItem>
-                <SelectItem value="Level III">Level III (Experienced)</SelectItem>
-                <SelectItem value="Level IV">Level IV (Fully Competent)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div>
-            <Label htmlFor="wageSource">Wage Source *</Label>
-            <Select
-              value={watch('wageSource')}
-              onValueChange={(value) => setValue('wageSource', value)}
-            >
-              <SelectTrigger className="mt-1.5">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="OES">OES (OEWS)</SelectItem>
-                <SelectItem value="CBA">Collective Bargaining Agreement</SelectItem>
-                <SelectItem value="DBA">Davis-Bacon Act</SelectItem>
-                <SelectItem value="SCA">Service Contract Act</SelectItem>
-                <SelectItem value="Other">Other Survey</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.wageSource && (
-              <p className="mt-1 text-sm text-destructive">{errors.wageSource.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="wageSourceDate">Wage Source Date *</Label>
-            <Input
-              id="wageSourceDate"
-              type="date"
-              {...register('wageSourceDate')}
-              className="mt-1.5"
-            />
-            {errors.wageSourceDate && (
-              <p className="mt-1 text-sm text-destructive">{errors.wageSourceDate.message}</p>
-            )}
-          </div>
-
-          <div className="md:col-span-2 border-b border-border pb-4 mt-4">
-            <h3 className="text-lg font-medium text-foreground mb-4">Actual Wage</h3>
-          </div>
-
-          <div>
-            <Label htmlFor="actualWage">Actual Wage Rate *</Label>
-            <div className="relative mt-1.5">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <Input
-                id="actualWage"
-                type="number"
-                step="0.01"
-                {...register('actualWage', { valueAsNumber: true })}
-                className="pl-7"
-                placeholder="0.00"
-              />
-            </div>
-            {errors.actualWage && (
-              <p className="mt-1 text-sm text-destructive">{errors.actualWage.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Label>Wage Unit *</Label>
-            <Select
-              value={watch('actualWageUnit')}
-              onValueChange={(value: WageInfo['actualWageUnit']) => 
-                setValue('actualWageUnit', value)
-              }
-            >
-              <SelectTrigger className="mt-1.5">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Hour">Per Hour</SelectItem>
-                <SelectItem value="Week">Per Week</SelectItem>
-                <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
-                <SelectItem value="Month">Per Month</SelectItem>
-                <SelectItem value="Year">Per Year</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
+        {/* Wage Compliance Check */}
         {prevailingWage > 0 && actualWage > 0 && (
           <div className={`rounded-lg p-4 border ${
             isWageCompliant 
@@ -259,10 +478,15 @@ export function WageInfoStep({ data, onNext, onBack }: WageInfoStepProps) {
           }`}>
             <p className="text-sm font-medium">
               {isWageCompliant 
-                ? '✓ Wage is compliant - actual wage meets or exceeds prevailing wage'
-                : '✗ Warning: Actual wage is below the prevailing wage requirement'
+                ? `✓ Wage is compliant - actual wage ($${actualWage.toLocaleString()}) meets or exceeds ${hasSecondaryWage ? 'highest ' : ''}prevailing wage ($${maxPrevailingWage.toLocaleString()})`
+                : `✗ Warning: Actual wage ($${actualWage.toLocaleString()}) is below the ${hasSecondaryWage ? 'highest ' : ''}prevailing wage requirement ($${maxPrevailingWage.toLocaleString()})`
               }
             </p>
+            {hasSecondaryWage && secondaryPrevailingWage > 0 && (
+              <p className="text-xs mt-1 opacity-80">
+                Primary: ${prevailingWage?.toLocaleString() || 0} | Secondary: ${secondaryPrevailingWage.toLocaleString()}
+              </p>
+            )}
           </div>
         )}
 
@@ -271,7 +495,7 @@ export function WageInfoStep({ data, onNext, onBack }: WageInfoStepProps) {
             Back
           </Button>
           <Button type="submit" variant="wizard" size="lg">
-            Review & Generate PAF
+            Next: Documents
           </Button>
         </div>
       </form>

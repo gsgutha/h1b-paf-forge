@@ -216,23 +216,42 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
           </SectionCard>
 
           <SectionCard title="Wage Information" icon={FileText} onEdit={() => onEdit(4)}>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Primary Worksite</p>
             <DataRow label="Prevailing Wage" value={formatCurrency(data.wage.prevailingWage, data.wage.prevailingWageUnit)} />
             <DataRow label="Wage Level" value={data.wage.wageLevel} />
             <DataRow label="Wage Source" value={data.wage.wageSource} />
             <DataRow label="Source Date" value={formatDate(data.wage.wageSourceDate)} />
+            {data.wage.hasSecondaryWage && data.wage.secondaryWage && (
+              <div className="border-t border-border mt-3 pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Secondary Worksite</p>
+                <DataRow label="Prevailing Wage" value={formatCurrency(data.wage.secondaryWage.prevailingWage, data.wage.secondaryWage.prevailingWageUnit)} />
+                <DataRow label="Wage Level" value={data.wage.secondaryWage.wageLevel} />
+                <DataRow label="Wage Source" value={data.wage.secondaryWage.wageSource} />
+                <DataRow label="Source Date" value={formatDate(data.wage.secondaryWage.wageSourceDate)} />
+                {data.wage.secondaryWage.areaName && (
+                  <DataRow label="Wage Area" value={data.wage.secondaryWage.areaName} />
+                )}
+              </div>
+            )}
             <div className="border-t border-border mt-3 pt-3">
               <DataRow label="Actual Wage" value={formatCurrency(data.wage.actualWage, data.wage.actualWageUnit)} />
             </div>
-            <div className={`mt-3 p-2 rounded text-xs font-medium ${
-              data.wage.actualWage >= data.wage.prevailingWage 
-                ? 'bg-success/10 text-success' 
-                : 'bg-destructive/10 text-destructive'
-            }`}>
-              {data.wage.actualWage >= data.wage.prevailingWage 
-                ? '✓ Wage is compliant'
-                : '✗ Wage compliance issue'
-              }
-            </div>
+            {(() => {
+              const maxPrevailing = data.wage.hasSecondaryWage && data.wage.secondaryWage 
+                ? Math.max(data.wage.prevailingWage, data.wage.secondaryWage.prevailingWage)
+                : data.wage.prevailingWage;
+              const isCompliant = data.wage.actualWage >= maxPrevailing;
+              return (
+                <div className={`mt-3 p-2 rounded text-xs font-medium ${
+                  isCompliant ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
+                }`}>
+                  {isCompliant 
+                    ? `✓ Wage is compliant (meets ${data.wage.hasSecondaryWage ? 'highest prevailing wage' : 'prevailing wage'})`
+                    : '✗ Wage compliance issue - actual wage below prevailing wage'
+                  }
+                </div>
+              );
+            })()}
           </SectionCard>
         </div>
 

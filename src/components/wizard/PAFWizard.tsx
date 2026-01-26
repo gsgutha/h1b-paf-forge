@@ -115,6 +115,7 @@ export function PAFWizard() {
         {currentStep === 4 && (
           <WageInfoStep 
             data={pafData.wage || {}} 
+            worksite={pafData.worksite}
             onNext={handleWageNext}
             onBack={goBack}
           />
