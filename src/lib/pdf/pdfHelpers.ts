@@ -1,6 +1,18 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 
+/**
+ * Parse a date string as local date to avoid timezone shifts.
+ * For "YYYY-MM-DD" format, creates date in local timezone.
+ */
+export function parseLocalDate(dateStr: string): Date {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+  return new Date(dateStr);
+}
+
 // PDF configuration constants
 export const PDF_CONFIG = {
   margin: 20,

@@ -14,6 +14,7 @@ import {
   checkPageBreak,
   formatDate,
   formatCurrency,
+  parseLocalDate,
 } from '../pdfHelpers';
 
 export function addPostingNoticeSection(
@@ -42,7 +43,7 @@ export function addPostingNoticeSection(
   
   // Posting certification
   const postingDate = supportingDocs?.noticePostingDate 
-    ? new Date(supportingDocs.noticePostingDate)
+    ? parseLocalDate(supportingDocs.noticePostingDate)
     : new Date();
   const postingEndDate = addDays(postingDate, 14); // 10 business days ≈ 14 calendar days
   
