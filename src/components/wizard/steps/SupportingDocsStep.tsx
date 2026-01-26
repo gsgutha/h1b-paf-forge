@@ -268,17 +268,28 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="flex items-start gap-3 p-4 bg-success/10 rounded-lg mb-4">
+                  <Check className="h-5 w-5 text-success mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">Auto-Generated Content</p>
+                    <p className="text-muted-foreground">
+                      The PDF automatically includes a complete wage determination memo with position details,
+                      SOC code, prevailing wage, actual wage, and methodology factors from your wizard entries.
+                    </p>
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="actualWageMemo">Wage Determination Memo</Label>
+                  <Label htmlFor="actualWageMemo">Additional Wage Determination Notes (Optional)</Label>
                   <Textarea
                     id="actualWageMemo"
-                    rows={12}
+                    rows={6}
+                    placeholder="Add any additional notes about wage determination methodology, comparable employees, or special circumstances..."
                     value={formData.actualWageMemo}
                     onChange={(e) => updateField('actualWageMemo', e.target.value)}
                     className="font-mono text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Describe how you determine wages for similarly employed workers
+                    Only add notes here if you have additional information beyond what's auto-generated
                   </p>
                 </div>
               </CardContent>
@@ -428,44 +439,10 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
 }
 
 function getDefaultWageMemo(): string {
-  return `ACTUAL WAGE DETERMINATION MEMORANDUM
-
-Date: [Date]
-Position: [Job Title]
-SOC Code: [SOC Code]
-
-WAGE DETERMINATION METHODOLOGY
-
-The employer determines the actual wage for this position based on the following factors:
-
-1. EXPERIENCE LEVEL
-   - Entry-level: 0-2 years of relevant experience
-   - Mid-level: 3-5 years of relevant experience
-   - Senior-level: 6+ years of relevant experience
-
-2. EDUCATION
-   - Minimum requirement: [Degree requirement]
-   - Advanced degrees may warrant additional compensation
-
-3. SPECIALIZED SKILLS
-   - [List any specialized skills that affect wage determination]
-
-4. COMPARABLE EMPLOYEES
-   - The wage offered is consistent with wages paid to other employees 
-     with similar experience, education, and job responsibilities.
-
-5. WAGE RANGE
-   - Minimum: $[amount] per [unit]
-   - Maximum: $[amount] per [unit]
-
-CERTIFICATION
-
-I certify that the wage offered to the H-1B worker is at least equal to the 
-actual wage paid to other employees with similar experience and qualifications 
-for the specific employment in question.
-
-_________________________
-Authorized Representative`;
+  // Note: The PDF generator automatically includes full wage determination details
+  // (position, SOC code, prevailing wage, actual wage, methodology factors).
+  // This field is for ADDITIONAL notes only - leave blank if none needed.
+  return '';
 }
 
 function getDefaultBenefitsNotes(): string {
