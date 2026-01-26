@@ -72,7 +72,7 @@ export async function generatePAFDocument(
   
   // 7. Worker Receipt Statement
   if (mergedOptions.includeWorkerReceipt) {
-    addWorkerReceiptSection(ctx, data);
+    addWorkerReceiptSection(ctx, data, supportingDocs);
   }
   
   // Add page numbers

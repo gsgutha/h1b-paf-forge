@@ -43,6 +43,15 @@ export interface JobDetails {
   isRD?: boolean; // R&D classification for ACWIA
 }
 
+export interface SecondaryWorksite {
+  address1: string;
+  address2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  county?: string;
+}
+
 export interface WorksiteLocation {
   address1: string;
   address2?: string;
@@ -52,6 +61,8 @@ export interface WorksiteLocation {
   county?: string;
   areaCode?: string;
   areaName?: string;
+  hasSecondaryWorksite?: boolean;
+  secondaryWorksite?: SecondaryWorksite;
 }
 
 export interface WageInfo {

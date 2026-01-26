@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -27,6 +28,15 @@ const US_STATES = [
   'Wisconsin', 'Wyoming'
 ];
 
+const secondaryWorksiteSchema = z.object({
+  address1: z.string().min(1, 'Address is required'),
+  address2: z.string().optional(),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().min(1, 'State is required'),
+  postalCode: z.string().min(5, 'Valid postal code required'),
+  county: z.string().optional(),
+});
+
 const worksiteSchema = z.object({
   address1: z.string().min(1, 'Address is required'),
   address2: z.string().optional(),
@@ -36,6 +46,8 @@ const worksiteSchema = z.object({
   county: z.string().optional(),
   areaCode: z.string().optional(),
   areaName: z.string().optional(),
+  hasSecondaryWorksite: z.boolean().optional(),
+  secondaryWorksite: secondaryWorksiteSchema.optional(),
 });
 
 interface WorksiteStepProps {
@@ -47,7 +59,9 @@ interface WorksiteStepProps {
 export function WorksiteStep({ data, onNext, onBack }: WorksiteStepProps) {
   const [geography, setGeography] = useState<GeographyArea[]>([]);
   const [stateAreas, setStateAreas] = useState<GeographyArea[]>([]);
+  const [secondaryStateAreas, setSecondaryStateAreas] = useState<GeographyArea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSecondary, setShowSecondary] = useState(data.hasSecondaryWorksite || false);
 
   const {
     register,
@@ -57,11 +71,17 @@ export function WorksiteStep({ data, onNext, onBack }: WorksiteStepProps) {
     watch,
   } = useForm<WorksiteLocation>({
     resolver: zodResolver(worksiteSchema),
-    defaultValues: data,
+    defaultValues: {
+      ...data,
+      hasSecondaryWorksite: data.hasSecondaryWorksite || false,
+      secondaryWorksite: data.secondaryWorksite || undefined,
+    },
   });
 
   const selectedState = watch('state');
   const selectedCounty = watch('county');
+  const secondaryState = watch('secondaryWorksite.state');
+  const secondaryCounty = watch('secondaryWorksite.county');
 
   useEffect(() => {
     async function loadData() {
@@ -87,6 +107,15 @@ export function WorksiteStep({ data, onNext, onBack }: WorksiteStepProps) {
     }
   }, [selectedState, geography]);
 
+  useEffect(() => {
+    if (secondaryState && geography.length > 0) {
+      const areas = getAreasForState(geography, secondaryState);
+      setSecondaryStateAreas(areas);
+    } else {
+      setSecondaryStateAreas([]);
+    }
+  }, [secondaryState, geography]);
+
   const handleCountySelect = (countyName: string) => {
     setValue('county', countyName);
     
@@ -98,7 +127,20 @@ export function WorksiteStep({ data, onNext, onBack }: WorksiteStepProps) {
     }
   };
 
+  const handleSecondaryCountySelect = (countyName: string) => {
+    setValue('secondaryWorksite.county', countyName);
+  };
+
   const uniqueCounties = [...new Set(stateAreas.map(a => a.countyName))].sort();
+  const secondaryUniqueCounties = [...new Set(secondaryStateAreas.map(a => a.countyName))].sort();
+
+  const handleSecondaryToggle = (enabled: boolean) => {
+    setShowSecondary(enabled);
+    setValue('hasSecondaryWorksite', enabled);
+    if (!enabled) {
+      setValue('secondaryWorksite', undefined);
+    }
+  };
 
   const onSubmit = (formData: WorksiteLocation) => {
     onNext(formData);
@@ -227,6 +269,129 @@ export function WorksiteStep({ data, onNext, onBack }: WorksiteStepProps) {
               <p className="mt-1 text-sm text-muted-foreground">
                 {watch('areaName')} (Code: {watch('areaCode')})
               </p>
+            </div>
+          )}
+
+          {/* Secondary Worksite Toggle */}
+          <div className="flex items-center justify-between rounded-lg border border-border p-4 bg-muted/30">
+            <div className="space-y-0.5">
+              <Label htmlFor="secondary-toggle" className="text-base font-medium">
+                Secondary Work Location
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Add an additional worksite if the employee will work at multiple locations
+              </p>
+            </div>
+            <Switch
+              id="secondary-toggle"
+              checked={showSecondary}
+              onCheckedChange={handleSecondaryToggle}
+            />
+          </div>
+
+          {/* Secondary Worksite Fields */}
+          {showSecondary && (
+            <div className="space-y-6 rounded-lg border border-accent/30 p-6 bg-accent/5">
+              <div className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-accent" />
+                <h3 className="text-lg font-medium text-foreground">Secondary Worksite</h3>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <Label htmlFor="secondary-address1">Address Line 1 *</Label>
+                  <Input
+                    id="secondary-address1"
+                    {...register('secondaryWorksite.address1')}
+                    className="mt-1.5"
+                    placeholder="Street address"
+                  />
+                  {errors.secondaryWorksite?.address1 && (
+                    <p className="mt-1 text-sm text-destructive">{errors.secondaryWorksite.address1.message}</p>
+                  )}
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="secondary-address2">Address Line 2</Label>
+                  <Input
+                    id="secondary-address2"
+                    {...register('secondaryWorksite.address2')}
+                    className="mt-1.5"
+                    placeholder="Suite, floor, building, etc."
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="secondary-city">City *</Label>
+                  <Input
+                    id="secondary-city"
+                    {...register('secondaryWorksite.city')}
+                    className="mt-1.5"
+                    placeholder="City"
+                  />
+                  {errors.secondaryWorksite?.city && (
+                    <p className="mt-1 text-sm text-destructive">{errors.secondaryWorksite.city.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="secondary-state">State *</Label>
+                  <Select
+                    value={secondaryState || ''}
+                    onValueChange={(value) => {
+                      setValue('secondaryWorksite.state', value);
+                      setValue('secondaryWorksite.county', '');
+                    }}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {US_STATES.map((state) => (
+                        <SelectItem key={state} value={state}>
+                          {state}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.secondaryWorksite?.state && (
+                    <p className="mt-1 text-sm text-destructive">{errors.secondaryWorksite.state.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="secondary-postalCode">Postal Code *</Label>
+                  <Input
+                    id="secondary-postalCode"
+                    {...register('secondaryWorksite.postalCode')}
+                    className="mt-1.5"
+                    placeholder="12345"
+                  />
+                  {errors.secondaryWorksite?.postalCode && (
+                    <p className="mt-1 text-sm text-destructive">{errors.secondaryWorksite.postalCode.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="secondary-county">County</Label>
+                  <Select
+                    value={secondaryCounty || ''}
+                    onValueChange={handleSecondaryCountySelect}
+                    disabled={!secondaryState}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder={secondaryState ? "Select county" : "Select state first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {secondaryUniqueCounties.map((county) => (
+                        <SelectItem key={county} value={county}>
+                          {county}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           )}
 
