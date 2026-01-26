@@ -32,21 +32,22 @@ const defaultOptions: PAFDocumentOptions = {
 /**
  * Generates a comprehensive PAF document matching the professional format
  * with cover page, table of contents, and all required sections.
+ * Now async to support embedding uploaded PDF files.
  */
-export function generatePAFDocument(
+export async function generatePAFDocument(
   data: PAFData, 
   supportingDocs?: SupportingDocs,
   options: PAFDocumentOptions = defaultOptions
-): jsPDF {
+): Promise<jsPDF> {
   const ctx = createPDFContext();
   const mergedOptions = { ...defaultOptions, ...options };
   
   // 1. Cover Page with Table of Contents
   addCoverPage(ctx, data, supportingDocs);
   
-  // 2. LCA Section (simulated ETA-9035 form)
+  // 2. LCA Section (simulated ETA-9035 form) + embedded LCA PDF
   if (mergedOptions.includeLCA) {
-    addLCASection(ctx, data, supportingDocs);
+    await addLCASection(ctx, data, supportingDocs);
   }
   
   // 3. Actual Wage Memorandum
@@ -64,9 +65,9 @@ export function generatePAFDocument(
     addPostingNoticeSection(ctx, data, supportingDocs);
   }
   
-  // 6. Benefits Summary
+  // 6. Benefits Summary (with embedded benefits docs if uploaded)
   if (mergedOptions.includeBenefits) {
-    addBenefitsSection(ctx, data, supportingDocs);
+    await addBenefitsSection(ctx, data, supportingDocs);
   }
   
   // 7. Worker Receipt Statement
@@ -87,12 +88,12 @@ export function generatePAFDocument(
 /**
  * Downloads the PAF document as a PDF file
  */
-export function downloadPAF(
+export async function downloadPAF(
   data: PAFData, 
   supportingDocs?: SupportingDocs,
   filename?: string
-): void {
-  const doc = generatePAFDocument(data, supportingDocs);
+): Promise<void> {
+  const doc = await generatePAFDocument(data, supportingDocs);
   const defaultFilename = `PAF_${data.employer.legalBusinessName.replace(/[^a-zA-Z0-9]/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`;
   doc.save(filename || defaultFilename);
 }
@@ -100,8 +101,8 @@ export function downloadPAF(
 /**
  * Opens the PAF document in a new window for printing
  */
-export function printPAF(data: PAFData, supportingDocs?: SupportingDocs): void {
-  const doc = generatePAFDocument(data, supportingDocs);
+export async function printPAF(data: PAFData, supportingDocs?: SupportingDocs): Promise<void> {
+  const doc = await generatePAFDocument(data, supportingDocs);
   const pdfBlob = doc.output('blob');
   const pdfUrl = URL.createObjectURL(pdfBlob);
   const printWindow = window.open(pdfUrl, '_blank');
@@ -115,7 +116,7 @@ export function printPAF(data: PAFData, supportingDocs?: SupportingDocs): void {
 /**
  * Returns the PAF document as a Blob for upload/storage
  */
-export function getPAFBlob(data: PAFData, supportingDocs?: SupportingDocs): Blob {
-  const doc = generatePAFDocument(data, supportingDocs);
+export async function getPAFBlob(data: PAFData, supportingDocs?: SupportingDocs): Promise<Blob> {
+  const doc = await generatePAFDocument(data, supportingDocs);
   return doc.output('blob');
 }

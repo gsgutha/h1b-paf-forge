@@ -1,4 +1,5 @@
-import { FileText, Download, Printer, Edit2, CheckCircle, Bell, Users, Building2 } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, Download, Printer, Edit2, CheckCircle, Bell, Building2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { PAFData } from '@/types/paf';
@@ -64,6 +65,7 @@ function DataRow({ label, value }: { label: string; value?: string | number | bo
 
 export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }: ReviewStepProps) {
   const { toast } = useToast();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const formatCurrency = (amount: number, unit: string) => {
     const formatted = new Intl.NumberFormat('en-US', {
@@ -81,32 +83,40 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    setIsGenerating(true);
     try {
-      downloadPAF(data, supportingDocs);
+      await downloadPAF(data, supportingDocs);
       toast({
         title: "PAF Downloaded!",
-        description: "Your complete Public Access File has been saved to your downloads folder.",
+        description: "Your complete Public Access File with all attachments has been saved.",
       });
       onGenerate();
     } catch (error) {
+      console.error('PDF generation error:', error);
       toast({
         title: "Download Failed",
         description: "There was an error generating the PDF. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    setIsGenerating(true);
     try {
-      printPAF(data, supportingDocs);
+      await printPAF(data, supportingDocs);
     } catch (error) {
+      console.error('Print error:', error);
       toast({
         title: "Print Failed",
         description: "There was an error opening the print preview. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -229,13 +239,21 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
             Back to Edit
           </Button>
           <div className="flex gap-3">
-            <Button variant="outline" size="lg" onClick={handlePrint}>
-              <Printer className="mr-2 h-4 w-4" />
+            <Button variant="outline" size="lg" onClick={handlePrint} disabled={isGenerating}>
+              {isGenerating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Printer className="mr-2 h-4 w-4" />
+              )}
               Print Preview
             </Button>
-            <Button variant="wizard" size="lg" onClick={handleDownload}>
-              <Download className="mr-2 h-4 w-4" />
-              Download PAF
+            <Button variant="wizard" size="lg" onClick={handleDownload} disabled={isGenerating}>
+              {isGenerating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              {isGenerating ? 'Generating...' : 'Download PAF'}
             </Button>
           </div>
         </div>
