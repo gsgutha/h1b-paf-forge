@@ -159,6 +159,12 @@ export function formatCurrency(amount: number, unit: string): string {
 
 export function formatDate(dateStr: string): string {
   try {
+    // Parse date string as local date to avoid timezone shifts
+    // For "YYYY-MM-DD" format, split and create date with local timezone
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      return format(new Date(year, month - 1, day), 'MMMM d, yyyy');
+    }
     return format(new Date(dateStr), 'MMMM d, yyyy');
   } catch {
     return dateStr;
@@ -167,6 +173,11 @@ export function formatDate(dateStr: string): string {
 
 export function formatShortDate(dateStr: string): string {
   try {
+    // Parse date string as local date to avoid timezone shifts
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      return format(new Date(year, month - 1, day), 'MM/dd/yyyy');
+    }
     return format(new Date(dateStr), 'MM/dd/yyyy');
   } catch {
     return dateStr;
