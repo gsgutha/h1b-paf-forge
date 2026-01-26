@@ -120,19 +120,24 @@ export function addBoldParagraph(ctx: PDFContext, text: string, fontSize: number
   ctx.yPos += lines.length * 5 + 3;
 }
 
-export function addSignatureLine(ctx: PDFContext, name: string, title?: string): void {
-  checkPageBreak(ctx, 30);
+export function addSignatureLine(ctx: PDFContext, name: string, title?: string, companyName?: string): void {
+  checkPageBreak(ctx, 35);
   ctx.yPos += 10;
   ctx.doc.setDrawColor(...PDF_CONFIG.colors.black);
   ctx.doc.line(ctx.margin, ctx.yPos, ctx.margin + 80, ctx.yPos);
   ctx.yPos += 5;
   ctx.doc.setFontSize(10);
-  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.text(name, ctx.margin, ctx.yPos);
   if (title) {
     ctx.yPos += 5;
     ctx.doc.setFont('helvetica', 'italic');
     ctx.doc.text(title, ctx.margin, ctx.yPos);
+  }
+  if (companyName) {
+    ctx.yPos += 5;
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.text(companyName, ctx.margin, ctx.yPos);
   }
   ctx.yPos += 10;
 }

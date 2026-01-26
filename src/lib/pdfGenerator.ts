@@ -78,7 +78,7 @@ export async function generatePAFDocument(
   
   // 7. H-1B Dependency and Willful Violator Status
   if (mergedOptions.includeH1BDependency) {
-    addH1BDependencySection(ctx, data);
+    addH1BDependencySection(ctx, data, supportingDocs);
   }
   
   // 8. Recruitment Summary (only for H-1B dependent employers)

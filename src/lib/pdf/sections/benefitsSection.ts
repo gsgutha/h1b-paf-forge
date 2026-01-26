@@ -108,7 +108,7 @@ export async function addBenefitsSection(
   // Signature
   checkPageBreak(ctx, 40);
   ctx.yPos += 15;
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.employer.legalBusinessName, margin, ctx.yPos);
-  addSignatureLine(ctx, 'Authorized Representative');
+  const signerName = supportingDocs?.signingAuthorityName || 'Authorized Representative';
+  const signerTitle = supportingDocs?.signingAuthorityTitle || undefined;
+  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
 }
