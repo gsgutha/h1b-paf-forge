@@ -245,8 +245,8 @@ Deno.serve(async (req) => {
     const dataText = chunkText.substring(dataStartIndex);
     const lines = dataText.split('\n');
     
-    // The last line might be incomplete, so we'll track where we actually end
-    let lastCompleteLineEnd = dataStartIndex;
+    // Track bytes processed in this chunk (relative to dataStartIndex)
+    let bytesProcessedInData = 0;
     const records: Record<string, unknown>[] = [];
     let skipped = 0;
     
@@ -255,8 +255,9 @@ Deno.serve(async (req) => {
     
     for (const line of linesToProcess) {
       const trimmedLine = line.trim();
+      bytesProcessedInData += line.length + 1; // +1 for newline
+      
       if (!trimmedLine) {
-        lastCompleteLineEnd += line.length + 1;
         continue;
       }
       
@@ -269,7 +270,6 @@ Deno.serve(async (req) => {
       
       if (!caseNumber || !caseStatus || !visaClass || !employerName) {
         skipped++;
-        lastCompleteLineEnd += line.length + 1;
         continue;
       }
 
@@ -313,7 +313,6 @@ Deno.serve(async (req) => {
       };
 
       records.push(record);
-      lastCompleteLineEnd += line.length + 1;
     }
 
     console.log(`Parsed ${records.length} records, skipped ${skipped}`);
@@ -338,9 +337,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Calculate next byte position
-    const nextByteStart = startByte + lastCompleteLineEnd;
-    const hasMore = totalSize > 0 && nextByteStart < totalSize;
+    // Calculate next byte position correctly:
+    // startByte + dataStartIndex gives us where data started in absolute terms
+    // bytesProcessedInData is how many bytes of complete lines we processed
+    const nextByteStart = startByte + dataStartIndex + bytesProcessedInData;
+    
+    // Ensure we actually made progress - if not, we're done
+    const madeProgress = bytesProcessedInData > 0 || (startByte === 0 && dataStartIndex > 0);
+    const hasMore = totalSize > 0 && nextByteStart < totalSize && madeProgress;
 
     // Calculate progress percentage
     const progressPercent = totalSize > 0 ? Math.round((nextByteStart / totalSize) * 100) : 0;
@@ -349,7 +353,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         totalSize,
-        processedBytes: lastCompleteLineEnd,
+        processedBytes: dataStartIndex + bytesProcessedInData,
         inserted,
         errors,
         skipped,
