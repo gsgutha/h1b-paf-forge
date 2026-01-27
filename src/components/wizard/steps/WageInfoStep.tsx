@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { DollarSign, Info, MapPin, Building2 } from 'lucide-react';
@@ -75,14 +75,17 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
     formState: { errors },
     setValue,
     watch,
+    control,
   } = useForm<WageInfo>({
     resolver: zodResolver(wageSchema),
     defaultValues: {
-      ...data,
+      prevailingWage: data.prevailingWage || 0,
       prevailingWageUnit: data.prevailingWageUnit || 'Year',
+      actualWage: data.actualWage || 0,
       actualWageUnit: data.actualWageUnit || 'Year',
       wageLevel: data.wageLevel || 'Level I',
       wageSource: data.wageSource || 'OES',
+      wageSourceDate: data.wageSourceDate || '',
       hasSecondaryWage: data.hasSecondaryWage ?? isDifferentCounty,
       secondaryWage: data.secondaryWage || {
         prevailingWage: 0,
@@ -174,23 +177,24 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
 
               <div>
                 <Label>Wage Unit *</Label>
-                <Select
-                  value={watch('prevailingWageUnit')}
-                  onValueChange={(value: WageInfo['prevailingWageUnit']) => 
-                    setValue('prevailingWageUnit', value)
-                  }
-                >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Hour">Per Hour</SelectItem>
-                    <SelectItem value="Week">Per Week</SelectItem>
-                    <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
-                    <SelectItem value="Month">Per Month</SelectItem>
-                    <SelectItem value="Year">Per Year</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="prevailingWageUnit"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Hour">Per Hour</SelectItem>
+                        <SelectItem value="Week">Per Week</SelectItem>
+                        <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
+                        <SelectItem value="Month">Per Month</SelectItem>
+                        <SelectItem value="Year">Per Year</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               <div>
@@ -211,39 +215,45 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <Select
-                  value={watch('wageLevel')}
-                  onValueChange={(value: WageInfo['wageLevel']) => setValue('wageLevel', value)}
-                >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Level I">Level I (Entry)</SelectItem>
-                    <SelectItem value="Level II">Level II (Qualified)</SelectItem>
-                    <SelectItem value="Level III">Level III (Experienced)</SelectItem>
-                    <SelectItem value="Level IV">Level IV (Fully Competent)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="wageLevel"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Level I">Level I (Entry)</SelectItem>
+                        <SelectItem value="Level II">Level II (Qualified)</SelectItem>
+                        <SelectItem value="Level III">Level III (Experienced)</SelectItem>
+                        <SelectItem value="Level IV">Level IV (Fully Competent)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               <div>
                 <Label htmlFor="wageSource">Wage Source *</Label>
-                <Select
-                  value={watch('wageSource')}
-                  onValueChange={(value) => setValue('wageSource', value)}
-                >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="OES">OES (OEWS)</SelectItem>
-                    <SelectItem value="CBA">Collective Bargaining Agreement</SelectItem>
-                    <SelectItem value="DBA">Davis-Bacon Act</SelectItem>
-                    <SelectItem value="SCA">Service Contract Act</SelectItem>
-                    <SelectItem value="Other">Other Survey</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="wageSource"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="OES">OES (OEWS)</SelectItem>
+                        <SelectItem value="CBA">Collective Bargaining Agreement</SelectItem>
+                        <SelectItem value="DBA">Davis-Bacon Act</SelectItem>
+                        <SelectItem value="SCA">Service Contract Act</SelectItem>
+                        <SelectItem value="Other">Other Survey</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.wageSource && (
                   <p className="mt-1 text-sm text-destructive">{errors.wageSource.message}</p>
                 )}
@@ -318,23 +328,24 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
 
                   <div>
                     <Label>Wage Unit *</Label>
-                    <Select
-                      value={watch('secondaryWage.prevailingWageUnit')}
-                      onValueChange={(value: WageInfo['prevailingWageUnit']) => 
-                        setValue('secondaryWage.prevailingWageUnit', value)
-                      }
-                    >
-                      <SelectTrigger className="mt-1.5">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Hour">Per Hour</SelectItem>
-                        <SelectItem value="Week">Per Week</SelectItem>
-                        <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
-                        <SelectItem value="Month">Per Month</SelectItem>
-                        <SelectItem value="Year">Per Year</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      name="secondaryWage.prevailingWageUnit"
+                      control={control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="mt-1.5">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Hour">Per Hour</SelectItem>
+                            <SelectItem value="Week">Per Week</SelectItem>
+                            <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
+                            <SelectItem value="Month">Per Month</SelectItem>
+                            <SelectItem value="Year">Per Year</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                   </div>
 
                   <div>
@@ -355,41 +366,45 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
                         </TooltipContent>
                       </Tooltip>
                     </div>
-                    <Select
-                      value={watch('secondaryWage.wageLevel')}
-                      onValueChange={(value: WageInfo['wageLevel']) => 
-                        setValue('secondaryWage.wageLevel', value)
-                      }
-                    >
-                      <SelectTrigger className="mt-1.5">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Level I">Level I (Entry)</SelectItem>
-                        <SelectItem value="Level II">Level II (Qualified)</SelectItem>
-                        <SelectItem value="Level III">Level III (Experienced)</SelectItem>
-                        <SelectItem value="Level IV">Level IV (Fully Competent)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      name="secondaryWage.wageLevel"
+                      control={control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="mt-1.5">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Level I">Level I (Entry)</SelectItem>
+                            <SelectItem value="Level II">Level II (Qualified)</SelectItem>
+                            <SelectItem value="Level III">Level III (Experienced)</SelectItem>
+                            <SelectItem value="Level IV">Level IV (Fully Competent)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                   </div>
 
                   <div>
                     <Label>Wage Source *</Label>
-                    <Select
-                      value={watch('secondaryWage.wageSource')}
-                      onValueChange={(value) => setValue('secondaryWage.wageSource', value)}
-                    >
-                      <SelectTrigger className="mt-1.5">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="OES">OES (OEWS)</SelectItem>
-                        <SelectItem value="CBA">Collective Bargaining Agreement</SelectItem>
-                        <SelectItem value="DBA">Davis-Bacon Act</SelectItem>
-                        <SelectItem value="SCA">Service Contract Act</SelectItem>
-                        <SelectItem value="Other">Other Survey</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      name="secondaryWage.wageSource"
+                      control={control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="mt-1.5">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="OES">OES (OEWS)</SelectItem>
+                            <SelectItem value="CBA">Collective Bargaining Agreement</SelectItem>
+                            <SelectItem value="DBA">Davis-Bacon Act</SelectItem>
+                            <SelectItem value="SCA">Service Contract Act</SelectItem>
+                            <SelectItem value="Other">Other Survey</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                   </div>
 
                   <div>
@@ -447,23 +462,24 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
 
               <div>
                 <Label>Wage Unit *</Label>
-                <Select
-                  value={watch('actualWageUnit')}
-                  onValueChange={(value: WageInfo['actualWageUnit']) => 
-                    setValue('actualWageUnit', value)
-                  }
-                >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Hour">Per Hour</SelectItem>
-                    <SelectItem value="Week">Per Week</SelectItem>
-                    <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
-                    <SelectItem value="Month">Per Month</SelectItem>
-                    <SelectItem value="Year">Per Year</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="actualWageUnit"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Hour">Per Hour</SelectItem>
+                        <SelectItem value="Week">Per Week</SelectItem>
+                        <SelectItem value="Bi-Weekly">Bi-Weekly</SelectItem>
+                        <SelectItem value="Month">Per Month</SelectItem>
+                        <SelectItem value="Year">Per Year</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
             </div>
           </CardContent>
