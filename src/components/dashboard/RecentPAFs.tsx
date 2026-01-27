@@ -1,4 +1,4 @@
-import { FileText, MoreHorizontal, Eye, Edit, Download, Trash2 } from 'lucide-react';
+import { FileText, MoreHorizontal, Eye, Edit, Download, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,50 +8,71 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from 'react-router-dom';
 
-interface PAFItem {
+interface PAFRecord {
   id: string;
-  jobTitle: string;
-  employeeName: string;
-  caseNumber: string;
-  status: 'certified' | 'pending' | 'draft';
-  createdAt: string;
+  job_title: string;
+  employer_legal_name: string;
+  lca_case_number: string | null;
+  created_at: string;
+  soc_code: string;
 }
 
-const samplePAFs: PAFItem[] = [
-  {
-    id: '1',
-    jobTitle: 'Software Developer',
-    employeeName: 'John Smith',
-    caseNumber: 'I-200-24001-123456',
-    status: 'certified',
-    createdAt: '2024-01-15',
-  },
-  {
-    id: '2',
-    jobTitle: 'Data Scientist',
-    employeeName: 'Jane Doe',
-    caseNumber: 'I-200-24002-789012',
-    status: 'pending',
-    createdAt: '2024-01-10',
-  },
-  {
-    id: '3',
-    jobTitle: 'Systems Analyst',
-    employeeName: 'Bob Johnson',
-    caseNumber: '',
-    status: 'draft',
-    createdAt: '2024-01-08',
-  },
-];
-
-const statusConfig = {
-  certified: { label: 'Certified', className: 'bg-success/10 text-success border-success/20' },
-  pending: { label: 'Pending', className: 'bg-warning/10 text-warning border-warning/20' },
-  draft: { label: 'Draft', className: 'bg-muted text-muted-foreground border-border' },
-};
-
 export function RecentPAFs() {
+  const { data: pafs, isLoading } = useQuery({
+    queryKey: ['recent-pafs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('paf_records')
+        .select('id, job_title, employer_legal_name, lca_case_number, created_at, soc_code')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      return data as PAFRecord[];
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="paf-section slide-up">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-foreground">Recent PAFs</h3>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!pafs || pafs.length === 0) {
+    return (
+      <div className="paf-section slide-up">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-foreground">Recent PAFs</h3>
+        </div>
+        <div className="text-center py-12 text-muted-foreground">
+          <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <p className="font-medium">No PAFs created yet</p>
+          <p className="text-sm mt-1">Create your first Public Access File to get started</p>
+          <Button asChild className="mt-4">
+            <Link to="/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Create PAF
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="paf-section slide-up">
       <div className="mb-4 flex items-center justify-between">
@@ -62,7 +83,7 @@ export function RecentPAFs() {
       </div>
       
       <div className="divide-y divide-border">
-        {samplePAFs.map((paf) => (
+        {pafs.map((paf) => (
           <div
             key={paf.id}
             className="flex items-center gap-4 py-4 transition-colors hover:bg-muted/30"
@@ -72,22 +93,21 @@ export function RecentPAFs() {
             </div>
             
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-foreground truncate">{paf.jobTitle}</p>
-              <p className="text-sm text-muted-foreground">{paf.employeeName}</p>
+              <p className="font-medium text-foreground truncate">{paf.job_title}</p>
+              <p className="text-sm text-muted-foreground">{paf.employer_legal_name}</p>
             </div>
             
             <div className="hidden md:block text-right">
               <p className="text-sm font-mono text-foreground">
-                {paf.caseNumber || 'No case number'}
+                {paf.lca_case_number || 'No case number'}
               </p>
-              <p className="text-xs text-muted-foreground">{paf.createdAt}</p>
+              <p className="text-xs text-muted-foreground">
+                {new Date(paf.created_at).toLocaleDateString()}
+              </p>
             </div>
             
-            <Badge 
-              variant="outline" 
-              className={statusConfig[paf.status].className}
-            >
-              {statusConfig[paf.status].label}
+            <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
+              {paf.soc_code}
             </Badge>
             
             <DropdownMenu>
