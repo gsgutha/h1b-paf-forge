@@ -35,8 +35,11 @@ export default function AdminImport() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.csv')) {
-      toast.error("Please upload a CSV file. If you have an XLSX file, please convert it to CSV first.");
+    const fileName = file.name.toLowerCase();
+    console.log('Selected file:', file.name, 'Size:', file.size, 'Type:', file.type);
+    
+    if (!fileName.endsWith('.csv')) {
+      toast.error(`File "${file.name}" is not a CSV. Please upload a .csv file.`);
       return;
     }
 
