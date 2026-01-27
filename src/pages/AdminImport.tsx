@@ -10,37 +10,26 @@ import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2 } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const CHUNK_SIZE = 5000; // rows per chunk
+const CHUNK_SIZE = 10000; // rows per chunk for server-side processing
 
 export default function AdminImport() {
+  const [isUploading, setIsUploading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [importProgress, setImportProgress] = useState(0);
   const [currentChunk, setCurrentChunk] = useState(0);
   const [totalChunks, setTotalChunks] = useState(0);
   const [result, setResult] = useState<{
     success: boolean;
-    totalParsed?: number;
+    totalLines?: number;
     inserted?: number;
     errors?: number;
     skipped?: number;
     message?: string;
   } | null>(null);
   const [fiscalYear, setFiscalYear] = useState("FY2024");
+  const [uploadedFilePath, setUploadedFilePath] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const splitCSVIntoChunks = (csvText: string): string[] => {
-    const lines = csvText.split('\n');
-    const header = lines[0];
-    const dataLines = lines.slice(1).filter(line => line.trim());
-    
-    const chunks: string[] = [];
-    for (let i = 0; i < dataLines.length; i += CHUNK_SIZE) {
-      const chunkLines = dataLines.slice(i, i + CHUNK_SIZE);
-      chunks.push(header + '\n' + chunkLines.join('\n'));
-    }
-    
-    return chunks;
-  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -51,68 +40,137 @@ export default function AdminImport() {
       return;
     }
 
-    setIsImporting(true);
-    setProgress(0);
+    setIsUploading(true);
+    setUploadProgress(0);
     setResult(null);
-    setCurrentChunk(0);
+    setUploadedFilePath(null);
 
     try {
-      toast.info("Reading file...");
-      const text = await file.text();
+      const fileName = `lca_${Date.now()}_${file.name}`;
       
-      const chunks = splitCSVIntoChunks(text);
-      setTotalChunks(chunks.length);
-      
-      toast.info(`File split into ${chunks.length} chunks of ${CHUNK_SIZE.toLocaleString()} rows each`);
+      toast.info(`Uploading ${(file.size / 1024 / 1024).toFixed(1)} MB file to storage...`);
 
-      let totalInserted = 0;
-      let totalErrors = 0;
-      let totalSkipped = 0;
-      let totalParsed = 0;
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('lca-imports')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      for (let i = 0; i < chunks.length; i++) {
-        setCurrentChunk(i + 1);
-        setProgress(Math.round(((i + 1) / chunks.length) * 100));
-        
-        const { data, error } = await supabase.functions.invoke('import-lca-disclosure', {
-          body: { csvData: chunks[i], fiscalYear }
+      if (error) {
+        throw new Error(`Upload failed: ${error.message}`);
+      }
+
+      setUploadProgress(100);
+      setUploadedFilePath(data.path);
+      toast.success("File uploaded successfully! Click 'Start Import' to process.");
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : "Upload failed");
+      setResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred'
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const startImport = async () => {
+    if (!uploadedFilePath) {
+      toast.error("No file uploaded. Please upload a file first.");
+      return;
+    }
+
+    setIsImporting(true);
+    setImportProgress(0);
+    setCurrentChunk(0);
+    setResult(null);
+
+    let totalInserted = 0;
+    let totalErrors = 0;
+    let totalSkipped = 0;
+    let totalLines = 0;
+    let chunkStart = 0;
+    let chunkNumber = 0;
+
+    try {
+      toast.info("Starting server-side import...");
+
+      // Process in chunks until done
+      let hasMore = true;
+      while (hasMore) {
+        chunkNumber++;
+        setCurrentChunk(chunkNumber);
+
+        const { data, error } = await supabase.functions.invoke('process-lca-import', {
+          body: { 
+            filePath: uploadedFilePath, 
+            fiscalYear,
+            chunkStart,
+            chunkSize: CHUNK_SIZE
+          }
         });
 
         if (error) {
-          console.error(`Chunk ${i + 1} error:`, error);
-          totalErrors += CHUNK_SIZE;
-          continue;
+          console.error(`Chunk ${chunkNumber} error:`, error);
+          throw new Error(`Processing failed at chunk ${chunkNumber}: ${error.message}`);
         }
 
+        totalLines = data.totalLines || totalLines;
         totalInserted += data.inserted || 0;
         totalErrors += data.errors || 0;
         totalSkipped += data.skipped || 0;
-        totalParsed += data.totalParsed || 0;
+        hasMore = data.hasMore;
+        chunkStart = data.nextChunkStart || 0;
+
+        // Update progress
+        const processedSoFar = chunkStart || totalLines;
+        const progressPercent = Math.min(Math.round((processedSoFar / totalLines) * 100), 100);
+        setImportProgress(progressPercent);
+        setTotalChunks(Math.ceil(totalLines / CHUNK_SIZE));
+
+        console.log(`Chunk ${chunkNumber}: inserted ${data.inserted}, hasMore: ${hasMore}`);
       }
 
-      setProgress(100);
+      setImportProgress(100);
       setResult({
         success: true,
-        totalParsed,
+        totalLines,
         inserted: totalInserted,
         errors: totalErrors,
         skipped: totalSkipped
       });
       toast.success(`Successfully imported ${totalInserted.toLocaleString()} LCA records`);
+
+      // Clean up uploaded file
+      await supabase.storage.from('lca-imports').remove([uploadedFilePath]);
+      setUploadedFilePath(null);
+
     } catch (error) {
       console.error('Import error:', error);
       setResult({
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error occurred'
       });
-      toast.error("Import failed. Please check the file format.");
+      toast.error("Import failed. Check the error details below.");
     } finally {
       setIsImporting(false);
       setCurrentChunk(0);
       setTotalChunks(0);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+    }
+  };
+
+  const cancelUpload = async () => {
+    if (uploadedFilePath) {
+      await supabase.storage.from('lca-imports').remove([uploadedFilePath]);
+      setUploadedFilePath(null);
+      toast.info("Upload cancelled and file removed.");
     }
   };
 
@@ -122,7 +180,7 @@ export default function AdminImport() {
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold text-foreground">Admin: Import LCA Data</h1>
           <p className="mt-2 text-muted-foreground">
-            Import LCA disclosure data from DOL CSV files
+            Import LCA disclosure data from DOL CSV files (supports large files up to 100MB+)
           </p>
         </div>
       </div>
@@ -135,8 +193,8 @@ export default function AdminImport() {
               Import LCA Disclosure File
             </CardTitle>
             <CardDescription>
-              Upload a CSV file from the DOL LCA Disclosure Data. Large files are automatically 
-              split into chunks of {CHUNK_SIZE.toLocaleString()} rows for reliable processing.
+              Upload a CSV file from the DOL LCA Disclosure Data. Large files are uploaded to storage 
+              first, then processed server-side in chunks of {CHUNK_SIZE.toLocaleString()} rows.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -147,11 +205,13 @@ export default function AdminImport() {
                 value={fiscalYear}
                 onChange={(e) => setFiscalYear(e.target.value)}
                 placeholder="e.g., FY2024"
+                disabled={isUploading || isImporting}
               />
             </div>
 
+            {/* Step 1: Upload */}
             <div className="space-y-2">
-              <Label htmlFor="file">CSV File</Label>
+              <Label>Step 1: Upload CSV File</Label>
               <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
                 <input
                   ref={fileInputRef}
@@ -159,30 +219,71 @@ export default function AdminImport() {
                   id="file"
                   accept=".csv"
                   onChange={handleFileUpload}
-                  disabled={isImporting}
+                  disabled={isUploading || isImporting || !!uploadedFilePath}
                   className="hidden"
                 />
                 <label
                   htmlFor="file"
                   className="cursor-pointer flex flex-col items-center gap-2"
                 >
-                  {isImporting ? (
+                  {isUploading ? (
                     <Loader2 className="h-10 w-10 text-muted-foreground animate-spin" />
+                  ) : uploadedFilePath ? (
+                    <CheckCircle className="h-10 w-10 text-green-500" />
                   ) : (
                     <Upload className="h-10 w-10 text-muted-foreground" />
                   )}
                   <span className="text-sm text-muted-foreground">
-                    {isImporting ? "Importing..." : "Click to upload CSV file"}
+                    {isUploading 
+                      ? "Uploading to storage..." 
+                      : uploadedFilePath 
+                        ? "File ready for import" 
+                        : "Click to upload CSV file (up to 100MB+)"}
                   </span>
                 </label>
               </div>
+              {uploadedFilePath && !isImporting && (
+                <Button variant="outline" size="sm" onClick={cancelUpload}>
+                  Cancel & Remove File
+                </Button>
+              )}
             </div>
+
+            {isUploading && (
+              <div className="space-y-2">
+                <Progress value={uploadProgress} />
+                <p className="text-sm text-muted-foreground text-center">
+                  Uploading... {uploadProgress}%
+                </p>
+              </div>
+            )}
+
+            {/* Step 2: Import */}
+            {uploadedFilePath && !isUploading && (
+              <div className="space-y-4">
+                <Label>Step 2: Process Import</Label>
+                <Button 
+                  onClick={startImport} 
+                  disabled={isImporting}
+                  className="w-full"
+                >
+                  {isImporting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Start Import"
+                  )}
+                </Button>
+              </div>
+            )}
 
             {isImporting && (
               <div className="space-y-2">
-                <Progress value={progress} />
+                <Progress value={importProgress} />
                 <p className="text-sm text-muted-foreground text-center">
-                  Processing chunk {currentChunk} of {totalChunks}... ({progress}%)
+                  Processing chunk {currentChunk}{totalChunks > 0 ? ` of ~${totalChunks}` : ''}... ({importProgress}%)
                 </p>
               </div>
             )}
@@ -200,7 +301,7 @@ export default function AdminImport() {
                 <AlertDescription>
                   {result.success ? (
                     <ul className="mt-2 text-sm space-y-1">
-                      <li>Records parsed: {result.totalParsed?.toLocaleString()}</li>
+                      <li>Total lines in file: {result.totalLines?.toLocaleString()}</li>
                       <li>Records inserted: {result.inserted?.toLocaleString()}</li>
                       <li>Records skipped: {result.skipped?.toLocaleString()}</li>
                       {result.errors ? <li>Errors: {result.errors?.toLocaleString()}</li> : null}
@@ -217,7 +318,8 @@ export default function AdminImport() {
               <ol className="list-decimal list-inside space-y-1">
                 <li>Download LCA disclosure data from <a href="https://www.dol.gov/agencies/eta/foreign-labor/performance" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">DOL Performance Data</a></li>
                 <li>Convert the XLSX file to CSV format</li>
-                <li>Upload the CSV file above (large files are auto-chunked)</li>
+                <li>Upload the CSV file (Step 1) - large files are stored temporarily</li>
+                <li>Click "Start Import" (Step 2) to process server-side</li>
               </ol>
             </div>
           </CardContent>
