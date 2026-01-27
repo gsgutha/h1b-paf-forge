@@ -70,14 +70,15 @@ export function addCoverPage(
   
   const tocItems = [
     { num: '1.', text: 'Copy of the Certified Labor Condition Application' },
-    { num: '2.', text: 'Copy of Actual Wage Memorandum' },
-    { num: '3.', text: 'Prevailing Wage Rate and its Source' },
-    { num: '4.', text: 'Memorandum to Confirm Compliance with Posting Requirement' },
-    { num: '5.', text: 'Benefits Summary and Benefits Materials' },
-    { num: '6.', text: 'If H-1B dependent company, list of "exempt" H-1B non-immigrants' },
-    { num: '7.', text: 'If H-1B dependent company and LCA is filed for a non-exempt H-1B employee, summary of the recruitment methods used and the time frames of recruitment of U.S. workers' },
-    { num: '8.', text: 'Sworn statement if there is a name change & List of employees affected with the name change and new EIN number if any' },
-    { num: '9.', text: 'If dependent company and LCA is filed for a non-exempt H-1B employee, Secondary Displacement Inquiry' },
+    { num: '2.', text: 'Actual Wage Standards (Company-Wide Policy)' },
+    { num: '3.', text: 'Actual Wage Determination (Position-Specific)' },
+    { num: '4.', text: 'Prevailing Wage Rate and its Source' },
+    { num: '5.', text: 'Memorandum to Confirm Compliance with Posting Requirement' },
+    { num: '6.', text: 'Benefits Summary and Benefits Materials' },
+    { num: '7.', text: 'If H-1B dependent company, list of "exempt" H-1B non-immigrants' },
+    { num: '8.', text: 'If H-1B dependent company and LCA is filed for a non-exempt H-1B employee, summary of the recruitment methods used and the time frames of recruitment of U.S. workers' },
+    { num: '9.', text: 'Sworn statement if there is a name change & List of employees affected with the name change and new EIN number if any' },
+    { num: '10.', text: 'If dependent company and LCA is filed for a non-exempt H-1B employee, Secondary Displacement Inquiry' },
   ];
   
   doc.setFontSize(10);

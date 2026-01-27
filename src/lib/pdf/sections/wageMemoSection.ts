@@ -13,6 +13,11 @@ import {
   formatDate,
 } from '../pdfHelpers';
 
+/**
+ * Adds the position-specific Actual Wage Determination section.
+ * This document is UNIQUE for each LCA/position - it explains how the 
+ * wage was determined for this specific job title, SOC code, and worker.
+ */
 export function addWageMemoSection(
   ctx: PDFContext, 
   data: PAFData, 
@@ -22,134 +27,212 @@ export function addWageMemoSection(
   
   // Start new page
   doc.addPage();
-  addPageHeader(ctx, 'Statement of Actual Wage Determination');
+  addPageHeader(ctx, 'Actual Wage Determination');
   
   ctx.yPos += 10;
-  addCenteredTitle(ctx, 'STATEMENT OF ACTUAL WAGE DETERMINATION FORM', 14);
+  addCenteredTitle(ctx, 'ACTUAL WAGE DETERMINATION', 14);
+  addCenteredTitle(ctx, 'Position-Specific Wage Analysis', 11);
   
   ctx.yPos += 10;
   
   // Employee name for personalization
   const employeeName = data.employer.employeeName || 'the H-1B worker';
   
-  // Introduction paragraph with populated data
-  const introPara = `This memorandum is prepared in accordance with the regulations of the U.S. Department of Labor (DOL) at 20 CFR Section 655.700 regarding the Labor Condition Application (LCA) filed by ${data.employer.legalBusinessName} for the position of ${data.job.jobTitle} for ${employeeName} located at: ${data.worksite.worksiteName ? data.worksite.worksiteName + ', ' : ''}${data.worksite.address1}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`;
-  addParagraph(ctx, introPara);
+  // Position Identification Box
+  doc.setFillColor(...PDF_CONFIG.colors.lightGray);
+  const boxHeight = 45;
+  doc.rect(margin, ctx.yPos, pageWidth - margin * 2, boxHeight, 'F');
+  ctx.yPos += 8;
   
-  ctx.yPos += 5;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('POSITION IDENTIFICATION', margin + 5, ctx.yPos);
+  ctx.yPos += 8;
   
-  // Position Details Section
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(`Job Title: ${data.job.jobTitle}`, margin + 5, ctx.yPos);
+  ctx.yPos += 6;
+  doc.text(`SOC Code: ${data.job.socCode} - ${data.job.socTitle}`, margin + 5, ctx.yPos);
+  ctx.yPos += 6;
+  if (data.job.onetCode) {
+    doc.text(`O*NET Code: ${data.job.onetCode}${data.job.onetTitle ? ' - ' + data.job.onetTitle : ''}`, margin + 5, ctx.yPos);
+    ctx.yPos += 6;
+  }
+  doc.text(`Worker: ${employeeName}`, margin + 5, ctx.yPos);
+  ctx.yPos += 15;
+  
+  // Introduction - position specific
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('POSITION DETAILS', margin, ctx.yPos);
+  doc.text('I. DETERMINATION SUMMARY', margin, ctx.yPos);
   ctx.yPos += 8;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   
-  const positionDetails = [
-    `Position Title: ${data.job.jobTitle}`,
-    `SOC Code: ${data.job.socCode} - ${data.job.socTitle}`,
-    data.job.onetCode ? `O*NET Code: ${data.job.onetCode}${data.job.onetTitle ? ' - ' + data.job.onetTitle : ''}` : '',
-    `Employment Period: ${formatDate(data.job.beginDate)} to ${formatDate(data.job.endDate)}`,
-    `Employment Type: ${data.job.isFullTime ? 'Full-Time' : 'Part-Time'}`,
-    `Workers Needed: ${data.job.workersNeeded}`,
-  ].filter(Boolean);
-  
-  positionDetails.forEach(detail => {
-    doc.text(detail, margin, ctx.yPos);
-    ctx.yPos += 6;
-  });
+  const introPara = `This Actual Wage Determination is prepared for the position of ${data.job.jobTitle} (SOC ${data.job.socCode}) in accordance with 20 CFR § 655.731 and the Company's Actual Wage Standards policy. This determination applies specifically to ${employeeName} for employment at ${data.worksite.worksiteName ? data.worksite.worksiteName + ', ' : ''}${data.worksite.address1}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`;
+  addParagraph(ctx, introPara);
   
   ctx.yPos += 5;
   
-  // Higher of Actual or Prevailing Wage Confirmation
-  ctx.yPos += 5;
+  // Wage Confirmation Box - CRITICAL COMPLIANCE ELEMENT
   const actualWage = data.wage.actualWage;
   const prevailingWage = data.wage.prevailingWage;
   const higherWage = Math.max(actualWage, prevailingWage);
   const wageSource = actualWage >= prevailingWage ? 'actual wage' : 'prevailing wage';
   
-  const wageConfirmation = `WAGE CONFIRMATION: ${employeeName} will be paid ${formatCurrency(higherWage, data.wage.actualWageUnit)}, which is the HIGHER of the actual wage (${formatCurrency(actualWage, data.wage.actualWageUnit)}) or the prevailing wage (${formatCurrency(prevailingWage, data.wage.prevailingWageUnit)}), as required by 20 CFR § 655.731(a).`;
+  doc.setFillColor(220, 245, 220); // Light green
+  const confirmBoxHeight = 30;
+  doc.rect(margin, ctx.yPos, pageWidth - margin * 2, confirmBoxHeight, 'F');
+  doc.setDrawColor(34, 139, 34); // Forest green border
+  doc.rect(margin, ctx.yPos, pageWidth - margin * 2, confirmBoxHeight, 'S');
+  ctx.yPos += 10;
   
-  // Draw highlighted confirmation box
-  doc.setFillColor(...PDF_CONFIG.colors.lightGray);
-  const confirmLines = doc.splitTextToSize(wageConfirmation, pageWidth - margin * 2 - 10);
-  doc.rect(margin, ctx.yPos - 3, pageWidth - margin * 2, confirmLines.length * 5 + 8, 'F');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  doc.text(confirmLines, margin + 5, ctx.yPos + 2);
-  ctx.yPos += confirmLines.length * 5 + 12;
+  doc.setTextColor(0, 100, 0);
+  const wageConfirmation = `WAGE CONFIRMATION: ${employeeName} will be paid ${formatCurrency(higherWage, data.wage.actualWageUnit)}, which is the HIGHER of the actual wage or the prevailing wage, as required by 20 CFR § 655.731(a).`;
+  const confirmLines = doc.splitTextToSize(wageConfirmation, pageWidth - margin * 2 - 10);
+  doc.text(confirmLines, margin + 5, ctx.yPos);
+  doc.setTextColor(0, 0, 0); // Reset to black
+  ctx.yPos += confirmBoxHeight - 5;
   
+  ctx.yPos += 10;
   doc.setFont('helvetica', 'normal');
   
-  // Prevailing Wage Details
-  ctx.yPos += 5;
+  // Employment Details
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('PREVAILING WAGE INFORMATION', margin, ctx.yPos);
+  doc.text('II. EMPLOYMENT DETAILS', margin, ctx.yPos);
   ctx.yPos += 8;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   
-  const pwDetails = [
-    `Prevailing Wage: ${formatCurrency(prevailingWage, data.wage.prevailingWageUnit)}`,
-    `Wage Level: ${data.wage.wageLevel}`,
-    `Wage Source: ${data.wage.wageSource}`,
-    `Wage Source Date: ${formatDate(data.wage.wageSourceDate)}`,
-    `Wage Area: ${data.worksite.areaName || data.worksite.city + ', ' + data.worksite.state}`,
-  ];
+  const employmentDetails = [
+    `Employment Period: ${formatDate(data.job.beginDate)} to ${formatDate(data.job.endDate)}`,
+    `Employment Type: ${data.job.isFullTime ? 'Full-Time' : 'Part-Time'}`,
+    `Workers Needed: ${data.job.workersNeeded}`,
+    `Worksite: ${data.worksite.city}, ${data.worksite.state}`,
+    data.worksite.areaName ? `Wage Area: ${data.worksite.areaName}` : '',
+  ].filter(Boolean);
   
-  pwDetails.forEach(detail => {
+  employmentDetails.forEach(detail => {
     doc.text(detail, margin, ctx.yPos);
     ctx.yPos += 6;
   });
   
   ctx.yPos += 5;
   
-  // Wage statement
-  const wageStatement = `Pursuant to the LCA, ${employeeName} for the position of ${data.job.jobTitle} will be paid at a rate of ${formatCurrency(data.job.wageRateFrom, data.job.wageUnit)}${data.job.wageRateTo ? ' to ' + formatCurrency(data.job.wageRateTo, data.job.wageUnit) : ''}. In determining the wage for the position the following factors were considered:`;
-  addParagraph(ctx, wageStatement);
+  // Wage Analysis
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('III. WAGE ANALYSIS', margin, ctx.yPos);
+  ctx.yPos += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  
+  // Create a table-like structure
+  const wageData = [
+    ['Wage Type', 'Amount', 'Source'],
+    ['Prevailing Wage', formatCurrency(prevailingWage, data.wage.prevailingWageUnit), data.wage.wageSource],
+    ['Wage Level', data.wage.wageLevel, `As of ${formatDate(data.wage.wageSourceDate)}`],
+    ['Actual Wage Offered', formatCurrency(data.job.wageRateFrom, data.job.wageUnit), 'Employer Determination'],
+    ['Final Wage (Higher Of)', formatCurrency(higherWage, data.wage.actualWageUnit), wageSource === 'actual wage' ? 'Actual Wage Applied' : 'Prevailing Wage Applied'],
+  ];
+  
+  doc.setFont('helvetica', 'bold');
+  doc.text(wageData[0][0], margin, ctx.yPos);
+  doc.text(wageData[0][1], margin + 60, ctx.yPos);
+  doc.text(wageData[0][2], margin + 120, ctx.yPos);
+  ctx.yPos += 6;
+  
+  doc.setFont('helvetica', 'normal');
+  for (let i = 1; i < wageData.length; i++) {
+    doc.text(wageData[i][0], margin, ctx.yPos);
+    doc.text(wageData[i][1], margin + 60, ctx.yPos);
+    doc.text(wageData[i][2], margin + 120, ctx.yPos);
+    ctx.yPos += 6;
+  }
+  
+  ctx.yPos += 10;
+  checkPageBreak(ctx, 80);
+  
+  // Factors Applied - Position-Specific Analysis
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('IV. FACTORS APPLIED TO THIS POSITION', margin, ctx.yPos);
+  ctx.yPos += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  
+  addParagraph(ctx, `In determining the wage for the ${data.job.jobTitle} position, the following factors from our Actual Wage Standards policy were evaluated:`);
   
   ctx.yPos += 5;
   
-  // Numbered factors
-  const factors = [
-    'Experience, including whether the applicant has been previously employed in this position, the length of any such employment, the type of employment (i.e. supervisory in nature), and, the depth and breadth of such employment.',
-    'Educational background, including the level of education obtained, the existence of special educational achievements (such as superior class rank or other distinction), and the reputation of the educational facility or facilities attended.',
-    'Job responsibility and function, including nature of duties and responsibilities to be performed and degree of supervision to be exercised.',
-    'Possession of specialized knowledge, skills or training.',
-    'Other indicators of performance/ability, including job references, performance evaluations, awards, achievements and/or accomplishments.',
+  const positionFactors = [
+    {
+      factor: 'Experience Requirements',
+      analysis: `The position of ${data.job.jobTitle} requires experience commensurate with a ${data.wage.wageLevel} wage level. ${employeeName}'s prior experience in similar roles was evaluated against the requirements.`
+    },
+    {
+      factor: 'Educational Qualifications',
+      analysis: `Educational credentials appropriate for the ${data.job.socTitle} occupational classification (SOC ${data.job.socCode}) were verified and considered in the wage determination.`
+    },
+    {
+      factor: 'Job Responsibility',
+      analysis: `The duties and responsibilities of the ${data.job.jobTitle} position, including the level of autonomy and decision-making authority, support the determined wage rate.`
+    },
+    {
+      factor: 'Specialized Skills',
+      analysis: data.job.onetCode 
+        ? `The position aligns with O*NET ${data.job.onetCode} (${data.job.onetTitle}), which defines the specialized knowledge and skills required for this role.`
+        : `The technical skills and specialized knowledge required for the ${data.job.socTitle} classification were assessed.`
+    },
+    {
+      factor: 'Comparable Employees',
+      analysis: `The wage was compared against rates paid to similarly employed U.S. workers in comparable positions within the Company to ensure internal equity.`
+    }
   ];
   
-  doc.setFontSize(10);
-  factors.forEach((factor, index) => {
-    checkPageBreak(ctx, 20);
+  positionFactors.forEach((item, index) => {
+    checkPageBreak(ctx, 25);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${index + 1}.`, margin, ctx.yPos);
+    doc.text(`${index + 1}. ${item.factor}:`, margin, ctx.yPos);
     doc.setFont('helvetica', 'normal');
+    ctx.yPos += 5;
     
-    const lines = doc.splitTextToSize(factor, pageWidth - margin * 2 - 15);
-    doc.text(lines, margin + 12, ctx.yPos);
+    const lines = doc.splitTextToSize(item.analysis, pageWidth - margin * 2 - 10);
+    doc.text(lines, margin + 5, ctx.yPos);
     ctx.yPos += lines.length * 5 + 5;
   });
   
   ctx.yPos += 5;
+  checkPageBreak(ctx, 50);
   
-  // Additional consideration
-  addParagraph(ctx, 'We also may consider other legitimate business factors such as the current market for individuals with the applicant\'s experience and qualifications. The consideration of such factors conforms to recognized principles of industry practice.');
+  // Conclusion
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('V. DETERMINATION CONCLUSION', margin, ctx.yPos);
+  ctx.yPos += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
   
-  addParagraph(ctx, 'Those parties receiving a salary higher than the candidate have higher compensation based upon their possessing relevant experience, their level of job responsibility and function, a higher level of specialized knowledge, skills, and/or training, and/or a record of successful performance in the position.');
+  const conclusion = `Based on the application of the Company's Actual Wage Standards to this specific position, it is determined that ${employeeName} shall be compensated at a rate of ${formatCurrency(higherWage, data.wage.actualWageUnit)} for the position of ${data.job.jobTitle}. This rate equals or exceeds both the actual wage paid to similarly employed workers and the ${data.wage.wageLevel} prevailing wage of ${formatCurrency(prevailingWage, data.wage.prevailingWageUnit)} for SOC ${data.job.socCode} in the ${data.worksite.areaName || data.worksite.city + ', ' + data.worksite.state} area.`;
+  addParagraph(ctx, conclusion);
   
-  // If user provided a custom wage memo, include it
-  if (supportingDocs?.actualWageMemo && supportingDocs.actualWageMemo.length > 100) {
+  // If user provided additional notes, include them
+  if (supportingDocs?.actualWageMemo && supportingDocs.actualWageMemo.length > 10) {
     ctx.yPos += 10;
-    addBoldParagraph(ctx, 'Additional Wage Determination Notes:', 10);
+    checkPageBreak(ctx, 40);
     
-    // Split memo into lines
-    const memoLines = supportingDocs.actualWageMemo.split('\n');
-    doc.setFontSize(9);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VI. ADDITIONAL NOTES', margin, ctx.yPos);
+    ctx.yPos += 8;
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
     
+    const memoLines = supportingDocs.actualWageMemo.split('\n');
     memoLines.forEach(line => {
       if (line.trim()) {
         checkPageBreak(ctx, 8);
@@ -164,6 +247,7 @@ export function addWageMemoSection(
   
   // Signature without date
   ctx.yPos += 15;
+  checkPageBreak(ctx, 40);
   const signerName = data.employer.signingAuthorityName || 'Authorized Representative';
   const signerTitle = data.employer.signingAuthorityTitle || undefined;
   addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName, false);

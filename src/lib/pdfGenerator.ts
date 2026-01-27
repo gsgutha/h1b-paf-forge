@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { createPDFContext, addPageNumber } from './pdf/pdfHelpers';
 import { addCoverPage } from './pdf/sections/coverPage';
 import { addLCASection } from './pdf/sections/lcaSection';
+import { addActualWageStandardsSection } from './pdf/sections/actualWageStandardsSection';
 import { addWageMemoSection } from './pdf/sections/wageMemoSection';
 import { addPrevailingWageSection } from './pdf/sections/prevailingWageSection';
 import { addPostingNoticeSection } from './pdf/sections/postingNoticeSection';
@@ -15,6 +16,7 @@ import { addRecruitmentSummarySection } from './pdf/sections/recruitmentSummaryS
 
 export interface PAFDocumentOptions {
   includeLCA?: boolean;
+  includeActualWageStandards?: boolean;
   includeWageMemo?: boolean;
   includePrevailingWage?: boolean;
   includePostingNotice?: boolean;
@@ -26,6 +28,7 @@ export interface PAFDocumentOptions {
 
 const defaultOptions: PAFDocumentOptions = {
   includeLCA: true,
+  includeActualWageStandards: true,
   includeWageMemo: true,
   includePrevailingWage: true,
   includePostingNotice: true,
@@ -56,12 +59,17 @@ export async function generatePAFDocument(
     await addLCASection(ctx, data, supportingDocs);
   }
   
-  // 3. Actual Wage Memorandum
+  // 3. Actual Wage Standards (Company-wide policy - same for all LCAs)
+  if (mergedOptions.includeActualWageStandards) {
+    addActualWageStandardsSection(ctx, data, supportingDocs);
+  }
+  
+  // 4. Actual Wage Determination (Position-specific - unique per LCA)
   if (mergedOptions.includeWageMemo) {
     addWageMemoSection(ctx, data, supportingDocs);
   }
   
-  // 4. Prevailing Wage Rate and Source
+  // 5. Prevailing Wage Rate and Source
   if (mergedOptions.includePrevailingWage) {
     addPrevailingWageSection(ctx, data);
   }
