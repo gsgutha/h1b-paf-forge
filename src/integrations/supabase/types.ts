@@ -14,6 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
+      lca_disclosure: {
+        Row: {
+          begin_date: string | null
+          case_number: string
+          case_status: string
+          created_at: string | null
+          decision_date: string | null
+          employer_address1: string | null
+          employer_address2: string | null
+          employer_city: string | null
+          employer_country: string | null
+          employer_dba: string | null
+          employer_fein: string | null
+          employer_name: string
+          employer_phone: string | null
+          employer_postal_code: string | null
+          employer_state: string | null
+          end_date: string | null
+          fiscal_year: string | null
+          full_time_position: boolean | null
+          h1b_dependent: boolean | null
+          id: string
+          job_title: string | null
+          naics_code: string | null
+          prevailing_wage: number | null
+          pw_source: string | null
+          pw_unit: string | null
+          pw_wage_level: string | null
+          received_date: string | null
+          soc_code: string | null
+          soc_title: string | null
+          total_workers: number | null
+          visa_class: string
+          wage_rate_from: number | null
+          wage_rate_to: number | null
+          wage_unit: string | null
+          willful_violator: boolean | null
+          worksite_city: string | null
+          worksite_county: string | null
+          worksite_postal_code: string | null
+          worksite_state: string | null
+        }
+        Insert: {
+          begin_date?: string | null
+          case_number: string
+          case_status: string
+          created_at?: string | null
+          decision_date?: string | null
+          employer_address1?: string | null
+          employer_address2?: string | null
+          employer_city?: string | null
+          employer_country?: string | null
+          employer_dba?: string | null
+          employer_fein?: string | null
+          employer_name: string
+          employer_phone?: string | null
+          employer_postal_code?: string | null
+          employer_state?: string | null
+          end_date?: string | null
+          fiscal_year?: string | null
+          full_time_position?: boolean | null
+          h1b_dependent?: boolean | null
+          id?: string
+          job_title?: string | null
+          naics_code?: string | null
+          prevailing_wage?: number | null
+          pw_source?: string | null
+          pw_unit?: string | null
+          pw_wage_level?: string | null
+          received_date?: string | null
+          soc_code?: string | null
+          soc_title?: string | null
+          total_workers?: number | null
+          visa_class: string
+          wage_rate_from?: number | null
+          wage_rate_to?: number | null
+          wage_unit?: string | null
+          willful_violator?: boolean | null
+          worksite_city?: string | null
+          worksite_county?: string | null
+          worksite_postal_code?: string | null
+          worksite_state?: string | null
+        }
+        Update: {
+          begin_date?: string | null
+          case_number?: string
+          case_status?: string
+          created_at?: string | null
+          decision_date?: string | null
+          employer_address1?: string | null
+          employer_address2?: string | null
+          employer_city?: string | null
+          employer_country?: string | null
+          employer_dba?: string | null
+          employer_fein?: string | null
+          employer_name?: string
+          employer_phone?: string | null
+          employer_postal_code?: string | null
+          employer_state?: string | null
+          end_date?: string | null
+          fiscal_year?: string | null
+          full_time_position?: boolean | null
+          h1b_dependent?: boolean | null
+          id?: string
+          job_title?: string | null
+          naics_code?: string | null
+          prevailing_wage?: number | null
+          pw_source?: string | null
+          pw_unit?: string | null
+          pw_wage_level?: string | null
+          received_date?: string | null
+          soc_code?: string | null
+          soc_title?: string | null
+          total_workers?: number | null
+          visa_class?: string
+          wage_rate_from?: number | null
+          wage_rate_to?: number | null
+          wage_unit?: string | null
+          willful_violator?: boolean | null
+          worksite_city?: string | null
+          worksite_county?: string | null
+          worksite_postal_code?: string | null
+          worksite_state?: string | null
+        }
+        Relationships: []
+      }
       oflc_prevailing_wages: {
         Row: {
           area_code: string
