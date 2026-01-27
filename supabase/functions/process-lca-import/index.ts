@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
     // Get a signed URL for the file to use byte-range requests
     const { data: signedUrlData, error: signedUrlError } = await supabase.storage
       .from('lca-imports')
-      .createSignedUrl(filePath, 3600);
+      .createSignedUrl(filePath, 7200); // 2 hours to handle long imports
 
     if (signedUrlError || !signedUrlData?.signedUrl) {
       console.error('Signed URL error:', signedUrlError);
@@ -148,18 +148,44 @@ Deno.serve(async (req) => {
 
     console.log(`Processing file: ${filePath}, bytes ${startByte}-${endByte}`);
 
-    // Fetch chunk with byte range
-    const response = await fetch(signedUrl, {
-      headers: {
-        'Range': `bytes=${startByte}-${endByte}`
+    // Fetch chunk with byte range - with retry logic for transient failures
+    let response: Response | null = null;
+    let lastError: string = '';
+    
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        response = await fetch(signedUrl, {
+          headers: {
+            'Range': `bytes=${startByte}-${endByte}`
+          }
+        });
+        
+        if (response.ok || response.status === 206) {
+          break; // Success
+        }
+        
+        lastError = `${response.status}`;
+        
+        // If it's a 522/5xx error, wait and retry
+        if (response.status >= 500 && attempt < 3) {
+          console.log(`Attempt ${attempt} failed with ${response.status}, retrying in 2s...`);
+          await new Promise(r => setTimeout(r, 2000));
+          continue;
+        }
+      } catch (fetchError) {
+        lastError = fetchError instanceof Error ? fetchError.message : 'fetch failed';
+        console.log(`Attempt ${attempt} fetch error: ${lastError}, retrying in 2s...`);
+        if (attempt < 3) {
+          await new Promise(r => setTimeout(r, 2000));
+        }
       }
-    });
+    }
 
-    if (!response.ok && response.status !== 206) {
-      const text = await response.text();
-      console.error('Fetch error:', response.status, text);
+    if (!response || (!response.ok && response.status !== 206)) {
+      const text = response ? await response.text() : lastError;
+      console.error('Fetch error after retries:', lastError, text);
       return new Response(
-        JSON.stringify({ error: `Failed to fetch file chunk: ${response.status}` }),
+        JSON.stringify({ error: `Failed to fetch file chunk after 3 attempts: ${lastError}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
