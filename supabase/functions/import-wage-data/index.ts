@@ -224,22 +224,23 @@ Deno.serve(async (req) => {
       const level4 = colMap.level4 !== -1 ? parseNumber(row[colMap.level4]) : null;
       const average = colMap.average !== -1 ? parseNumber(row[colMap.average]) : null;
 
+      // FLAG.gov data stores HOURLY wages in level columns
       const record: WageRecord = {
         wage_year: wageYear,
         area_code: areaCode,
         area_name: label,
         soc_code: socCode,
         soc_title: '',
-        level_1_hourly: level1 ? Math.round((level1 / 2080) * 100) / 100 : null,
-        level_1_annual: level1,
-        level_2_hourly: level2 ? Math.round((level2 / 2080) * 100) / 100 : null,
-        level_2_annual: level2,
-        level_3_hourly: level3 ? Math.round((level3 / 2080) * 100) / 100 : null,
-        level_3_annual: level3,
-        level_4_hourly: level4 ? Math.round((level4 / 2080) * 100) / 100 : null,
-        level_4_annual: level4,
-        mean_hourly: average ? Math.round((average / 2080) * 100) / 100 : null,
-        mean_annual: average,
+        level_1_hourly: level1,
+        level_1_annual: level1 ? Math.round(level1 * 2080 * 100) / 100 : null,
+        level_2_hourly: level2,
+        level_2_annual: level2 ? Math.round(level2 * 2080 * 100) / 100 : null,
+        level_3_hourly: level3,
+        level_3_annual: level3 ? Math.round(level3 * 2080 * 100) / 100 : null,
+        level_4_hourly: level4,
+        level_4_annual: level4 ? Math.round(level4 * 2080 * 100) / 100 : null,
+        mean_hourly: average,
+        mean_annual: average ? Math.round(average * 2080 * 100) / 100 : null,
       };
 
       batch.push(record);
