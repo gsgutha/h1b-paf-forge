@@ -10,9 +10,13 @@ import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2 } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+const CHUNK_SIZE = 5000; // rows per chunk
+
 export default function AdminImport() {
   const [isImporting, setIsImporting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [currentChunk, setCurrentChunk] = useState(0);
+  const [totalChunks, setTotalChunks] = useState(0);
   const [result, setResult] = useState<{
     success: boolean;
     totalParsed?: number;
@@ -24,41 +28,77 @@ export default function AdminImport() {
   const [fiscalYear, setFiscalYear] = useState("FY2024");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const splitCSVIntoChunks = (csvText: string): string[] => {
+    const lines = csvText.split('\n');
+    const header = lines[0];
+    const dataLines = lines.slice(1).filter(line => line.trim());
+    
+    const chunks: string[] = [];
+    for (let i = 0; i < dataLines.length; i += CHUNK_SIZE) {
+      const chunkLines = dataLines.slice(i, i + CHUNK_SIZE);
+      chunks.push(header + '\n' + chunkLines.join('\n'));
+    }
+    
+    return chunks;
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check if it's a CSV file
     if (!file.name.endsWith('.csv')) {
       toast.error("Please upload a CSV file. If you have an XLSX file, please convert it to CSV first.");
       return;
     }
 
     setIsImporting(true);
-    setProgress(10);
+    setProgress(0);
     setResult(null);
+    setCurrentChunk(0);
 
     try {
-      // Read file content
+      toast.info("Reading file...");
       const text = await file.text();
-      setProgress(30);
+      
+      const chunks = splitCSVIntoChunks(text);
+      setTotalChunks(chunks.length);
+      
+      toast.info(`File split into ${chunks.length} chunks of ${CHUNK_SIZE.toLocaleString()} rows each`);
 
-      // Send to edge function
-      const { data, error } = await supabase.functions.invoke('import-lca-disclosure', {
-        body: { csvData: text, fiscalYear }
-      });
+      let totalInserted = 0;
+      let totalErrors = 0;
+      let totalSkipped = 0;
+      let totalParsed = 0;
 
-      setProgress(100);
+      for (let i = 0; i < chunks.length; i++) {
+        setCurrentChunk(i + 1);
+        setProgress(Math.round(((i + 1) / chunks.length) * 100));
+        
+        const { data, error } = await supabase.functions.invoke('import-lca-disclosure', {
+          body: { csvData: chunks[i], fiscalYear }
+        });
 
-      if (error) {
-        throw error;
+        if (error) {
+          console.error(`Chunk ${i + 1} error:`, error);
+          totalErrors += CHUNK_SIZE;
+          continue;
+        }
+
+        totalInserted += data.inserted || 0;
+        totalErrors += data.errors || 0;
+        totalSkipped += data.skipped || 0;
+        totalParsed += data.totalParsed || 0;
       }
 
+      setProgress(100);
       setResult({
         success: true,
-        ...data
+        totalParsed,
+        inserted: totalInserted,
+        errors: totalErrors,
+        skipped: totalSkipped
       });
-      toast.success(`Successfully imported ${data.inserted} LCA records`);
+      toast.success(`Successfully imported ${totalInserted.toLocaleString()} LCA records`);
     } catch (error) {
       console.error('Import error:', error);
       setResult({
@@ -68,6 +108,8 @@ export default function AdminImport() {
       toast.error("Import failed. Please check the file format.");
     } finally {
       setIsImporting(false);
+      setCurrentChunk(0);
+      setTotalChunks(0);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -93,8 +135,8 @@ export default function AdminImport() {
               Import LCA Disclosure File
             </CardTitle>
             <CardDescription>
-              Upload a CSV file from the DOL LCA Disclosure Data. The file should contain
-              columns for case number, employer name, job title, wages, etc.
+              Upload a CSV file from the DOL LCA Disclosure Data. Large files are automatically 
+              split into chunks of {CHUNK_SIZE.toLocaleString()} rows for reliable processing.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -140,7 +182,7 @@ export default function AdminImport() {
               <div className="space-y-2">
                 <Progress value={progress} />
                 <p className="text-sm text-muted-foreground text-center">
-                  Processing file... This may take a few minutes for large files.
+                  Processing chunk {currentChunk} of {totalChunks}... ({progress}%)
                 </p>
               </div>
             )}
@@ -175,7 +217,7 @@ export default function AdminImport() {
               <ol className="list-decimal list-inside space-y-1">
                 <li>Download LCA disclosure data from <a href="https://www.dol.gov/agencies/eta/foreign-labor/performance" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">DOL Performance Data</a></li>
                 <li>Convert the XLSX file to CSV format</li>
-                <li>Upload the CSV file above</li>
+                <li>Upload the CSV file above (large files are auto-chunked)</li>
               </ol>
             </div>
           </CardContent>
