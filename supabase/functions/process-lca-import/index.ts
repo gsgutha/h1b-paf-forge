@@ -97,6 +97,8 @@ const columnMap: Record<string, string> = {
   'pw_source': 'pw_source',
   'pw_source_1': 'pw_source',
   'h-1b_dependent': 'h1b_dependent',
+  'h_1b_dependent': 'h1b_dependent',
+  'support_h1b': 'h1b_dependent',
   'willful_violator': 'willful_violator',
   'worksite_city': 'worksite_city',
   'worksite_city_1': 'worksite_city',
