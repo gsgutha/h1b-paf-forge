@@ -10,18 +10,14 @@ import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2 } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const CHUNK_SIZE = 10000; // rows per chunk for server-side processing
-
 export default function AdminImport() {
   const [isUploading, setIsUploading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [importProgress, setImportProgress] = useState(0);
-  const [currentChunk, setCurrentChunk] = useState(0);
-  const [totalChunks, setTotalChunks] = useState(0);
   const [result, setResult] = useState<{
     success: boolean;
-    totalLines?: number;
+    totalSize?: number;
     inserted?: number;
     errors?: number;
     skipped?: number;
@@ -92,31 +88,32 @@ export default function AdminImport() {
 
     setIsImporting(true);
     setImportProgress(0);
-    setCurrentChunk(0);
     setResult(null);
 
     let totalInserted = 0;
     let totalErrors = 0;
     let totalSkipped = 0;
-    let totalLines = 0;
-    let chunkStart = 0;
+    let totalSize = 0;
+    let byteStart = 0;
     let chunkNumber = 0;
+    let cachedHeaders: string[] | undefined;
+    let cachedColIndices: Record<string, number> | undefined;
 
     try {
-      toast.info("Starting server-side import...");
+      toast.info("Starting server-side import with streaming...");
 
-      // Process in chunks until done
+      // Process in byte chunks until done
       let hasMore = true;
       while (hasMore) {
         chunkNumber++;
-        setCurrentChunk(chunkNumber);
 
         const { data, error } = await supabase.functions.invoke('process-lca-import', {
           body: { 
             filePath: uploadedFilePath, 
             fiscalYear,
-            chunkStart,
-            chunkSize: CHUNK_SIZE
+            byteStart,
+            headers: cachedHeaders,
+            colIndices: cachedColIndices
           }
         });
 
@@ -125,26 +122,29 @@ export default function AdminImport() {
           throw new Error(`Processing failed at chunk ${chunkNumber}: ${error.message}`);
         }
 
-        totalLines = data.totalLines || totalLines;
+        // Cache headers from first chunk
+        if (chunkNumber === 1 && data.headers) {
+          cachedHeaders = data.headers;
+          cachedColIndices = data.colIndices;
+        }
+
+        totalSize = data.totalSize || totalSize;
         totalInserted += data.inserted || 0;
         totalErrors += data.errors || 0;
         totalSkipped += data.skipped || 0;
         hasMore = data.hasMore;
-        chunkStart = data.nextChunkStart || 0;
+        byteStart = data.nextByteStart || 0;
 
         // Update progress
-        const processedSoFar = chunkStart || totalLines;
-        const progressPercent = Math.min(Math.round((processedSoFar / totalLines) * 100), 100);
-        setImportProgress(progressPercent);
-        setTotalChunks(Math.ceil(totalLines / CHUNK_SIZE));
+        setImportProgress(data.progressPercent || 0);
 
-        console.log(`Chunk ${chunkNumber}: inserted ${data.inserted}, hasMore: ${hasMore}`);
+        console.log(`Chunk ${chunkNumber}: inserted ${data.inserted}, progress: ${data.progressPercent}%, hasMore: ${hasMore}`);
       }
 
       setImportProgress(100);
       setResult({
         success: true,
-        totalLines,
+        totalSize,
         inserted: totalInserted,
         errors: totalErrors,
         skipped: totalSkipped
@@ -164,8 +164,6 @@ export default function AdminImport() {
       toast.error("Import failed. Check the error details below.");
     } finally {
       setIsImporting(false);
-      setCurrentChunk(0);
-      setTotalChunks(0);
     }
   };
 
@@ -197,7 +195,7 @@ export default function AdminImport() {
             </CardTitle>
             <CardDescription>
               Upload a CSV file from the DOL LCA Disclosure Data. Large files are uploaded to storage 
-              first, then processed server-side in chunks of {CHUNK_SIZE.toLocaleString()} rows.
+              first, then processed server-side in small streaming chunks to avoid memory limits.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -286,7 +284,7 @@ export default function AdminImport() {
               <div className="space-y-2">
                 <Progress value={importProgress} />
                 <p className="text-sm text-muted-foreground text-center">
-                  Processing chunk {currentChunk}{totalChunks > 0 ? ` of ~${totalChunks}` : ''}... ({importProgress}%)
+                  Processing... {importProgress}% complete
                 </p>
               </div>
             )}
@@ -304,7 +302,7 @@ export default function AdminImport() {
                 <AlertDescription>
                   {result.success ? (
                     <ul className="mt-2 text-sm space-y-1">
-                      <li>Total lines in file: {result.totalLines?.toLocaleString()}</li>
+                      <li>File size: {((result.totalSize || 0) / 1024 / 1024).toFixed(1)} MB</li>
                       <li>Records inserted: {result.inserted?.toLocaleString()}</li>
                       <li>Records skipped: {result.skipped?.toLocaleString()}</li>
                       {result.errors ? <li>Errors: {result.errors?.toLocaleString()}</li> : null}
