@@ -26,6 +26,17 @@ export default function AdminImport() {
   const [fiscalYear, setFiscalYear] = useState("FY2024");
   const [uploadedFilePath, setUploadedFilePath] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importLogs, setImportLogs] = useState<Array<{
+    chunk: number;
+    bytesProcessed: number;
+    totalBytes: number;
+    inserted: number;
+    skipped: number;
+    errors: number;
+    progress: number;
+    timestamp: Date;
+  }>>([]);
+  const logsEndRef = useRef<HTMLDivElement>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -89,6 +100,7 @@ export default function AdminImport() {
     setIsImporting(true);
     setImportProgress(0);
     setResult(null);
+    setImportLogs([]);
 
     let totalInserted = 0;
     let totalErrors = 0;
@@ -137,6 +149,23 @@ export default function AdminImport() {
 
         // Update progress
         setImportProgress(data.progressPercent || 0);
+
+        // Add log entry for this chunk
+        setImportLogs(prev => [...prev, {
+          chunk: chunkNumber,
+          bytesProcessed: byteStart + (data.processedBytes || 0),
+          totalBytes: data.totalSize || totalSize,
+          inserted: data.inserted || 0,
+          skipped: data.skipped || 0,
+          errors: data.errors || 0,
+          progress: data.progressPercent || 0,
+          timestamp: new Date()
+        }]);
+
+        // Auto-scroll to latest log
+        setTimeout(() => {
+          logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
 
         console.log(`Chunk ${chunkNumber}: inserted ${data.inserted}, progress: ${data.progressPercent}%, hasMore: ${hasMore}`);
       }
@@ -285,6 +314,56 @@ export default function AdminImport() {
                 <Progress value={importProgress} />
                 <p className="text-sm text-muted-foreground text-center">
                   Processing... {importProgress}% complete
+                </p>
+              </div>
+            )}
+
+            {/* Import Logs Panel */}
+            {importLogs.length > 0 && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Import Progress Log
+                </Label>
+                <div className="border rounded-md bg-muted/30 max-h-48 overflow-y-auto">
+                  <div className="p-2 space-y-1 font-mono text-xs">
+                    {importLogs.map((log, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`p-1.5 rounded ${
+                          log.errors > 0 
+                            ? 'bg-destructive/10 text-destructive' 
+                            : log.inserted > 0 
+                              ? 'bg-green-500/10 text-green-700 dark:text-green-400' 
+                              : 'bg-muted'
+                        }`}
+                      >
+                        <span className="text-muted-foreground">
+                          [{log.timestamp.toLocaleTimeString()}]
+                        </span>{' '}
+                        <span className="font-semibold">Chunk {log.chunk}</span>:{' '}
+                        <span className="text-primary">{(log.bytesProcessed / 1024 / 1024).toFixed(2)} MB</span>
+                        {log.totalBytes > 0 && (
+                          <span className="text-muted-foreground">
+                            /{(log.totalBytes / 1024 / 1024).toFixed(1)} MB
+                          </span>
+                        )}{' '}
+                        | <span className="text-green-600 dark:text-green-400">+{log.inserted} inserted</span>
+                        {log.skipped > 0 && (
+                          <span className="text-yellow-600 dark:text-yellow-400"> | {log.skipped} skipped</span>
+                        )}
+                        {log.errors > 0 && (
+                          <span className="text-destructive"> | {log.errors} errors</span>
+                        )}
+                        {' '}| <span className="font-medium">{log.progress}%</span>
+                      </div>
+                    ))}
+                    <div ref={logsEndRef} />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Total: {importLogs.reduce((sum, l) => sum + l.inserted, 0).toLocaleString()} inserted, 
+                  {' '}{importLogs.reduce((sum, l) => sum + l.skipped, 0).toLocaleString()} skipped
                 </p>
               </div>
             )}
