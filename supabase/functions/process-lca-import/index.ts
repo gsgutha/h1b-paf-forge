@@ -252,10 +252,22 @@ Deno.serve(async (req) => {
     const records: Record<string, unknown>[] = [];
     let skipped = 0;
     
+    // Track skipped samples (up to 100 per chunk)
+    const skippedSamples: Array<{
+      reason: string;
+      lineNumber: number;
+      caseNumber: string | null;
+      employerName: string | null;
+      missingFields: string[];
+    }> = [];
+    const MAX_SKIP_SAMPLES = 100;
+    
     // Process all complete lines (skip the last one as it might be partial)
     const linesToProcess = lines.length > 1 ? lines.slice(0, -1) : [];
     
+    let lineNumber = 0;
     for (const line of linesToProcess) {
+      lineNumber++;
       const trimmedLine = line.trim();
       bytesProcessedInData += line.length + 1; // +1 for newline
       
@@ -270,8 +282,25 @@ Deno.serve(async (req) => {
       const visaClass = values[colIndices['visa_class']] || '';
       const employerName = values[colIndices['employer_name']] || '';
       
-      if (!caseNumber || !caseStatus || !visaClass || !employerName) {
+      // Track missing required fields
+      const missingFields: string[] = [];
+      if (!caseNumber) missingFields.push('case_number');
+      if (!caseStatus) missingFields.push('case_status');
+      if (!visaClass) missingFields.push('visa_class');
+      if (!employerName) missingFields.push('employer_name');
+      
+      if (missingFields.length > 0) {
         skipped++;
+        // Capture sample for diagnostics
+        if (skippedSamples.length < MAX_SKIP_SAMPLES) {
+          skippedSamples.push({
+            reason: 'missing_required_fields',
+            lineNumber,
+            caseNumber: caseNumber || null,
+            employerName: employerName || null,
+            missingFields
+          });
+        }
         continue;
       }
 
@@ -365,6 +394,8 @@ Deno.serve(async (req) => {
         // Return headers and column indices for subsequent requests
         headers: startByte === 0 ? headers : undefined,
         colIndices: startByte === 0 ? colIndices : undefined,
+        // Return skipped samples for diagnostics
+        skippedSamples: skippedSamples.length > 0 ? skippedSamples : undefined,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

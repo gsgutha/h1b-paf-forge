@@ -37,6 +37,17 @@ export default function AdminImport() {
     timestamp: Date;
   }>>([]);
   const logsEndRef = useRef<HTMLDivElement>(null);
+  
+  // Track skipped samples for diagnostics
+  const [skippedSamples, setSkippedSamples] = useState<Array<{
+    chunk: number;
+    reason: string;
+    lineNumber: number;
+    caseNumber: string | null;
+    employerName: string | null;
+    missingFields: string[];
+  }>>([]);
+  const [showSkippedPanel, setShowSkippedPanel] = useState(false);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -101,6 +112,7 @@ export default function AdminImport() {
     setImportProgress(0);
     setResult(null);
     setImportLogs([]);
+    setSkippedSamples([]);
 
     let totalInserted = 0;
     let totalErrors = 0;
@@ -161,6 +173,18 @@ export default function AdminImport() {
           progress: data.progressPercent || 0,
           timestamp: new Date()
         }]);
+        
+        // Capture skipped samples for diagnostics
+        if (data.skippedSamples && data.skippedSamples.length > 0) {
+          const chunkNum = chunkNumber;
+          setSkippedSamples(prev => [
+            ...prev,
+            ...data.skippedSamples.map((s: { reason: string; lineNumber: number; caseNumber: string | null; employerName: string | null; missingFields: string[] }) => ({
+              ...s,
+              chunk: chunkNum
+            }))
+          ]);
+        }
 
         // Auto-scroll to latest log
         setTimeout(() => {
@@ -364,6 +388,63 @@ export default function AdminImport() {
                 <p className="text-xs text-muted-foreground">
                   Total: {importLogs.reduce((sum, l) => sum + l.inserted, 0).toLocaleString()} inserted, 
                   {' '}{importLogs.reduce((sum, l) => sum + l.skipped, 0).toLocaleString()} skipped
+                </p>
+              </div>
+            )}
+            
+            {/* Skipped Records Panel */}
+            {skippedSamples.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-yellow-500" />
+                    Skipped Records Sample ({skippedSamples.length} samples)
+                  </Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowSkippedPanel(!showSkippedPanel)}
+                  >
+                    {showSkippedPanel ? 'Hide' : 'Show'} Details
+                  </Button>
+                </div>
+                {showSkippedPanel && (
+                  <div className="border rounded-md bg-yellow-50/50 dark:bg-yellow-900/10 max-h-64 overflow-y-auto">
+                    <div className="p-2 space-y-1 font-mono text-xs">
+                      {skippedSamples.slice(0, 200).map((sample, idx) => (
+                        <div 
+                          key={idx} 
+                          className="p-2 rounded bg-background/80 border border-yellow-200 dark:border-yellow-800"
+                        >
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <span className="text-muted-foreground">Chunk {sample.chunk}, Line {sample.lineNumber}</span>
+                            <span className="px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded text-[10px] font-medium">
+                              {sample.reason.replace(/_/g, ' ')}
+                            </span>
+                          </div>
+                          <div className="mt-1 text-muted-foreground">
+                            <span className="text-destructive font-medium">Missing: </span>
+                            {sample.missingFields.join(', ')}
+                          </div>
+                          {(sample.caseNumber || sample.employerName) && (
+                            <div className="mt-1 text-xs">
+                              {sample.caseNumber && <span>Case: {sample.caseNumber} </span>}
+                              {sample.employerName && <span>| Employer: {sample.employerName}</span>}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {skippedSamples.length > 200 && (
+                        <p className="text-center text-muted-foreground py-2">
+                          ... and {skippedSamples.length - 200} more samples
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  ⚠️ These are sample rows that were skipped due to missing required fields. 
+                  Up to 100 samples are captured per chunk.
                 </p>
               </div>
             )}
