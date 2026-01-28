@@ -18,10 +18,10 @@ export function addWorkerReceiptSection(ctx: PDFContext, data: PAFData, supporti
   doc.addPage();
   addPageHeader(ctx, 'Worker Receipt Acknowledgment');
   
-  ctx.yPos += 20;
-  addCenteredTitle(ctx, 'STATEMENT OF RECEIPT OF CERTIFIED LABOR', 14);
-  ctx.yPos -= 5;
-  addCenteredTitle(ctx, 'CONDITION APPLICATION BY H-1B NONIMMIGRANT WORKER', 14);
+  ctx.yPos += 15;
+  addCenteredTitle(ctx, 'STATEMENT OF RECEIPT OF CERTIFIED LABOR CONDITION', 13);
+  ctx.yPos += 3;
+  addCenteredTitle(ctx, 'APPLICATION BY H-1B NONIMMIGRANT WORKER', 13);
   
   ctx.yPos += 15;
   
