@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import CreatePAF from "./pages/CreatePAF";
+import EditPAF from "./pages/EditPAF";
 import Lookup from "./pages/Lookup";
 import AdminImport from "./pages/AdminImport";
 import NotFound from "./pages/NotFound";
@@ -20,6 +21,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/create" element={<CreatePAF />} />
+          <Route path="/edit/:id" element={<EditPAF />} />
           <Route path="/lookup" element={<Lookup />} />
           <Route path="/admin/import" element={<AdminImport />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

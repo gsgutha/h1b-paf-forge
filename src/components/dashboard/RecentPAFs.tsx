@@ -117,11 +117,15 @@ export function RecentPAFs() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <Eye className="mr-2 h-4 w-4" /> View
+                <DropdownMenuItem asChild>
+                  <Link to={`/edit/${paf.id}`}>
+                    <Eye className="mr-2 h-4 w-4" /> View
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Edit className="mr-2 h-4 w-4" /> Edit
+                <DropdownMenuItem asChild>
+                  <Link to={`/edit/${paf.id}`}>
+                    <Edit className="mr-2 h-4 w-4" /> Edit
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Download className="mr-2 h-4 w-4" /> Download
