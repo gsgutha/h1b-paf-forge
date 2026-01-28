@@ -164,7 +164,7 @@ export function LCASelectionStep({ onSelect }: LCASelectionStepProps) {
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold">{selectedLca.job_title || 'Position Details'}</h4>
                       <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                        Certified
+                        🟡 Not Generated
                       </Badge>
                     </div>
                     
@@ -249,15 +249,20 @@ export function LCASelectionStep({ onSelect }: LCASelectionStepProps) {
                       <p className="text-xs text-muted-foreground">{lca.job_title || 'No title'}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
-                      PAF Generated
-                    </Badge>
-                    {lca.paf_generated_at && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {format(new Date(lca.paf_generated_at), 'MMM d, yyyy h:mm a')}
-                      </p>
-                    )}
+                  <div className="text-right flex items-center gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+                          🟢 PAF Generated
+                        </Badge>
+                        <span className="text-green-600" title="Audit Ready">✅</span>
+                      </div>
+                      {lca.paf_generated_at && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(lca.paf_generated_at), 'MMM d, yyyy h:mm a')}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
