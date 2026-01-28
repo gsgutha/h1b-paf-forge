@@ -45,9 +45,10 @@ const employerSchema = z.object({
 interface EmployerInfoStepProps {
   data: Partial<Employer>;
   onNext: (data: Employer) => void;
+  onBack?: () => void;
 }
 
-export function EmployerInfoStep({ data, onNext }: EmployerInfoStepProps) {
+export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps) {
   const {
     register,
     handleSubmit,
@@ -256,7 +257,14 @@ export function EmployerInfoStep({ data, onNext }: EmployerInfoStepProps) {
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
+        <div className="flex justify-between pt-4">
+          {onBack ? (
+            <Button type="button" variant="outline" onClick={onBack}>
+              Back to LCA Selection
+            </Button>
+          ) : (
+            <div />
+          )}
           <Button type="submit" variant="wizard" size="lg">
             Continue to Job Details
           </Button>
