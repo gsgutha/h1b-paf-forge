@@ -98,15 +98,15 @@ function renderWageReport(ctx: PDFContext, wageData: WageReportData, isFirst: bo
   tableData.forEach((row, index) => {
     checkPageBreak(ctx, 8);
     
-    // Alternate row background
-    if (index % 2 === 0) {
-      doc.setFillColor(...PDF_CONFIG.colors.lightGray);
-      doc.rect(margin, ctx.yPos - 4, pageWidth - margin * 2, 7, 'F');
-    }
+    // Check if this is the selected wage level row (exact match)
+    const isSelectedWageLevel = row[0] === `${selectedLevel} Wage:`;
     
-    // Highlight selected wage level row
-    if (row[0].includes(selectedLevel)) {
+    // Highlight selected wage level row with green, otherwise alternate gray
+    if (isSelectedWageLevel) {
       doc.setFillColor(200, 230, 200);
+      doc.rect(margin, ctx.yPos - 4, pageWidth - margin * 2, 7, 'F');
+    } else if (index % 2 === 0) {
+      doc.setFillColor(...PDF_CONFIG.colors.lightGray);
       doc.rect(margin, ctx.yPos - 4, pageWidth - margin * 2, 7, 'F');
     }
     
