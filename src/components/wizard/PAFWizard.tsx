@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { WizardProgress } from './WizardProgress';
+import { LCASelectionStep, type LCARecord } from './steps/LCASelectionStep';
 import { EmployerInfoStep } from './steps/EmployerInfoStep';
 import { JobDetailsStep } from './steps/JobDetailsStep';
 import { WorksiteStep } from './steps/WorksiteStep';
@@ -8,8 +9,11 @@ import { SupportingDocsStep, type SupportingDocs } from './steps/SupportingDocsS
 import { ReviewStep } from './steps/ReviewStep';
 import type { PAFData, Employer, JobDetails, WorksiteLocation, WageInfo } from '@/types/paf';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 const steps = [
+  { id: 0, title: 'Select LCA', description: 'Choose case' },
   { id: 1, title: 'Employer', description: 'Company info' },
   { id: 2, title: 'Job Details', description: 'Position & SOC' },
   { id: 3, title: 'Worksite', description: 'Location' },
@@ -20,6 +24,7 @@ const steps = [
 
 export interface ExtendedPAFData extends PAFData {
   supportingDocs?: SupportingDocs;
+  lcaId?: string; // Track the selected LCA ID
 }
 
 const initialPAFData: Partial<ExtendedPAFData> = {
@@ -31,12 +36,97 @@ const initialPAFData: Partial<ExtendedPAFData> = {
   worksite: {} as WorksiteLocation,
   wage: {} as WageInfo,
   supportingDocs: undefined,
+  lcaId: undefined,
 };
 
+// Helper to map LCA wage unit to PAF wage unit
+function mapWageUnit(unit: string | null): 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year' {
+  if (!unit) return 'Year';
+  const lower = unit.toLowerCase();
+  if (lower.includes('hour')) return 'Hour';
+  if (lower.includes('week')) return 'Week';
+  if (lower.includes('month')) return 'Month';
+  return 'Year';
+}
+
+// Helper to map LCA wage level to PAF wage level
+function mapWageLevel(level: string | null): 'Level I' | 'Level II' | 'Level III' | 'Level IV' {
+  if (!level) return 'Level I';
+  if (level.includes('IV') || level.includes('4')) return 'Level IV';
+  if (level.includes('III') || level.includes('3')) return 'Level III';
+  if (level.includes('II') || level.includes('2')) return 'Level II';
+  return 'Level I';
+}
+
 export function PAFWizard() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [pafData, setPafData] = useState<Partial<ExtendedPAFData>>(initialPAFData);
+  const [selectedLca, setSelectedLca] = useState<LCARecord | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleLCASelect = (lca: LCARecord) => {
+    setSelectedLca(lca);
+    
+    // Auto-fill all available fields from LCA
+    const employer: Employer = {
+      legalBusinessName: lca.employer_name,
+      address1: lca.employer_address1 || '',
+      address2: lca.employer_address2 || undefined,
+      city: lca.employer_city || '',
+      state: lca.employer_state || '',
+      postalCode: lca.employer_postal_code || '',
+      country: lca.employer_country || 'United States',
+      telephone: lca.employer_phone || '',
+      fein: lca.employer_fein || '',
+      naicsCode: lca.naics_code || '',
+    };
+
+    const job: JobDetails = {
+      jobTitle: lca.job_title || '',
+      socCode: lca.soc_code || '',
+      socTitle: lca.soc_title || '',
+      isFullTime: lca.full_time_position ?? true,
+      beginDate: lca.begin_date || '',
+      endDate: lca.end_date || '',
+      wageRateFrom: lca.wage_rate_from || 0,
+      wageRateTo: lca.wage_rate_to || undefined,
+      wageUnit: mapWageUnit(lca.wage_unit),
+      workersNeeded: lca.total_workers || 1,
+    };
+
+    const worksite: WorksiteLocation = {
+      address1: '', // Not in LCA disclosure
+      city: lca.worksite_city || '',
+      state: lca.worksite_state || '',
+      postalCode: lca.worksite_postal_code || '',
+      county: lca.worksite_county || undefined,
+    };
+
+    const wage: Partial<WageInfo> = {
+      prevailingWage: lca.prevailing_wage || 0,
+      prevailingWageUnit: mapWageUnit(lca.wage_unit),
+      wageLevel: mapWageLevel(lca.pw_wage_level),
+      wageSource: 'OFLC Online Wage Library',
+      wageSourceDate: lca.decision_date || new Date().toISOString().split('T')[0],
+    };
+
+    setPafData((prev) => ({
+      ...prev,
+      lcaId: lca.id,
+      caseNumber: lca.case_number,
+      caseStatus: 'Certified',
+      visaType: lca.visa_class === 'H-1B' ? 'H-1B' : 'H-1B',
+      isH1BDependent: lca.h1b_dependent ?? false,
+      isWillfulViolator: lca.willful_violator ?? false,
+      employer,
+      job,
+      worksite,
+      wage: wage as WageInfo,
+    }));
+
+    setCurrentStep(1);
+  };
 
   const handleEmployerNext = (employer: Employer) => {
     setPafData((prev) => ({ ...prev, employer }));
@@ -67,15 +157,44 @@ export function PAFWizard() {
     setCurrentStep(step);
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    // Mark LCA as PAF generated
+    if (pafData.lcaId) {
+      const { error } = await supabase
+        .from('lca_disclosure')
+        .update({ 
+          paf_generated: true, 
+          paf_generated_at: new Date().toISOString() 
+        })
+        .eq('id', pafData.lcaId);
+
+      if (error) {
+        toast({
+          title: "Error updating LCA status",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Invalidate queries to refresh the LCA lists
+      queryClient.invalidateQueries({ queryKey: ['pending-lcas'] });
+      queryClient.invalidateQueries({ queryKey: ['generated-lcas'] });
+    }
+
     toast({
       title: "PAF Generated Successfully!",
       description: "Your Public Access File has been created and is ready for download.",
     });
+
+    // Reset wizard for next PAF
+    setPafData(initialPAFData);
+    setSelectedLca(null);
+    setCurrentStep(0);
   };
 
   const goBack = () => {
-    setCurrentStep((prev) => Math.max(1, prev - 1));
+    setCurrentStep((prev) => Math.max(0, prev - 1));
   };
 
   return (
@@ -89,10 +208,15 @@ export function PAFWizard() {
       </div>
 
       <div className="paf-section">
+        {currentStep === 0 && (
+          <LCASelectionStep onSelect={handleLCASelect} />
+        )}
+
         {currentStep === 1 && (
           <EmployerInfoStep 
             data={pafData.employer || {}} 
-            onNext={handleEmployerNext} 
+            onNext={handleEmployerNext}
+            onBack={goBack}
           />
         )}
 

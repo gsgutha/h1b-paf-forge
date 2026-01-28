@@ -38,6 +38,8 @@ export type Database = {
           id: string
           job_title: string | null
           naics_code: string | null
+          paf_generated: boolean
+          paf_generated_at: string | null
           prevailing_wage: number | null
           pw_source: string | null
           pw_unit: string | null
@@ -79,6 +81,8 @@ export type Database = {
           id?: string
           job_title?: string | null
           naics_code?: string | null
+          paf_generated?: boolean
+          paf_generated_at?: string | null
           prevailing_wage?: number | null
           pw_source?: string | null
           pw_unit?: string | null
@@ -120,6 +124,8 @@ export type Database = {
           id?: string
           job_title?: string | null
           naics_code?: string | null
+          paf_generated?: boolean
+          paf_generated_at?: string | null
           prevailing_wage?: number | null
           pw_source?: string | null
           pw_unit?: string | null
