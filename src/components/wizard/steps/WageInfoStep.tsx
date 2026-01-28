@@ -107,12 +107,20 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
   const actualWage = watch('actualWage');
   const hasSecondaryWage = watch('hasSecondaryWage');
   const secondaryPrevailingWage = watch('secondaryWage.prevailingWage');
+  const prevailingWageUnit = watch('prevailingWageUnit');
+  const actualWageUnit = watch('actualWageUnit');
   
   // Check compliance: actual wage must be >= MAX of both prevailing wages
   const maxPrevailingWage = hasSecondaryWage && secondaryPrevailingWage 
     ? Math.max(prevailingWage || 0, secondaryPrevailingWage) 
     : prevailingWage;
   const isWageCompliant = actualWage >= maxPrevailingWage;
+  
+  // Check if wage units are not Year (Rule 4: Unit Consistency)
+  const hasNonYearUnit = prevailingWageUnit !== 'Year' || actualWageUnit !== 'Year';
+  
+  // Block PAF generation if wage is non-compliant
+  const canProceed = isWageCompliant || actualWage === 0 || prevailingWage === 0;
 
   return (
     <div className="fade-in">
@@ -485,6 +493,18 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
           </CardContent>
         </Card>
 
+        {/* Unit Consistency Warning (Rule 4) */}
+        {hasNonYearUnit && (
+          <div className="rounded-lg p-4 border bg-warning/10 border-warning/20">
+            <p className="text-sm font-medium text-warning-foreground flex items-center gap-2">
+              ⚠️ Wage Unit Recommendation
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              DOL typically expects annual wages. Consider converting to yearly rates for consistency across all PAF documents.
+            </p>
+          </div>
+        )}
+
         {/* Wage Compliance Check */}
         {prevailingWage > 0 && actualWage > 0 && (
           <div className={`rounded-lg p-4 border ${
@@ -495,9 +515,14 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
             <p className="text-sm font-medium">
               {isWageCompliant 
                 ? `✓ Wage is compliant - actual wage ($${actualWage.toLocaleString()}) meets or exceeds ${hasSecondaryWage ? 'highest ' : ''}prevailing wage ($${maxPrevailingWage.toLocaleString()})`
-                : `✗ Warning: Actual wage ($${actualWage.toLocaleString()}) is below the ${hasSecondaryWage ? 'highest ' : ''}prevailing wage requirement ($${maxPrevailingWage.toLocaleString()})`
+                : `🔴 PAF BLOCKED: Actual wage ($${actualWage.toLocaleString()}) is below the ${hasSecondaryWage ? 'highest ' : ''}prevailing wage requirement ($${maxPrevailingWage.toLocaleString()})`
               }
             </p>
+            {!isWageCompliant && (
+              <p className="text-xs mt-1">
+                You must increase the actual wage to at least ${maxPrevailingWage.toLocaleString()} to proceed with PAF generation.
+              </p>
+            )}
             {hasSecondaryWage && secondaryPrevailingWage > 0 && (
               <p className="text-xs mt-1 opacity-80">
                 Primary: ${prevailingWage?.toLocaleString() || 0} | Secondary: ${secondaryPrevailingWage.toLocaleString()}
@@ -510,7 +535,13 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
           <Button type="button" variant="wizardOutline" size="lg" onClick={onBack}>
             Back
           </Button>
-          <Button type="submit" variant="wizard" size="lg">
+          <Button 
+            type="submit" 
+            variant="wizard" 
+            size="lg"
+            disabled={!canProceed}
+            title={!canProceed ? 'Offered wage does not meet prevailing wage' : undefined}
+          >
             Next: Documents
           </Button>
         </div>
