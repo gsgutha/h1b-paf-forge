@@ -1,0 +1,139 @@
+import { PDFContext, PDF_CONFIG, checkPageBreak } from './pdfHelpers';
+import { format } from 'date-fns';
+import type { AuthorizedSignatory } from '@/config/signatories';
+
+/**
+ * Digital signature renderer for PDF documents.
+ * Renders a signature with the signatory's name, title, and styled signature text.
+ */
+
+/**
+ * Renders a digital signature on the PDF document.
+ * Uses a cursive-style rendering for the signature appearance.
+ */
+export function addDigitalSignature(
+  ctx: PDFContext,
+  signatory: AuthorizedSignatory,
+  companyName?: string,
+  includeDate: boolean = true
+): void {
+  const { doc, margin, pageWidth } = ctx;
+  
+  checkPageBreak(ctx, 60);
+  ctx.yPos += 10;
+  
+  // Signature box with light background
+  const boxWidth = 180;
+  const boxHeight = 50;
+  const boxX = margin;
+  const boxY = ctx.yPos;
+  
+  // Light signature area background
+  doc.setFillColor(252, 252, 252);
+  doc.setDrawColor(200, 200, 200);
+  doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, 'FD');
+  
+  // "Digitally signed by" label
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('Digitally signed by:', boxX + 5, boxY + 8);
+  
+  // Signature name in cursive-like style (using italic)
+  doc.setFontSize(18);
+  doc.setFont('times', 'bolditalic');
+  doc.setTextColor(0, 51, 102); // Navy blue for signature
+  doc.text(signatory.name, boxX + 5, boxY + 22);
+  
+  // Reset text color
+  doc.setTextColor(0, 0, 0);
+  
+  // Title
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(80, 80, 80);
+  doc.text(signatory.title, boxX + 5, boxY + 30);
+  
+  // Company name if provided
+  if (companyName) {
+    doc.setFont('helvetica', 'normal');
+    doc.text(companyName, boxX + 5, boxY + 37);
+  }
+  
+  // Date and verification
+  if (includeDate) {
+    doc.setFontSize(7);
+    doc.setTextColor(100, 100, 100);
+    const dateStr = format(new Date(), "yyyy.MM.dd HH:mm:ss 'EST'");
+    doc.text(`Date: ${dateStr}`, boxX + 5, boxY + 45);
+  }
+  
+  ctx.yPos = boxY + boxHeight + 5;
+  
+  // Add verification text below the box
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('This document was digitally signed by an authorized representative.', margin, ctx.yPos);
+  doc.setTextColor(0, 0, 0);
+  
+  ctx.yPos += 10;
+}
+
+/**
+ * Renders a simpler signature line with digital signature styling
+ * Used in sections that need a more compact signature format
+ */
+export function addCompactDigitalSignature(
+  ctx: PDFContext,
+  signatory: AuthorizedSignatory,
+  companyName?: string,
+  includeDate: boolean = true
+): void {
+  const { doc, margin } = ctx;
+  
+  checkPageBreak(ctx, 40);
+  ctx.yPos += 10;
+  
+  // Draw signature line
+  doc.setDrawColor(...PDF_CONFIG.colors.black);
+  doc.line(margin, ctx.yPos, margin + 100, ctx.yPos);
+  ctx.yPos += 2;
+  
+  // Signature in cursive style
+  doc.setFontSize(14);
+  doc.setFont('times', 'bolditalic');
+  doc.setTextColor(0, 51, 102);
+  doc.text(signatory.name, margin, ctx.yPos + 5);
+  doc.setTextColor(0, 0, 0);
+  
+  ctx.yPos += 10;
+  
+  // Name printed
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text(signatory.name, margin, ctx.yPos);
+  
+  // Title
+  if (signatory.title) {
+    ctx.yPos += 5;
+    doc.setFont('helvetica', 'italic');
+    doc.text(signatory.title, margin, ctx.yPos);
+  }
+  
+  // Company
+  if (companyName) {
+    ctx.yPos += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.text(companyName, margin, ctx.yPos);
+  }
+  
+  // Date
+  if (includeDate) {
+    ctx.yPos += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Date: ${format(new Date(), 'MMMM d, yyyy')}`, margin, ctx.yPos);
+  }
+  
+  ctx.yPos += 10;
+}

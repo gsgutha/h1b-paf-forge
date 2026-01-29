@@ -7,9 +7,10 @@ import {
   addCenteredTitle,
   addParagraph,
   addBoldParagraph,
-  addSignatureLine,
   checkPageBreak,
 } from '../pdfHelpers';
+import { addCompactDigitalSignature } from '../signatureRenderer';
+import { getSignatoryById, getDefaultSignatory } from '@/config/signatories';
 
 /**
  * Adds the company-wide Actual Wage Standards policy section.
@@ -183,9 +184,13 @@ export function addActualWageStandardsSection(
   doc.text(certLines, margin + 5, ctx.yPos);
   ctx.yPos += certLines.length * 5 + 15;
   
-  // Signature without date
+  // Digital Signature
   ctx.yPos += 10;
-  const signerName = data.employer.signingAuthorityName || 'Authorized Representative';
-  const signerTitle = data.employer.signingAuthorityTitle || undefined;
-  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName, false);
+  
+  // Get the selected signatory or use default
+  const signatory = data.employer.signatoryId 
+    ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
+    : getDefaultSignatory();
+  
+  addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName, false);
 }

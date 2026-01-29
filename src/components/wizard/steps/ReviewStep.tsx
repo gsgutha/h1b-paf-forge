@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Download, Printer, Edit2, CheckCircle, Bell, Building2, Loader2 } from 'lucide-react';
+import { FileText, Download, Printer, Edit2, CheckCircle, Bell, Building2, Loader2, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { PAFData } from '@/types/paf';
@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { downloadPAF, printPAF } from '@/lib/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
 import type { SupportingDocs } from './SupportingDocsStep';
+import { getSignatoryById } from '@/config/signatories';
 
 interface ReviewStepProps {
   data: PAFData;
@@ -170,12 +171,35 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
             <DataRow label="NAICS Code" value={data.employer.naicsCode} />
             <div className="border-t border-border mt-3 pt-3">
               <DataRow label="H-1B Worker" value={data.employer.employeeName || 'Not provided'} />
-              <DataRow label="Signing Authority" value={data.employer.signingAuthorityName || 'Not provided'} />
-              <DataRow label="Authority Title" value={data.employer.signingAuthorityTitle || 'Not provided'} />
+              {(() => {
+                const signatory = data.employer.signatoryId 
+                  ? getSignatoryById(data.employer.signatoryId) 
+                  : null;
+                return signatory ? (
+                  <div className="flex justify-between py-1.5 border-b border-border/50">
+                    <span className="text-muted-foreground">Digital Signature</span>
+                    <div className="flex items-center gap-1.5 text-right">
+                      <PenTool className="h-3.5 w-3.5 text-accent" />
+                      <span className="font-medium text-foreground">{signatory.name}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <DataRow label="Signing Authority" value={data.employer.signingAuthorityName || 'Not provided'} />
+                    <DataRow label="Authority Title" value={data.employer.signingAuthorityTitle || 'Not provided'} />
+                  </>
+                );
+              })()}
             </div>
-            {!data.employer.signingAuthorityName && (
+            {!data.employer.signatoryId && !data.employer.signingAuthorityName && (
               <div className="mt-3 p-2 rounded text-xs bg-muted text-muted-foreground">
                 ⚠ Documents will show "Authorized Representative" as default
+              </div>
+            )}
+            {data.employer.signatoryId && (
+              <div className="mt-3 p-2 rounded text-xs bg-success/10 text-success flex items-center gap-2">
+                <PenTool className="h-3.5 w-3.5" />
+                <span>Digital signature will be automatically applied to all PAF documents</span>
               </div>
             )}
           </SectionCard>

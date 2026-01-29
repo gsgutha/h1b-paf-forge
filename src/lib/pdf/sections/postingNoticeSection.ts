@@ -10,12 +10,13 @@ import {
   addSubsectionHeader,
   addLabelValue,
   addParagraph,
-  addSignatureLine,
   checkPageBreak,
   formatDate,
   formatCurrency,
   parseLocalDate,
 } from '../pdfHelpers';
+import { addCompactDigitalSignature } from '../signatureRenderer';
+import { getSignatoryById, getDefaultSignatory } from '@/config/signatories';
 
 export function addPostingNoticeSection(
   ctx: PDFContext, 
@@ -91,11 +92,15 @@ export function addPostingNoticeSection(
   const complaintsText2 = 'Complaints alleging failure to offer employment to an equally or better qualified U.S. worker or an employer\'s misrepresentation regarding such offers of employment may be filed with the Office of Special Counsel for Immigration Related Unfair Employment Practices, Civil Rights Division, Department of Justice.';
   addParagraph(ctx, complaintsText2);
   
-  // Signature
+  // Digital Signature
   ctx.yPos += 10;
-  const signerName = data.employer.signingAuthorityName || 'Authorized Representative';
-  const signerTitle = data.employer.signingAuthorityTitle || undefined;
-  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
+  
+  // Get the selected signatory or use default
+  const signatory = data.employer.signatoryId 
+    ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
+    : getDefaultSignatory();
+  
+  addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName);
   
   // ----- Page 2: LCA Posting Notice -----
   doc.addPage();

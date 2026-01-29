@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building2 } from 'lucide-react';
+import { Building2, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { AUTHORIZED_SIGNATORIES, getSignatoryById } from '@/config/signatories';
 import type { Employer } from '@/types/paf';
 
 const US_STATES = [
@@ -37,6 +39,7 @@ const employerSchema = z.object({
   telephone: z.string().min(10, 'Valid phone number required'),
   fein: z.string().min(9, 'Valid FEIN required').max(11),
   naicsCode: z.string().min(4, 'Valid NAICS code required'),
+  signatoryId: z.string().optional(),
   signingAuthorityName: z.string().optional(),
   signingAuthorityTitle: z.string().optional(),
   employeeName: z.string().optional(),
@@ -60,10 +63,32 @@ export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps
     defaultValues: {
       ...data,
       country: data.country || 'United States Of America',
+      signatoryId: data.signatoryId || AUTHORIZED_SIGNATORIES[0]?.id,
     },
   });
 
+  const selectedSignatoryId = watch('signatoryId');
+  const selectedSignatory = selectedSignatoryId ? getSignatoryById(selectedSignatoryId) : undefined;
+
+  // When signatory is selected, auto-populate name and title
+  const handleSignatoryChange = (signatoryId: string) => {
+    setValue('signatoryId', signatoryId);
+    const signatory = getSignatoryById(signatoryId);
+    if (signatory) {
+      setValue('signingAuthorityName', signatory.name);
+      setValue('signingAuthorityTitle', signatory.title);
+    }
+  };
+
   const onSubmit = (formData: Employer) => {
+    // Ensure signatory name/title are set from selection
+    if (formData.signatoryId) {
+      const signatory = getSignatoryById(formData.signatoryId);
+      if (signatory) {
+        formData.signingAuthorityName = signatory.name;
+        formData.signingAuthorityTitle = signatory.title;
+      }
+    }
     onNext(formData);
   };
 
@@ -217,7 +242,11 @@ export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps
 
         {/* Employee & Signing Authority Section */}
         <div className="border-t border-border pt-6 mt-6">
-          <h3 className="text-lg font-medium text-foreground mb-4">Employee & Signing Authority</h3>
+          <div className="flex items-center gap-2 mb-4">
+            <PenTool className="h-5 w-5 text-accent" />
+            <h3 className="text-lg font-medium text-foreground">Employee & Digital Signature</h3>
+          </div>
+          
           <div className="grid gap-6 md:grid-cols-2">
             <div className="md:col-span-2">
               <Label htmlFor="employeeName">H-1B Worker Full Name</Label>
@@ -232,27 +261,51 @@ export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps
               </p>
             </div>
 
-            <div>
-              <Label htmlFor="signingAuthorityName">Signing Authority Name</Label>
-              <Input
-                id="signingAuthorityName"
-                {...register('signingAuthorityName')}
-                className="mt-1.5"
-                placeholder="e.g., Jane Doe"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Person authorized to sign employer documents
+            {/* Authorized Signatory Selection */}
+            <div className="md:col-span-2">
+              <Label className="text-sm font-medium">Authorized Signatory *</Label>
+              <p className="text-xs text-muted-foreground mb-3">
+                Select the authorized representative whose digital signature will appear on all PAF documents
               </p>
-            </div>
-
-            <div>
-              <Label htmlFor="signingAuthorityTitle">Signing Authority Title</Label>
-              <Input
-                id="signingAuthorityTitle"
-                {...register('signingAuthorityTitle')}
-                className="mt-1.5"
-                placeholder="e.g., HR Director"
-              />
+              
+              <RadioGroup
+                value={selectedSignatoryId}
+                onValueChange={handleSignatoryChange}
+                className="grid gap-3"
+              >
+                {AUTHORIZED_SIGNATORIES.map((signatory) => (
+                  <div
+                    key={signatory.id}
+                    className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
+                      selectedSignatoryId === signatory.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-muted-foreground/50'
+                    }`}
+                    onClick={() => handleSignatoryChange(signatory.id)}
+                  >
+                    <RadioGroupItem value={signatory.id} id={signatory.id} />
+                    <div className="flex-1">
+                      <Label htmlFor={signatory.id} className="text-sm font-medium cursor-pointer">
+                        {signatory.name}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">{signatory.title}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-accent">
+                      <PenTool className="h-3.5 w-3.5" />
+                      <span>Digital Signature</span>
+                    </div>
+                  </div>
+                ))}
+              </RadioGroup>
+              
+              {selectedSignatory && (
+                <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium">Selected:</span> {selectedSignatory.name} ({selectedSignatory.title}) 
+                    will digitally sign all generated PAF documents.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

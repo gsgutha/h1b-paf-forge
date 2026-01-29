@@ -10,12 +10,12 @@ import {
   addSubsectionHeader,
   addParagraph,
   addBoldParagraph,
-  addSignatureLine,
-  addDateLine,
   checkPageBreak,
   formatDate,
   parseLocalDate,
 } from '../pdfHelpers';
+import { addDigitalSignature } from '../signatureRenderer';
+import { getSignatoryById, getDefaultSignatory } from '@/config/signatories';
 
 export function addRecruitmentSummarySection(
   ctx: PDFContext, 
@@ -166,9 +166,11 @@ export function addRecruitmentSummarySection(
   const certStatement = `I hereby certify that ${data.employer.legalBusinessName} has complied with all recruitment requirements applicable to H-1B dependent employers under 20 CFR § 655.739. The information provided in this summary is true and correct to the best of my knowledge.`;
   addParagraph(ctx, certStatement);
   
-  // Signature
-  const signerName = data.employer.signingAuthorityName || 'Authorized Representative';
-  const signerTitle = data.employer.signingAuthorityTitle || undefined;
-  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
-  addDateLine(ctx);
+  // Digital Signature
+  // Get the selected signatory or use default
+  const signatory = data.employer.signatoryId 
+    ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
+    : getDefaultSignatory();
+  
+  addDigitalSignature(ctx, signatory, data.employer.legalBusinessName);
 }

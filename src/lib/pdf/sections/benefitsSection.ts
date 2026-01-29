@@ -6,10 +6,11 @@ import {
   addPageHeader,
   addCenteredTitle,
   addParagraph,
-  addSignatureLine,
   checkPageBreak,
 } from '../pdfHelpers';
 import { embedFile } from '../embedPdf';
+import { addCompactDigitalSignature } from '../signatureRenderer';
+import { getSignatoryById, getDefaultSignatory } from '@/config/signatories';
 
 export async function addBenefitsSection(
   ctx: PDFContext, 
@@ -105,10 +106,14 @@ export async function addBenefitsSection(
     }
   }
   
-  // Signature
-  checkPageBreak(ctx, 40);
+  // Digital Signature
+  checkPageBreak(ctx, 60);
   ctx.yPos += 15;
-  const signerName = data.employer.signingAuthorityName || 'Authorized Representative';
-  const signerTitle = data.employer.signingAuthorityTitle || undefined;
-  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
+  
+  // Get the selected signatory or use default
+  const signatory = data.employer.signatoryId 
+    ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
+    : getDefaultSignatory();
+  
+  addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName);
 }
