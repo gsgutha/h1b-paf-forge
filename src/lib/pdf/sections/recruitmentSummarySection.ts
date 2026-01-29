@@ -172,5 +172,5 @@ export function addRecruitmentSummarySection(
     ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
     : getDefaultSignatory();
   
-  addDigitalSignature(ctx, signatory, data.employer.legalBusinessName);
+  addDigitalSignature(ctx, signatory, data.employer.legalBusinessName, false);
 }

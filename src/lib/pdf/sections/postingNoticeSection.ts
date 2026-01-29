@@ -100,7 +100,7 @@ export function addPostingNoticeSection(
     ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
     : getDefaultSignatory();
   
-  addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName);
+  addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName, false);
   
   // ----- Page 2: LCA Posting Notice -----
   doc.addPage();

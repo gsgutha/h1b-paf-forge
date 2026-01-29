@@ -140,5 +140,5 @@ export function addH1BDependencySection(
     ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
     : getDefaultSignatory();
   
-  addDigitalSignature(ctx, signatory, data.employer.legalBusinessName);
+  addDigitalSignature(ctx, signatory, data.employer.legalBusinessName, false);
 }
