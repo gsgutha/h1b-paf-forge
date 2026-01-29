@@ -115,5 +115,5 @@ export async function addBenefitsSection(
     ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
     : getDefaultSignatory();
   
-  addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName);
+  addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName, false);
 }

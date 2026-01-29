@@ -59,33 +59,20 @@ function mapWageLevel(level: string | null): 'Level I' | 'Level II' | 'Level III
 }
 
 // Calculate wage source date based on LCA begin date
-// Rule: If LCA start date is on or after July 1 → use July 1 of that year
-//       If LCA start date is before July 1 → use July 1 of previous year
+// Rule: Always use July 1st of the PREVIOUS year
+// Example: Oct 1, 2025 → July 1, 2024
 function calculateWageSourceDate(lcaBeginDate: string | null): string {
   if (!lcaBeginDate) {
-    // Fallback to current date logic
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const july1 = new Date(currentYear, 6, 1); // July is month 6 (0-indexed)
-    
-    if (today >= july1) {
-      return `${currentYear}-07-01`;
-    } else {
-      return `${currentYear - 1}-07-01`;
-    }
+    // Fallback: use July 1 of previous year
+    const currentYear = new Date().getFullYear();
+    return `${currentYear - 1}-07-01`;
   }
   
   const beginDate = new Date(lcaBeginDate);
   const year = beginDate.getFullYear();
-  const july1OfYear = new Date(year, 6, 1); // July 1 of the LCA year
   
-  if (beginDate >= july1OfYear) {
-    // On or after July 1 → use July 1 of that year
-    return `${year}-07-01`;
-  } else {
-    // Before July 1 → use July 1 of previous year
-    return `${year - 1}-07-01`;
-  }
+  // Always use July 1 of the previous year
+  return `${year - 1}-07-01`;
 }
 
 // Default employer constants
