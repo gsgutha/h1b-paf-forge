@@ -10,10 +10,11 @@ import {
   addLabelValue,
   addParagraph,
   addBoldParagraph,
-  addSignatureLine,
   addDateLine,
   checkPageBreak,
 } from '../pdfHelpers';
+import { addDigitalSignature } from '../signatureRenderer';
+import { getSignatoryById, getDefaultSignatory } from '@/config/signatories';
 
 export function addH1BDependencySection(
   ctx: PDFContext, 
@@ -133,9 +134,11 @@ export function addH1BDependencySection(
   const certStatement = `I hereby certify that the information provided above regarding ${data.employer.legalBusinessName}'s H-1B dependency status and willful violator status is true and correct to the best of my knowledge. I understand that providing false information may result in civil and/or criminal penalties under 18 U.S.C. § 1546.`;
   addParagraph(ctx, certStatement);
   
-  // Signature
-  const signerName = data.employer.signingAuthorityName || 'Authorized Representative';
-  const signerTitle = data.employer.signingAuthorityTitle || undefined;
-  addSignatureLine(ctx, signerName, signerTitle, data.employer.legalBusinessName);
-  addDateLine(ctx);
+  // Digital Signature
+  // Get the selected signatory or use default
+  const signatory = data.employer.signatoryId 
+    ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
+    : getDefaultSignatory();
+  
+  addDigitalSignature(ctx, signatory, data.employer.legalBusinessName);
 }

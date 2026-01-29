@@ -10,6 +10,8 @@ export interface Employer {
   telephone: string;
   fein: string;
   naicsCode: string;
+  // Signing authority - can be ID reference or manual entry
+  signatoryId?: string; // References AUTHORIZED_SIGNATORIES
   signingAuthorityName?: string;
   signingAuthorityTitle?: string;
   employeeName?: string;
