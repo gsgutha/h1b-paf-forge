@@ -58,6 +58,40 @@ function mapWageLevel(level: string | null): 'Level I' | 'Level II' | 'Level III
   return 'Level I';
 }
 
+// Calculate wage source date based on LCA begin date
+// Rule: If LCA start date is on or after July 1 → use July 1 of that year
+//       If LCA start date is before July 1 → use July 1 of previous year
+function calculateWageSourceDate(lcaBeginDate: string | null): string {
+  if (!lcaBeginDate) {
+    // Fallback to current date logic
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const july1 = new Date(currentYear, 6, 1); // July is month 6 (0-indexed)
+    
+    if (today >= july1) {
+      return `${currentYear}-07-01`;
+    } else {
+      return `${currentYear - 1}-07-01`;
+    }
+  }
+  
+  const beginDate = new Date(lcaBeginDate);
+  const year = beginDate.getFullYear();
+  const july1OfYear = new Date(year, 6, 1); // July 1 of the LCA year
+  
+  if (beginDate >= july1OfYear) {
+    // On or after July 1 → use July 1 of that year
+    return `${year}-07-01`;
+  } else {
+    // Before July 1 → use July 1 of previous year
+    return `${year - 1}-07-01`;
+  }
+}
+
+// Default employer constants
+const DEFAULT_FEIN = '20-3420634';
+const DEFAULT_TRADE_NAME = 'SBS Corp';
+
 export function PAFWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const [pafData, setPafData] = useState<Partial<ExtendedPAFData>>(initialPAFData);
@@ -69,8 +103,10 @@ export function PAFWizard() {
     setSelectedLca(lca);
     
     // Auto-fill all available fields from LCA
+    // Use default FEIN and Trade Name for all cases
     const employer: Employer = {
       legalBusinessName: lca.employer_name,
+      tradeName: DEFAULT_TRADE_NAME,
       address1: lca.employer_address1 || '',
       address2: lca.employer_address2 || undefined,
       city: lca.employer_city || '',
@@ -78,10 +114,9 @@ export function PAFWizard() {
       postalCode: lca.employer_postal_code || '',
       country: lca.employer_country || 'United States',
       telephone: lca.employer_phone || '',
-      fein: lca.employer_fein || '',
+      fein: DEFAULT_FEIN,
       naicsCode: lca.naics_code || '',
     };
-
     const job: JobDetails = {
       jobTitle: lca.job_title || '',
       socCode: lca.soc_code || '',
@@ -103,14 +138,16 @@ export function PAFWizard() {
       county: lca.worksite_county || undefined,
     };
 
+    // Calculate wage source date based on LCA begin date
+    const wageSourceDate = calculateWageSourceDate(lca.begin_date);
+
     const wage: Partial<WageInfo> = {
       prevailingWage: lca.prevailing_wage || 0,
       prevailingWageUnit: mapWageUnit(lca.wage_unit),
       wageLevel: mapWageLevel(lca.pw_wage_level),
       wageSource: 'OFLC Online Wage Library',
-      wageSourceDate: lca.decision_date || new Date().toISOString().split('T')[0],
+      wageSourceDate: wageSourceDate,
     };
-
     setPafData((prev) => ({
       ...prev,
       lcaId: lca.id,
