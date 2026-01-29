@@ -100,8 +100,12 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
   });
 
   const onSubmit = (formData: WageInfo) => {
+    console.log('WageInfoStep form submitted:', formData);
     onNext(formData);
   };
+  
+  // Debug: Log form errors
+  console.log('WageInfoStep form errors:', errors);
 
   const prevailingWage = watch('prevailingWage');
   const actualWage = watch('actualWage');
