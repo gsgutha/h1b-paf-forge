@@ -92,6 +92,7 @@ const Index = () => {
               value={stats?.totalPafs ?? 0}
               description="Public Access Files created"
               icon={FileText}
+              href="/generated-pafs"
             />
             <StatsCard
               title="Active LCAs"
