@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import CreatePAF from "./pages/CreatePAF";
 import EditPAF from "./pages/EditPAF";
+import GeneratedPAFs from "./pages/GeneratedPAFs";
 import Lookup from "./pages/Lookup";
 import AdminImport from "./pages/AdminImport";
 import Settings from "./pages/Settings";
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/create" element={<CreatePAF />} />
           <Route path="/edit/:id" element={<EditPAF />} />
+          <Route path="/generated-pafs" element={<GeneratedPAFs />} />
           <Route path="/lookup" element={<Lookup />} />
           <Route path="/admin/import" element={<AdminImport />} />
           <Route path="/settings" element={<Settings />} />
