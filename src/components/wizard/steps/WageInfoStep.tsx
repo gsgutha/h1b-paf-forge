@@ -37,6 +37,7 @@ const secondaryWageSchema = z.object({
   areaName: z.string().optional(),
 });
 
+// Base schema for primary wage fields
 const wageSchema = z.object({
   prevailingWage: z.number().min(0.01, 'Prevailing wage is required'),
   prevailingWageUnit: z.enum(['Hour', 'Week', 'Bi-Weekly', 'Month', 'Year']),
@@ -46,7 +47,41 @@ const wageSchema = z.object({
   actualWage: z.number().min(0.01, 'Actual wage is required'),
   actualWageUnit: z.enum(['Hour', 'Week', 'Bi-Weekly', 'Month', 'Year']),
   hasSecondaryWage: z.boolean().optional(),
-  secondaryWage: secondaryWageSchema.optional(),
+  // Secondary wage is optional - only validated when hasSecondaryWage is true
+  secondaryWage: z.object({
+    prevailingWage: z.number().optional(),
+    prevailingWageUnit: z.enum(['Hour', 'Week', 'Bi-Weekly', 'Month', 'Year']).optional(),
+    wageLevel: z.enum(['Level I', 'Level II', 'Level III', 'Level IV']).optional(),
+    wageSource: z.string().optional(),
+    wageSourceDate: z.string().optional(),
+    areaCode: z.string().optional(),
+    areaName: z.string().optional(),
+  }).optional(),
+}).superRefine((data, ctx) => {
+  // Only validate secondary wage fields when hasSecondaryWage is true
+  if (data.hasSecondaryWage) {
+    if (!data.secondaryWage?.prevailingWage || data.secondaryWage.prevailingWage < 0.01) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Secondary prevailing wage is required',
+        path: ['secondaryWage', 'prevailingWage'],
+      });
+    }
+    if (!data.secondaryWage?.wageSource) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Secondary wage source is required',
+        path: ['secondaryWage', 'wageSource'],
+      });
+    }
+    if (!data.secondaryWage?.wageSourceDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Secondary source date is required',
+        path: ['secondaryWage', 'wageSourceDate'],
+      });
+    }
+  }
 });
 
 const wageLevelDescriptions = {
@@ -100,12 +135,12 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
   });
 
   const onSubmit = (formData: WageInfo) => {
-    console.log('WageInfoStep form submitted:', formData);
+    // Clean up secondary wage data if not enabled
+    if (!formData.hasSecondaryWage) {
+      formData.secondaryWage = undefined;
+    }
     onNext(formData);
   };
-  
-  // Debug: Log form errors
-  console.log('WageInfoStep form errors:', errors);
 
   const prevailingWage = watch('prevailingWage');
   const actualWage = watch('actualWage');
