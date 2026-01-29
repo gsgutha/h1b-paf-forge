@@ -1,12 +1,54 @@
 import { FileText, FolderOpen, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Layout } from '@/components/layout/Layout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { RecentPAFs } from '@/components/dashboard/RecentPAFs';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+
+const EMPLOYER_NAME = 'Sai Business Solutions LLC';
 
 const Index = () => {
+  // Fetch stats from lca_disclosure for Sai Business Solutions LLC
+  const { data: stats } = useQuery({
+    queryKey: ['dashboard-stats', EMPLOYER_NAME],
+    queryFn: async () => {
+      // Get PAF records count
+      const { count: pafCount } = await supabase
+        .from('paf_records')
+        .select('*', { count: 'exact', head: true });
+
+      // Get Active LCAs (certified, not yet PAF generated)
+      const { count: activeLcaCount } = await supabase
+        .from('lca_disclosure')
+        .select('*', { count: 'exact', head: true })
+        .eq('employer_name', EMPLOYER_NAME)
+        .eq('paf_generated', false)
+        .ilike('case_status', '%certified%');
+
+      // Get Generated PAFs from LCA disclosure
+      const { count: generatedPafCount } = await supabase
+        .from('lca_disclosure')
+        .select('*', { count: 'exact', head: true })
+        .eq('employer_name', EMPLOYER_NAME)
+        .eq('paf_generated', true);
+
+      // Get total LCAs for this employer
+      const { count: totalLcaCount } = await supabase
+        .from('lca_disclosure')
+        .select('*', { count: 'exact', head: true })
+        .eq('employer_name', EMPLOYER_NAME);
+
+      return {
+        totalPafs: generatedPafCount || 0,
+        activeLcas: activeLcaCount || 0,
+        totalLcas: totalLcaCount || 0,
+      };
+    },
+  });
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -46,21 +88,21 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <StatsCard
-              title="Total PAFs"
-              value={12}
+              title="Generated PAFs"
+              value={stats?.totalPafs ?? 0}
               description="Public Access Files created"
               icon={FileText}
             />
             <StatsCard
               title="Active LCAs"
-              value={8}
-              description="Currently valid certifications"
+              value={stats?.activeLcas ?? 0}
+              description="Ready for PAF generation"
               icon={CheckCircle2}
             />
             <StatsCard
-              title="Pending"
-              value={3}
-              description="Awaiting certification"
+              title="Total LCAs"
+              value={stats?.totalLcas ?? 0}
+              description="Sai Business Solutions LLC"
               icon={Clock}
             />
             <StatsCard
