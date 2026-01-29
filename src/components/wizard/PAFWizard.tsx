@@ -182,39 +182,119 @@ export function PAFWizard() {
   };
 
   const handleGenerate = async () => {
-    // Mark LCA as PAF generated
-    if (pafData.lcaId) {
-      const { error } = await supabase
-        .from('lca_disclosure')
-        .update({ 
-          paf_generated: true, 
-          paf_generated_at: new Date().toISOString() 
-        })
-        .eq('id', pafData.lcaId);
-
-      if (error) {
-        toast({
-          title: "Error updating LCA status",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
+    // IMPORTANT: Persist the generated PAF into paf_records so it shows up on
+    // /generated-pafs and can be opened via /edit/:id.
+    try {
+      if (!pafData.employer || !pafData.job || !pafData.worksite || !pafData.wage) {
+        throw new Error('Missing PAF data');
       }
 
-      // Invalidate queries to refresh the LCA lists
+      const employer = pafData.employer;
+      const job = pafData.job;
+      const worksite = pafData.worksite;
+      const wage = pafData.wage;
+
+      const { data: created, error: insertError } = await supabase
+        .from('paf_records')
+        .insert({
+          visa_type: pafData.visaType ?? 'H-1B',
+          lca_case_number: pafData.caseNumber ?? pafData.supportingDocs?.lcaCaseNumber ?? null,
+
+          is_h1b_dependent: pafData.isH1BDependent ?? false,
+          is_willful_violator: pafData.isWillfulViolator ?? false,
+          is_full_time: job.isFullTime ?? true,
+          is_rd: job.isRD ?? false,
+
+          employer_legal_name: employer.legalBusinessName,
+          employer_trade_name: employer.tradeName ?? null,
+          employer_address1: employer.address1,
+          employer_address2: employer.address2 ?? null,
+          employer_city: employer.city,
+          employer_state: employer.state,
+          employer_postal_code: employer.postalCode,
+          employer_country: employer.country,
+          employer_telephone: employer.telephone,
+          employer_fein: employer.fein,
+          employer_naics_code: employer.naicsCode,
+
+          job_title: job.jobTitle,
+          soc_code: job.socCode,
+          soc_title: job.socTitle,
+          onet_code: job.onetCode ?? null,
+          onet_title: job.onetTitle ?? null,
+
+          begin_date: job.beginDate,
+          end_date: job.endDate,
+          wage_rate_from: job.wageRateFrom,
+          wage_rate_to: job.wageRateTo ?? null,
+          wage_unit: job.wageUnit,
+          workers_needed: job.workersNeeded ?? 1,
+
+          worksite_address1: worksite.address1,
+          worksite_address2: worksite.address2 ?? null,
+          worksite_city: worksite.city,
+          worksite_state: worksite.state,
+          worksite_postal_code: worksite.postalCode,
+          worksite_county: worksite.county ?? null,
+          worksite_area_code: worksite.areaCode ?? null,
+          worksite_area_name: worksite.areaName ?? null,
+
+          prevailing_wage: wage.prevailingWage,
+          prevailing_wage_unit: wage.prevailingWageUnit,
+          wage_level: wage.wageLevel,
+          wage_source: wage.wageSource,
+          wage_source_date: wage.wageSourceDate,
+          actual_wage: wage.actualWage,
+          actual_wage_unit: wage.actualWageUnit,
+
+          // Optional file paths (not yet persisted to storage)
+          lca_file_path: null,
+          actual_wage_memo_path: null,
+          notice_posting_proof_path: null,
+          benefits_comparison_path: null,
+        })
+        .select('id')
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Mark LCA as PAF generated *only after* paf_records is created.
+      if (pafData.lcaId) {
+        const { error: lcaError } = await supabase
+          .from('lca_disclosure')
+          .update({
+            paf_generated: true,
+            paf_generated_at: new Date().toISOString(),
+          })
+          .eq('id', pafData.lcaId);
+
+        if (lcaError) throw lcaError;
+      }
+
+      // Refresh dashboard + lists
+      queryClient.invalidateQueries({ queryKey: ['recent-pafs'] });
+      queryClient.invalidateQueries({ queryKey: ['all-pafs'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       queryClient.invalidateQueries({ queryKey: ['pending-lcas'] });
       queryClient.invalidateQueries({ queryKey: ['generated-lcas'] });
+
+      toast({
+        title: 'PAF Saved Successfully',
+        description: `Saved as an editable record${created?.id ? ` (ID: ${created.id})` : ''}.`,
+      });
+
+      // Reset wizard for next PAF
+      setPafData(initialPAFData);
+      setSelectedLca(null);
+      setCurrentStep(0);
+    } catch (error: any) {
+      console.error('PAF save error:', error);
+      toast({
+        title: 'Could not save generated PAF',
+        description: error?.message || 'Please try again.',
+        variant: 'destructive',
+      });
     }
-
-    toast({
-      title: "PAF Generated Successfully!",
-      description: "Your Public Access File has been created and is ready for download.",
-    });
-
-    // Reset wizard for next PAF
-    setPafData(initialPAFData);
-    setSelectedLca(null);
-    setCurrentStep(0);
   };
 
   const goBack = () => {
