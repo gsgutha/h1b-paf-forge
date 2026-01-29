@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      authorized_signatories: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          signature_image_path: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          signature_image_path?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          signature_image_path?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lca_disclosure: {
         Row: {
           begin_date: string | null

@@ -8,6 +8,7 @@ import CreatePAF from "./pages/CreatePAF";
 import EditPAF from "./pages/EditPAF";
 import Lookup from "./pages/Lookup";
 import AdminImport from "./pages/AdminImport";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/edit/:id" element={<EditPAF />} />
           <Route path="/lookup" element={<Lookup />} />
           <Route path="/admin/import" element={<AdminImport />} />
+          <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
