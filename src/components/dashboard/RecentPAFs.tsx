@@ -84,9 +84,10 @@ export function RecentPAFs() {
       
       <div className="divide-y divide-border">
         {pafs.map((paf) => (
-          <div
+          <Link
             key={paf.id}
-            className="flex items-center gap-4 py-4 transition-colors hover:bg-muted/30"
+            to={`/edit/${paf.id}`}
+            className="flex items-center gap-4 py-4 transition-colors hover:bg-muted/30 cursor-pointer"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
               <FileText className="h-5 w-5 text-primary" />
@@ -136,7 +137,7 @@ export function RecentPAFs() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

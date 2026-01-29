@@ -20,7 +20,7 @@ export const AUTHORIZED_SIGNATORIES: AuthorizedSignatory[] = [
   {
     id: 'sreedevi-nair',
     name: 'Sreedevi Nair',
-    title: 'Director of Operations',
+    title: 'CSO',
   },
   {
     id: 'venkat-kalyan',
