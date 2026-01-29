@@ -6,6 +6,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/create', label: 'Create PAF', icon: Plus },
   { href: '/lookup', label: 'Lookup', icon: Search },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function Header() {
