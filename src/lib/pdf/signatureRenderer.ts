@@ -15,27 +15,52 @@ export interface SignatoryWithImage {
 }
 
 /**
+ * Fetches an image from URL and converts it to base64 for PDF embedding
+ */
+async function fetchImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Renders a digital signature on the PDF document.
  * If signatureImagePath is provided, embeds the image.
  * Otherwise, uses a cursive-style text rendering.
  */
-export function addDigitalSignature(
+export async function addDigitalSignature(
   ctx: PDFContext,
   signatory: AuthorizedSignatory | SignatoryWithImage,
   companyName?: string,
   includeDate: boolean = false
-): void {
+): Promise<void> {
   const { doc, margin, pageWidth } = ctx;
   
-  checkPageBreak(ctx, 60);
+  checkPageBreak(ctx, 70);
   ctx.yPos += 10;
   
   // Check if we have a signature image
-  const hasImage = 'signatureImagePath' in signatory && signatory.signatureImagePath;
+  const imagePath = 'signatureImagePath' in signatory ? signatory.signatureImagePath : null;
+  let imageData: string | null = null;
+  
+  if (imagePath) {
+    imageData = await fetchImageAsBase64(imagePath);
+  }
   
   // Signature box with light background
   const boxWidth = 180;
-  const boxHeight = hasImage ? 60 : 50;
+  const boxHeight = imageData ? 70 : 50;
   const boxX = margin;
   const boxY = ctx.yPos;
   
@@ -46,31 +71,22 @@ export function addDigitalSignature(
   
   let currentY = boxY + 8;
   
-  if (hasImage && 'signatureImagePath' in signatory && signatory.signatureImagePath) {
-    // Render signature image
+  // "Digitally signed by" label
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('Digitally signed by:', boxX + 5, currentY);
+  currentY += 5;
+  
+  if (imageData) {
+    // Embed the actual signature image
     try {
-      // The image will be added by the PDF generator with proper async handling
-      // For now, we'll add a placeholder area and the name/title below
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100, 100, 100);
-      doc.text('Digitally signed by:', boxX + 5, currentY);
-      currentY += 5;
-      
-      // Signature name in cursive-like style (using italic) as fallback
-      doc.setFontSize(18);
-      doc.setFont('times', 'bolditalic');
-      doc.setTextColor(0, 51, 102); // Navy blue for signature
-      doc.text(signatory.name, boxX + 5, currentY + 12);
-      currentY += 18;
+      const imgWidth = 80;
+      const imgHeight = 30;
+      doc.addImage(imageData, 'JPEG', boxX + 5, currentY, imgWidth, imgHeight);
+      currentY += imgHeight + 5;
     } catch {
-      // Fallback to text-based signature
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100, 100, 100);
-      doc.text('Digitally signed by:', boxX + 5, currentY);
-      currentY += 5;
-      
+      // Fallback to cursive text if image fails
       doc.setFontSize(18);
       doc.setFont('times', 'bolditalic');
       doc.setTextColor(0, 51, 102);
@@ -78,17 +94,10 @@ export function addDigitalSignature(
       currentY += 18;
     }
   } else {
-    // "Digitally signed by" label
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    doc.text('Digitally signed by:', boxX + 5, currentY);
-    currentY += 5;
-    
     // Signature name in cursive-like style (using italic)
     doc.setFontSize(18);
     doc.setFont('times', 'bolditalic');
-    doc.setTextColor(0, 51, 102); // Navy blue for signature
+    doc.setTextColor(0, 51, 102);
     doc.text(signatory.name, boxX + 5, currentY + 12);
     currentY += 18;
   }
@@ -134,30 +143,55 @@ export function addDigitalSignature(
  * Renders a simpler signature line with digital signature styling
  * Used in sections that need a more compact signature format
  */
-export function addCompactDigitalSignature(
+export async function addCompactDigitalSignature(
   ctx: PDFContext,
   signatory: AuthorizedSignatory | SignatoryWithImage,
   companyName?: string,
   includeDate: boolean = false
-): void {
+): Promise<void> {
   const { doc, margin } = ctx;
   
-  checkPageBreak(ctx, 40);
+  checkPageBreak(ctx, 50);
   ctx.yPos += 10;
+  
+  // Check if we have a signature image
+  const imagePath = 'signatureImagePath' in signatory ? signatory.signatureImagePath : null;
+  let imageData: string | null = null;
+  
+  if (imagePath) {
+    imageData = await fetchImageAsBase64(imagePath);
+  }
   
   // Draw signature line
   doc.setDrawColor(...PDF_CONFIG.colors.black);
   doc.line(margin, ctx.yPos, margin + 100, ctx.yPos);
   ctx.yPos += 2;
   
-  // Signature in cursive style
-  doc.setFontSize(14);
-  doc.setFont('times', 'bolditalic');
-  doc.setTextColor(0, 51, 102);
-  doc.text(signatory.name, margin, ctx.yPos + 5);
-  doc.setTextColor(0, 0, 0);
-  
-  ctx.yPos += 10;
+  if (imageData) {
+    // Embed the actual signature image
+    try {
+      const imgWidth = 70;
+      const imgHeight = 25;
+      doc.addImage(imageData, 'JPEG', margin, ctx.yPos, imgWidth, imgHeight);
+      ctx.yPos += imgHeight + 3;
+    } catch {
+      // Fallback to cursive text
+      doc.setFontSize(14);
+      doc.setFont('times', 'bolditalic');
+      doc.setTextColor(0, 51, 102);
+      doc.text(signatory.name, margin, ctx.yPos + 5);
+      doc.setTextColor(0, 0, 0);
+      ctx.yPos += 10;
+    }
+  } else {
+    // Signature in cursive style
+    doc.setFontSize(14);
+    doc.setFont('times', 'bolditalic');
+    doc.setTextColor(0, 51, 102);
+    doc.text(signatory.name, margin, ctx.yPos + 5);
+    doc.setTextColor(0, 0, 0);
+    ctx.yPos += 10;
+  }
   
   // Name printed
   doc.setFontSize(10);

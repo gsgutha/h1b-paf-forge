@@ -61,12 +61,12 @@ export async function generatePAFDocument(
   
   // 3. Actual Wage Standards (Company-wide policy - same for all LCAs)
   if (mergedOptions.includeActualWageStandards) {
-    addActualWageStandardsSection(ctx, data, supportingDocs);
+    await addActualWageStandardsSection(ctx, data, supportingDocs);
   }
   
   // 4. Actual Wage Determination (Position-specific - unique per LCA)
   if (mergedOptions.includeWageMemo) {
-    addWageMemoSection(ctx, data, supportingDocs);
+    await addWageMemoSection(ctx, data, supportingDocs);
   }
   
   // 5. Prevailing Wage Rate and Source
@@ -76,7 +76,7 @@ export async function generatePAFDocument(
   
   // 5. LCA Posting Notice and Display Details
   if (mergedOptions.includePostingNotice) {
-    addPostingNoticeSection(ctx, data, supportingDocs);
+    await addPostingNoticeSection(ctx, data, supportingDocs);
   }
   
   // 6. Benefits Summary (with embedded benefits docs if uploaded)
@@ -86,12 +86,12 @@ export async function generatePAFDocument(
   
   // 7. H-1B Dependency and Willful Violator Status
   if (mergedOptions.includeH1BDependency) {
-    addH1BDependencySection(ctx, data, supportingDocs);
+    await addH1BDependencySection(ctx, data, supportingDocs);
   }
   
   // 8. Recruitment Summary (only for H-1B dependent employers)
   if (mergedOptions.includeRecruitmentSummary) {
-    addRecruitmentSummarySection(ctx, data, supportingDocs);
+    await addRecruitmentSummarySection(ctx, data, supportingDocs);
   }
   
   // 9. Worker Receipt Statement
