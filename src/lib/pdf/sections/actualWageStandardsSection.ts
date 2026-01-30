@@ -9,19 +9,43 @@ import {
   addBoldParagraph,
   checkPageBreak,
 } from '../pdfHelpers';
-import { addCompactDigitalSignature } from '../signatureRenderer';
-import { getSignatoryById, getDefaultSignatory } from '@/config/signatories';
+import { addCompactDigitalSignature, SignatoryWithImage } from '../signatureRenderer';
+import { supabase } from '@/integrations/supabase/client';
+
+async function getSignatoryFromDB(signatoryId?: string): Promise<SignatoryWithImage | null> {
+  try {
+    let query = supabase.from('authorized_signatories').select('*');
+    
+    if (signatoryId) {
+      query = query.eq('id', signatoryId);
+    } else {
+      query = query.eq('is_default', true);
+    }
+    
+    const { data, error } = await query.single();
+    if (error || !data) return null;
+    
+    return {
+      id: data.id,
+      name: data.name,
+      title: data.title,
+      signatureImagePath: data.signature_image_path,
+    };
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Adds the company-wide Actual Wage Standards policy section.
  * This document is the SAME for all LCAs/positions - it describes 
  * the employer's general methodology for determining actual wages.
  */
-export function addActualWageStandardsSection(
+export async function addActualWageStandardsSection(
   ctx: PDFContext, 
   data: PAFData, 
   _supportingDocs?: SupportingDocs
-): void {
+): Promise<void> {
   const { doc, pageWidth, margin } = ctx;
   
   // Start new page
@@ -171,7 +195,7 @@ export function addActualWageStandardsSection(
   addParagraph(ctx, documentation);
   
   ctx.yPos += 5;
-  checkPageBreak(ctx, 40);
+  checkPageBreak(ctx, 50);
   
   // Certification
   doc.setFillColor(...PDF_CONFIG.colors.lightGray);
@@ -187,10 +211,17 @@ export function addActualWageStandardsSection(
   // Digital Signature
   ctx.yPos += 10;
   
-  // Get the selected signatory or use default
-  const signatory = data.employer.signatoryId 
-    ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
-    : getDefaultSignatory();
+  // Get the signatory from database with image path
+  const signatory = await getSignatoryFromDB(data.employer.signatoryId);
   
-  addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName, false);
+  if (signatory) {
+    await addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName, false);
+  } else {
+    await addCompactDigitalSignature(ctx, {
+      id: 'fallback',
+      name: 'Authorized Signatory',
+      title: 'Authorized Representative',
+      signatureImagePath: null
+    }, data.employer.legalBusinessName, false);
+  }
 }

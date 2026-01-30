@@ -14,14 +14,38 @@ import {
   formatDate,
   parseLocalDate,
 } from '../pdfHelpers';
-import { addDigitalSignature } from '../signatureRenderer';
-import { getSignatoryById, getDefaultSignatory } from '@/config/signatories';
+import { addDigitalSignature, SignatoryWithImage } from '../signatureRenderer';
+import { supabase } from '@/integrations/supabase/client';
 
-export function addRecruitmentSummarySection(
+async function getSignatoryFromDB(signatoryId?: string): Promise<SignatoryWithImage | null> {
+  try {
+    let query = supabase.from('authorized_signatories').select('*');
+    
+    if (signatoryId) {
+      query = query.eq('id', signatoryId);
+    } else {
+      query = query.eq('is_default', true);
+    }
+    
+    const { data, error } = await query.single();
+    if (error || !data) return null;
+    
+    return {
+      id: data.id,
+      name: data.name,
+      title: data.title,
+      signatureImagePath: data.signature_image_path,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function addRecruitmentSummarySection(
   ctx: PDFContext, 
   data: PAFData,
   supportingDocs?: SupportingDocs
-): void {
+): Promise<void> {
   // Only add this section if employer is H-1B dependent
   if (!data.isH1BDependent) {
     return;
@@ -166,11 +190,17 @@ export function addRecruitmentSummarySection(
   const certStatement = `I hereby certify that ${data.employer.legalBusinessName} has complied with all recruitment requirements applicable to H-1B dependent employers under 20 CFR § 655.739. The information provided in this summary is true and correct to the best of my knowledge.`;
   addParagraph(ctx, certStatement);
   
-  // Digital Signature
-  // Get the selected signatory or use default
-  const signatory = data.employer.signatoryId 
-    ? getSignatoryById(data.employer.signatoryId) || getDefaultSignatory()
-    : getDefaultSignatory();
+  // Digital Signature - fetch from database
+  const signatory = await getSignatoryFromDB(data.employer.signatoryId);
   
-  addDigitalSignature(ctx, signatory, data.employer.legalBusinessName, false);
+  if (signatory) {
+    await addDigitalSignature(ctx, signatory, data.employer.legalBusinessName, false);
+  } else {
+    await addDigitalSignature(ctx, {
+      id: 'fallback',
+      name: 'Authorized Signatory',
+      title: 'Authorized Representative',
+      signatureImagePath: null
+    }, data.employer.legalBusinessName, false);
+  }
 }
