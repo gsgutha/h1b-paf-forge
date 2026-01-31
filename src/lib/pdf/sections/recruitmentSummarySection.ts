@@ -19,23 +19,57 @@ import { supabase } from '@/integrations/supabase/client';
 
 async function getSignatoryFromDB(signatoryId?: string): Promise<SignatoryWithImage | null> {
   try {
-    let query = supabase.from('authorized_signatories').select('*');
-    
+    // First try to get by signatoryId if provided
     if (signatoryId) {
-      query = query.eq('id', signatoryId);
-    } else {
-      query = query.eq('is_default', true);
+      const { data, error } = await supabase
+        .from('authorized_signatories')
+        .select('*')
+        .eq('id', signatoryId)
+        .single();
+      
+      if (!error && data) {
+        return {
+          id: data.id,
+          name: data.name,
+          title: data.title,
+          signatureImagePath: data.signature_image_path,
+        };
+      }
     }
     
-    const { data, error } = await query.single();
-    if (error || !data) return null;
+    // Fall back to default signatory
+    const { data: defaultData, error: defaultError } = await supabase
+      .from('authorized_signatories')
+      .select('*')
+      .eq('is_default', true)
+      .single();
     
-    return {
-      id: data.id,
-      name: data.name,
-      title: data.title,
-      signatureImagePath: data.signature_image_path,
-    };
+    if (!defaultError && defaultData) {
+      return {
+        id: defaultData.id,
+        name: defaultData.name,
+        title: defaultData.title,
+        signatureImagePath: defaultData.signature_image_path,
+      };
+    }
+    
+    // If no default, get the first signatory
+    const { data: firstData } = await supabase
+      .from('authorized_signatories')
+      .select('*')
+      .limit(1)
+      .single();
+    
+    if (firstData) {
+      return {
+        id: firstData.id,
+        name: firstData.name,
+        title: firstData.title,
+        signatureImagePath: firstData.signature_image_path,
+      };
+    }
+    
+    return null;
   } catch {
     return null;
   }
