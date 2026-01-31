@@ -1,6 +1,8 @@
-import { FileText, Home, Plus, Search, Settings } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { FileText, Home, Plus, Search, Settings, LogOut } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
@@ -11,6 +13,13 @@ const navItems = [
 
 export function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <header className="nav-gradient sticky top-0 z-50 w-full border-b border-white/10 shadow-lg">
@@ -44,6 +53,17 @@ export function Header() {
               </Link>
             );
           })}
+          {user && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="ml-2 text-primary-foreground/80 hover:bg-white/10 hover:text-primary-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline ml-2">Logout</span>
+            </Button>
+          )}
         </nav>
       </div>
     </header>
