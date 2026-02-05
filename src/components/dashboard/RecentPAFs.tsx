@@ -12,6 +12,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
+import { downloadPAF } from '@/lib/pdfGenerator';
+import { toast } from 'sonner';
+import type { PAFData } from '@/types/paf';
 
 interface PAFRecord {
   id: string;
@@ -20,6 +23,74 @@ interface PAFRecord {
   lca_case_number: string | null;
   created_at: string;
   soc_code: string;
+}
+// Convert DB record to PAFData format
+function convertToPAFData(record: any): PAFData {
+  return {
+    visaType: record.visa_type || 'H-1B',
+    caseNumber: record.lca_case_number,
+    employer: {
+      legalBusinessName: record.employer_legal_name,
+      tradeName: record.employer_trade_name,
+      address1: record.employer_address1,
+      address2: record.employer_address2,
+      city: record.employer_city,
+      state: record.employer_state,
+      postalCode: record.employer_postal_code,
+      country: record.employer_country,
+      telephone: record.employer_telephone,
+      fein: record.employer_fein,
+      naicsCode: record.employer_naics_code,
+    },
+    contact: {
+      lastName: '',
+      firstName: '',
+      jobTitle: '',
+      address1: record.employer_address1,
+      city: record.employer_city,
+      state: record.employer_state,
+      postalCode: record.employer_postal_code,
+      country: record.employer_country,
+      telephone: record.employer_telephone,
+      email: '',
+    },
+    job: {
+      jobTitle: record.job_title,
+      socCode: record.soc_code,
+      socTitle: record.soc_title,
+      onetCode: record.onet_code,
+      onetTitle: record.onet_title,
+      isFullTime: record.is_full_time,
+      beginDate: record.begin_date,
+      endDate: record.end_date,
+      wageRateFrom: record.wage_rate_from,
+      wageRateTo: record.wage_rate_to,
+      wageUnit: record.wage_unit,
+      workersNeeded: record.workers_needed,
+      isRD: record.is_rd,
+    },
+    worksite: {
+      address1: record.worksite_address1,
+      address2: record.worksite_address2,
+      city: record.worksite_city,
+      state: record.worksite_state,
+      postalCode: record.worksite_postal_code,
+      county: record.worksite_county,
+      areaCode: record.worksite_area_code,
+      areaName: record.worksite_area_name,
+    },
+    wage: {
+      prevailingWage: record.prevailing_wage,
+      prevailingWageUnit: record.prevailing_wage_unit,
+      wageLevel: record.wage_level,
+      wageSource: record.wage_source,
+      wageSourceDate: record.wage_source_date,
+      actualWage: record.actual_wage,
+      actualWageUnit: record.actual_wage_unit,
+    },
+    isH1BDependent: record.is_h1b_dependent,
+    isWillfulViolator: record.is_willful_violator,
+  };
 }
 
 export function RecentPAFs() {
@@ -73,12 +144,33 @@ export function RecentPAFs() {
     );
   }
 
+  const handleDownload = async (e: React.MouseEvent, pafId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      toast.loading('Generating PDF...', { id: 'download' });
+      const { data: fullRecord, error } = await supabase
+        .from('paf_records')
+        .select('*')
+        .eq('id', pafId)
+        .single();
+      
+      if (error) throw error;
+      const pafData = convertToPAFData(fullRecord);
+      await downloadPAF(pafData);
+      toast.success('PAF downloaded successfully', { id: 'download' });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download PAF', { id: 'download' });
+    }
+  };
+
   return (
     <div className="paf-section slide-up">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Recent PAFs</h3>
-        <Button variant="ghost" size="sm">
-          View All
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/generated-pafs">View All</Link>
         </Button>
       </div>
       
@@ -128,7 +220,7 @@ export function RecentPAFs() {
                     <Edit className="mr-2 h-4 w-4" /> Edit
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => handleDownload(e, paf.id)}>
                   <Download className="mr-2 h-4 w-4" /> Download
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
