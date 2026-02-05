@@ -1,19 +1,25 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '@/components/layout/Layout';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, FileText } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Download, FileText, Save, Pencil, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { downloadPAF } from '@/lib/pdfGenerator';
 import type { PAFData } from '@/types/paf';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 export default function EditPAF() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
+  const [workerName, setWorkerName] = useState('');
 
   const { data: pafRecord, isLoading, error } = useQuery({
     queryKey: ['paf-record', id],
@@ -24,13 +30,54 @@ export default function EditPAF() {
         .from('paf_records')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
     },
     enabled: !!id,
   });
+
+  // Initialize workerName when data loads
+  useState(() => {
+    if (pafRecord?.worker_name) {
+      setWorkerName(pafRecord.worker_name);
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (updates: { worker_name: string }) => {
+      const { error } = await supabase
+        .from('paf_records')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['paf-record', id] });
+      toast.success('PAF updated successfully');
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      console.error('Update error:', error);
+      toast.error('Failed to update PAF');
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate({ worker_name: workerName });
+  };
+
+  const handleStartEdit = () => {
+    setWorkerName(pafRecord?.worker_name || '');
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setWorkerName(pafRecord?.worker_name || '');
+    setIsEditing(false);
+  };
 
   const handleDownload = async () => {
     if (!pafRecord) return;
@@ -54,6 +101,7 @@ export default function EditPAF() {
         telephone: pafRecord.employer_telephone,
         fein: pafRecord.employer_fein,
         naicsCode: pafRecord.employer_naics_code,
+        employeeName: pafRecord.worker_name || undefined,
       },
       contact: {
         lastName: '',
@@ -161,15 +209,76 @@ export default function EditPAF() {
                 {pafRecord.employer_legal_name} • {pafRecord.lca_case_number || 'No case number'}
               </p>
             </div>
-            <Button onClick={handleDownload} variant="wizard">
-              <Download className="mr-2 h-4 w-4" />
-              Download PAF
-            </Button>
+            <div className="flex gap-2">
+              {!isEditing && (
+                <Button onClick={handleStartEdit} variant="outline">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </Button>
+              )}
+              <Button onClick={handleDownload} variant="wizard">
+                <Download className="mr-2 h-4 w-4" />
+                Download PAF
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Editable Worker Info Card */}
+        <Card className="mb-6 border-2 border-primary/20">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <span>H-1B Worker / Beneficiary</span>
+              {!pafRecord.worker_name && !isEditing && (
+                <Badge variant="outline" className="text-warning border-warning">
+                  Not Set
+                </Badge>
+              )}
+            </CardTitle>
+            {isEditing && (
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
+                  <X className="mr-1 h-4 w-4" />
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
+                  <Save className="mr-1 h-4 w-4" />
+                  {updateMutation.isPending ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            )}
+          </CardHeader>
+          <CardContent>
+            {isEditing ? (
+              <div className="space-y-2">
+                <Label htmlFor="workerName">Worker Full Name</Label>
+                <Input
+                  id="workerName"
+                  value={workerName}
+                  onChange={(e) => setWorkerName(e.target.value)}
+                  placeholder="Enter the H-1B worker's full name"
+                  className="max-w-md"
+                />
+                <p className="text-sm text-muted-foreground">
+                  This name will appear on the Worker Receipt and other personalized documents.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-lg font-medium">
+                  {pafRecord.worker_name || (
+                    <span className="text-muted-foreground italic">
+                      No worker name set. Click "Edit" to add the beneficiary name.
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="grid gap-6 md:grid-cols-2">
           {/* Employer Info */}
           <Card>
