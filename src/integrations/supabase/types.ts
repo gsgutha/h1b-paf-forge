@@ -279,6 +279,7 @@ export type Database = {
           wage_source: string
           wage_source_date: string
           wage_unit: string
+          worker_name: string | null
           workers_needed: number
           worksite_address1: string
           worksite_address2: string | null
@@ -331,6 +332,7 @@ export type Database = {
           wage_source: string
           wage_source_date: string
           wage_unit: string
+          worker_name?: string | null
           workers_needed?: number
           worksite_address1: string
           worksite_address2?: string | null
@@ -383,6 +385,7 @@ export type Database = {
           wage_source?: string
           wage_source_date?: string
           wage_unit?: string
+          worker_name?: string | null
           workers_needed?: number
           worksite_address1?: string
           worksite_address2?: string | null
