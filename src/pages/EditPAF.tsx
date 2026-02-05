@@ -7,14 +7,13 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { generatePAFDocument } from '@/lib/pdfGenerator';
+import { downloadPAF } from '@/lib/pdfGenerator';
 import type { PAFData } from '@/types/paf';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export default function EditPAF() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const { data: pafRecord, isLoading, error } = useQuery({
     queryKey: ['paf-record', id],
@@ -105,17 +104,12 @@ export default function EditPAF() {
     };
 
     try {
-      await generatePAFDocument(pafData, undefined);
-      toast({
-        title: "PAF Downloaded",
-        description: "Your Public Access File has been downloaded.",
-      });
+      toast.loading('Generating PDF...', { id: 'download' });
+      await downloadPAF(pafData, undefined);
+      toast.success('PAF downloaded successfully', { id: 'download' });
     } catch (err) {
-      toast({
-        title: "Download Failed",
-        description: "Could not generate the PAF document.",
-        variant: "destructive",
-      });
+      console.error('Download error:', err);
+      toast.error('Failed to generate PAF document', { id: 'download' });
     }
   };
 
