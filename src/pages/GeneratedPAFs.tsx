@@ -23,6 +23,89 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { downloadPAF } from '@/lib/pdfGenerator';
+import { toast } from 'sonner';
+import type { PAFData } from '@/types/paf';
+// Fetch full record for download
+async function fetchFullPAFRecord(id: string) {
+  const { data, error } = await supabase
+    .from('paf_records')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+// Convert DB record to PAFData format
+function convertToPAFData(record: any): PAFData {
+  return {
+    visaType: record.visa_type || 'H-1B',
+    caseNumber: record.lca_case_number,
+    employer: {
+      legalBusinessName: record.employer_legal_name,
+      tradeName: record.employer_trade_name,
+      address1: record.employer_address1,
+      address2: record.employer_address2,
+      city: record.employer_city,
+      state: record.employer_state,
+      postalCode: record.employer_postal_code,
+      country: record.employer_country,
+      telephone: record.employer_telephone,
+      fein: record.employer_fein,
+      naicsCode: record.employer_naics_code,
+    },
+    contact: {
+      lastName: '',
+      firstName: '',
+      jobTitle: '',
+      address1: record.employer_address1,
+      city: record.employer_city,
+      state: record.employer_state,
+      postalCode: record.employer_postal_code,
+      country: record.employer_country,
+      telephone: record.employer_telephone,
+      email: '',
+    },
+    job: {
+      jobTitle: record.job_title,
+      socCode: record.soc_code,
+      socTitle: record.soc_title,
+      onetCode: record.onet_code,
+      onetTitle: record.onet_title,
+      isFullTime: record.is_full_time,
+      beginDate: record.begin_date,
+      endDate: record.end_date,
+      wageRateFrom: record.wage_rate_from,
+      wageRateTo: record.wage_rate_to,
+      wageUnit: record.wage_unit,
+      workersNeeded: record.workers_needed,
+      isRD: record.is_rd,
+    },
+    worksite: {
+      address1: record.worksite_address1,
+      address2: record.worksite_address2,
+      city: record.worksite_city,
+      state: record.worksite_state,
+      postalCode: record.worksite_postal_code,
+      county: record.worksite_county,
+      areaCode: record.worksite_area_code,
+      areaName: record.worksite_area_name,
+    },
+    wage: {
+      prevailingWage: record.prevailing_wage,
+      prevailingWageUnit: record.prevailing_wage_unit,
+      wageLevel: record.wage_level,
+      wageSource: record.wage_source,
+      wageSourceDate: record.wage_source_date,
+      actualWage: record.actual_wage,
+      actualWageUnit: record.actual_wage_unit,
+    },
+    isH1BDependent: record.is_h1b_dependent,
+    isWillfulViolator: record.is_willful_violator,
+  };
+}
 
 interface PAFRecord {
   id: string;
@@ -37,7 +120,6 @@ interface PAFRecord {
   worksite_city: string;
   worksite_state: string;
 }
-
 export default function GeneratedPAFs() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,6 +142,20 @@ export default function GeneratedPAFs() {
     paf.lca_case_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     paf.soc_code.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDownload = async (e: React.MouseEvent, pafId: string) => {
+    e.stopPropagation();
+    try {
+      toast.loading('Generating PDF...', { id: 'download' });
+      const fullRecord = await fetchFullPAFRecord(pafId);
+      const pafData = convertToPAFData(fullRecord);
+      await downloadPAF(pafData);
+      toast.success('PAF downloaded successfully', { id: 'download' });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download PAF', { id: 'download' });
+    }
+  };
 
   return (
     <Layout>
@@ -178,7 +274,7 @@ export default function GeneratedPAFs() {
                               <Edit className="mr-2 h-4 w-4" /> Edit
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => handleDownload(e, paf.id)}>
                             <Download className="mr-2 h-4 w-4" /> Download
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
