@@ -112,6 +112,7 @@ interface PAFRecord {
   job_title: string;
   employer_legal_name: string;
   lca_case_number: string | null;
+  lca_status: string;
   created_at: string;
   soc_code: string;
   soc_title: string;
@@ -129,7 +130,7 @@ export default function GeneratedPAFs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('paf_records')
-        .select('id, job_title, employer_legal_name, lca_case_number, created_at, soc_code, soc_title, begin_date, end_date, worksite_city, worksite_state')
+        .select('id, job_title, employer_legal_name, lca_case_number, lca_status, created_at, soc_code, soc_title, begin_date, end_date, worksite_city, worksite_state')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -217,6 +218,7 @@ export default function GeneratedPAFs() {
                 <TableRow>
                   <TableHead>Job Title</TableHead>
                   <TableHead>Case Number</TableHead>
+                  <TableHead>LCA Status</TableHead>
                   <TableHead>SOC Code</TableHead>
                   <TableHead>Worksite</TableHead>
                   <TableHead>Validity Period</TableHead>
@@ -243,6 +245,14 @@ export default function GeneratedPAFs() {
                       <code className="text-sm bg-muted px-2 py-1 rounded">
                         {paf.lca_case_number || 'N/A'}
                       </code>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={paf.lca_status === 'certified' ? 'default' : 'secondary'}
+                        className={paf.lca_status === 'in_process' ? 'bg-warning/20 text-warning border-warning/30' : ''}
+                      >
+                        {paf.lca_status === 'certified' ? '🟢 Certified' : '🟡 In Process'}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{paf.soc_code}</Badge>

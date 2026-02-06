@@ -264,6 +264,7 @@ export type Database = {
           job_title: string
           lca_case_number: string | null
           lca_file_path: string | null
+          lca_status: string
           notice_posting_proof_path: string | null
           onet_code: string | null
           onet_title: string | null
@@ -317,6 +318,7 @@ export type Database = {
           job_title: string
           lca_case_number?: string | null
           lca_file_path?: string | null
+          lca_status?: string
           notice_posting_proof_path?: string | null
           onet_code?: string | null
           onet_title?: string | null
@@ -370,6 +372,7 @@ export type Database = {
           job_title?: string
           lca_case_number?: string | null
           lca_file_path?: string | null
+          lca_status?: string
           notice_posting_proof_path?: string | null
           onet_code?: string | null
           onet_title?: string | null

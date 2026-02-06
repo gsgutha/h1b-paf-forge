@@ -311,11 +311,17 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
       const worksite = pafData.worksite;
       const wage = pafData.wage;
 
+      // Determine LCA status: manual mode uses the certified toggle, LCA mode is always certified
+      const lcaStatus = isManual 
+        ? (pafData.supportingDocs?.isCertifiedLCA === false ? 'in_process' : 'certified')
+        : 'certified';
+
       const { data: created, error: insertError } = await supabase
         .from('paf_records')
         .insert({
           visa_type: pafData.visaType ?? 'H-1B',
           lca_case_number: pafData.caseNumber ?? pafData.supportingDocs?.lcaCaseNumber ?? null,
+          lca_status: lcaStatus,
 
           is_h1b_dependent: pafData.isH1BDependent ?? false,
           is_willful_violator: pafData.isWillfulViolator ?? false,
