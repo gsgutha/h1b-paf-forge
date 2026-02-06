@@ -5,7 +5,7 @@ import { EmployerInfoStep } from './steps/EmployerInfoStep';
 import { JobDetailsStep } from './steps/JobDetailsStep';
 import { WorksiteStep } from './steps/WorksiteStep';
 import { WageInfoStep } from './steps/WageInfoStep';
-import { SupportingDocsStep, type SupportingDocs } from './steps/SupportingDocsStep';
+import { SupportingDocsStep, type SupportingDocs, type LCAScanResult } from './steps/SupportingDocsStep';
 import { ReviewStep } from './steps/ReviewStep';
 import type { PAFData, Employer, JobDetails, WorksiteLocation, WageInfo } from '@/types/paf';
 import { useToast } from '@/hooks/use-toast';
@@ -227,8 +227,71 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
   };
 
   const handleSupportingDocsNext = (supportingDocs: SupportingDocs) => {
-    setPafData((prev) => ({ ...prev, supportingDocs }));
+    setPafData((prev) => ({
+      ...prev,
+      supportingDocs,
+      isH1BDependent: supportingDocs.isH1BDependent ?? prev.isH1BDependent,
+    }));
     setCurrentStep(stepIndex.review);
+  };
+
+  const handleLCAScanComplete = (scanData: LCAScanResult) => {
+    setPafData((prev) => {
+      const updated = { ...prev };
+
+      if (scanData.caseNumber) updated.caseNumber = scanData.caseNumber;
+      if (scanData.h1bDependent !== undefined) updated.isH1BDependent = scanData.h1bDependent;
+      if (scanData.willfulViolator !== undefined) updated.isWillfulViolator = scanData.willfulViolator;
+
+      // Update employer info (preserve defaults like FEIN and trade name)
+      if (scanData.employerName || scanData.naicsCode) {
+        updated.employer = {
+          ...(updated.employer || ({} as Employer)),
+          ...(scanData.employerName && { legalBusinessName: scanData.employerName }),
+          ...(scanData.naicsCode && { naicsCode: scanData.naicsCode }),
+        };
+      }
+
+      // Update job details
+      if (scanData.jobTitle || scanData.socCode) {
+        updated.job = {
+          ...(updated.job || ({} as JobDetails)),
+          ...(scanData.jobTitle && { jobTitle: scanData.jobTitle }),
+          ...(scanData.socCode && { socCode: scanData.socCode }),
+          ...(scanData.socTitle && { socTitle: scanData.socTitle }),
+          ...(scanData.isFullTime !== undefined && { isFullTime: scanData.isFullTime }),
+          ...(scanData.beginDate && { beginDate: scanData.beginDate }),
+          ...(scanData.endDate && { endDate: scanData.endDate }),
+          ...(scanData.wageRateFrom !== undefined && { wageRateFrom: scanData.wageRateFrom }),
+          ...(scanData.wageRateTo !== undefined && { wageRateTo: scanData.wageRateTo }),
+          ...(scanData.wageUnit && { wageUnit: mapWageUnit(scanData.wageUnit) }),
+          ...(scanData.totalWorkers && { workersNeeded: scanData.totalWorkers }),
+        };
+      }
+
+      // Update worksite
+      if (scanData.worksiteCity || scanData.worksiteState) {
+        updated.worksite = {
+          ...(updated.worksite || ({} as WorksiteLocation)),
+          ...(scanData.worksiteCity && { city: scanData.worksiteCity }),
+          ...(scanData.worksiteState && { state: scanData.worksiteState }),
+          ...(scanData.worksitePostalCode && { postalCode: scanData.worksitePostalCode }),
+          ...(scanData.worksiteCounty && { county: scanData.worksiteCounty }),
+        };
+      }
+
+      // Update wage info
+      if (scanData.prevailingWage !== undefined) {
+        updated.wage = {
+          ...(updated.wage || ({} as WageInfo)),
+          ...(scanData.prevailingWage !== undefined && { prevailingWage: scanData.prevailingWage }),
+          ...(scanData.prevailingWageUnit && { prevailingWageUnit: mapWageUnit(scanData.prevailingWageUnit) }),
+          ...(scanData.wageLevel && { wageLevel: mapWageLevel(scanData.wageLevel) }),
+        };
+      }
+
+      return updated;
+    });
   };
 
   const handleEdit = (step: number) => {
@@ -408,6 +471,8 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
             data={pafData.supportingDocs || {}}
             onNext={handleSupportingDocsNext}
             onBack={goBack}
+            isManualMode={isManual}
+            onScanComplete={handleLCAScanComplete}
           />
         )}
 

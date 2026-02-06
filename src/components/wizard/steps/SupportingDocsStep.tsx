@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FileText, Upload, X, Check, AlertCircle, FileUp, Building2, Bell, Users } from 'lucide-react';
+import { FileText, Upload, X, Check, AlertCircle, FileUp, Building2, Bell, Users, Loader2, Sparkles, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,41 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+export interface LCAScanResult {
+  caseNumber?: string;
+  caseStatus?: string;
+  employerName?: string;
+  employerAddress?: string;
+  employerCity?: string;
+  employerState?: string;
+  employerPostalCode?: string;
+  employerFein?: string;
+  naicsCode?: string;
+  jobTitle?: string;
+  socCode?: string;
+  socTitle?: string;
+  isFullTime?: boolean;
+  beginDate?: string;
+  endDate?: string;
+  wageRateFrom?: number;
+  wageRateTo?: number;
+  wageUnit?: string;
+  prevailingWage?: number;
+  prevailingWageUnit?: string;
+  wageLevel?: string;
+  worksiteCity?: string;
+  worksiteState?: string;
+  worksitePostalCode?: string;
+  worksiteCounty?: string;
+  h1bDependent?: boolean;
+  willfulViolator?: boolean;
+  visaClass?: string;
+  totalWorkers?: number;
+}
 
 export interface SupportingDocs {
   lcaCaseNumber: string;
@@ -19,12 +54,16 @@ export interface SupportingDocs {
   noticePostingLocation2: string;
   benefitsComparisonFile: File | null;
   benefitsNotes: string;
+  isCertifiedLCA?: boolean;
+  isH1BDependent?: boolean;
 }
 
 interface SupportingDocsStepProps {
   data: Partial<SupportingDocs>;
   onNext: (data: SupportingDocs) => void;
   onBack: () => void;
+  isManualMode?: boolean;
+  onScanComplete?: (result: LCAScanResult) => void;
 }
 
 function FileUploadZone({ 
@@ -117,7 +156,7 @@ function FileUploadZone({
   );
 }
 
-export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepProps) {
+export function SupportingDocsStep({ data, onNext, onBack, isManualMode, onScanComplete }: SupportingDocsStepProps) {
   const [formData, setFormData] = useState<Partial<SupportingDocs>>({
     lcaCaseNumber: data.lcaCaseNumber || '',
     lcaFile: data.lcaFile || null,
@@ -129,7 +168,71 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
     noticePostingLocation2: data.noticePostingLocation2 || '',
     benefitsComparisonFile: data.benefitsComparisonFile || null,
     benefitsNotes: data.benefitsNotes || getDefaultBenefitsNotes(),
+    isCertifiedLCA: data.isCertifiedLCA ?? true,
+    isH1BDependent: data.isH1BDependent ?? false,
   });
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<LCAScanResult | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleScanLCA = async () => {
+    if (!formData.lcaFile) return;
+
+    setIsScanning(true);
+    setScanError(null);
+    setScanResult(null);
+
+    try {
+      const arrayBuffer = await formData.lcaFile.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const pdfBase64 = btoa(binary);
+
+      const { data: result, error } = await supabase.functions.invoke('scan-lca-pdf', {
+        body: { pdfBase64 },
+      });
+
+      if (error) throw error;
+      if (!result?.success) throw new Error(result?.error || 'Scan failed');
+
+      const scanData = result.data as LCAScanResult;
+      setScanResult(scanData);
+
+      // Auto-fill fields from scan
+      if (scanData.caseNumber) {
+        updateField('lcaCaseNumber', scanData.caseNumber);
+      }
+      if (scanData.h1bDependent !== undefined && scanData.h1bDependent !== null) {
+        updateField('isH1BDependent', scanData.h1bDependent);
+      }
+      if (scanData.caseStatus) {
+        updateField('isCertifiedLCA', scanData.caseStatus.toLowerCase() === 'certified');
+      }
+
+      if (onScanComplete) {
+        onScanComplete(scanData);
+      }
+
+      toast({
+        title: 'LCA Scanned Successfully',
+        description: 'Data extracted and applied to wizard fields.',
+      });
+    } catch (err: any) {
+      console.error('LCA scan error:', err);
+      setScanError(err.message || 'Failed to scan LCA');
+      toast({
+        title: 'LCA Scan Failed',
+        description: err.message || 'Could not extract data from the uploaded LCA.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,6 +310,42 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Compliance Toggles - shown in manual mode */}
+                {isManualMode && (
+                  <div className="grid gap-4 sm:grid-cols-2 p-4 bg-muted/30 rounded-lg border border-border">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="isCertifiedLCA" className="text-sm font-medium">
+                          Is this a Certified LCA?
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Confirm the LCA has been certified by DOL
+                        </p>
+                      </div>
+                      <Switch
+                        id="isCertifiedLCA"
+                        checked={formData.isCertifiedLCA ?? true}
+                        onCheckedChange={(checked) => updateField('isCertifiedLCA', checked)}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="isH1BDependent" className="text-sm font-medium">
+                          H-1B Dependent Employer?
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Is the employer H-1B dependent per DOL standards?
+                        </p>
+                      </div>
+                      <Switch
+                        id="isH1BDependent"
+                        checked={formData.isH1BDependent ?? false}
+                        onCheckedChange={(checked) => updateField('isH1BDependent', checked)}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="lcaCaseNumber">LCA Case Number</Label>
@@ -227,11 +366,139 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
                   <FileUploadZone
                     label="Upload Certified LCA (ETA 9035)"
                     file={formData.lcaFile || null}
-                    onFileChange={(file) => updateField('lcaFile', file)}
-                    onRemove={() => updateField('lcaFile', null)}
+                    onFileChange={(file) => {
+                      updateField('lcaFile', file);
+                      setScanResult(null);
+                      setScanError(null);
+                    }}
+                    onRemove={() => {
+                      updateField('lcaFile', null);
+                      setScanResult(null);
+                      setScanError(null);
+                    }}
                     accept=".pdf"
                   />
                 </div>
+
+                {/* AI Scan Button */}
+                {formData.lcaFile && (
+                  <div className="space-y-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={handleScanLCA}
+                      disabled={isScanning}
+                    >
+                      {isScanning ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Scanning LCA with AI...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" />
+                          Scan &amp; Extract LCA Data
+                        </>
+                      )}
+                    </Button>
+
+                    {scanError && (
+                      <div className="flex items-start gap-3 p-4 bg-destructive/10 rounded-lg">
+                        <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-destructive">Scan Error</p>
+                          <p className="text-muted-foreground">{scanError}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {scanResult && (
+                      <Card className="border-success/30 bg-success/5">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <ShieldCheck className="h-5 w-5 text-success" />
+                            LCA Data Extracted
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid gap-2 text-sm">
+                            {scanResult.caseNumber && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Case Number</span>
+                                <span className="font-medium">{scanResult.caseNumber}</span>
+                              </div>
+                            )}
+                            {scanResult.caseStatus && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Status</span>
+                                <Badge variant={scanResult.caseStatus.toLowerCase() === 'certified' ? 'default' : 'destructive'}>
+                                  {scanResult.caseStatus}
+                                </Badge>
+                              </div>
+                            )}
+                            {scanResult.employerName && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Employer</span>
+                                <span className="font-medium">{scanResult.employerName}</span>
+                              </div>
+                            )}
+                            {scanResult.jobTitle && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Job Title</span>
+                                <span className="font-medium">{scanResult.jobTitle}</span>
+                              </div>
+                            )}
+                            {scanResult.socCode && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">SOC Code</span>
+                                <span className="font-medium">{scanResult.socCode}{scanResult.socTitle ? ` - ${scanResult.socTitle}` : ''}</span>
+                              </div>
+                            )}
+                            {scanResult.wageRateFrom !== undefined && scanResult.wageRateFrom !== null && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Wage</span>
+                                <span className="font-medium">
+                                  ${scanResult.wageRateFrom?.toLocaleString()}
+                                  {scanResult.wageRateTo ? ` - $${scanResult.wageRateTo.toLocaleString()}` : ''}
+                                  {' / '}{scanResult.wageUnit || 'Year'}
+                                </span>
+                              </div>
+                            )}
+                            {scanResult.prevailingWage !== undefined && scanResult.prevailingWage !== null && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Prevailing Wage</span>
+                                <span className="font-medium">
+                                  ${scanResult.prevailingWage?.toLocaleString()} / {scanResult.prevailingWageUnit || 'Year'}
+                                  {scanResult.wageLevel ? ` (${scanResult.wageLevel})` : ''}
+                                </span>
+                              </div>
+                            )}
+                            {(scanResult.worksiteCity || scanResult.worksiteState) && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Worksite</span>
+                                <span className="font-medium">
+                                  {[scanResult.worksiteCity, scanResult.worksiteState].filter(Boolean).join(', ')}
+                                </span>
+                              </div>
+                            )}
+                            {scanResult.h1bDependent !== undefined && scanResult.h1bDependent !== null && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">H-1B Dependent</span>
+                                <Badge variant={scanResult.h1bDependent ? 'destructive' : 'secondary'}>
+                                  {scanResult.h1bDependent ? 'Yes' : 'No'}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-3">
+                            Extracted data has been applied to your wizard fields. Review and adjust as needed.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
                   <AlertCircle className="h-5 w-5 text-accent mt-0.5" />
@@ -239,9 +506,9 @@ export function SupportingDocsStep({ data, onNext, onBack }: SupportingDocsStepP
                     <p className="font-medium text-foreground">Where to get your LCA</p>
                     <p className="text-muted-foreground">
                       Download your certified LCA from the{' '}
-                      <a 
-                        href="https://flag.dol.gov" 
-                        target="_blank" 
+                      <a
+                        href="https://flag.dol.gov"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-accent hover:underline"
                       >
