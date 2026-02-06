@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Download, FileText, Save, Pencil, X, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Save, Pencil, X, Upload, Loader2, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { downloadPAF } from '@/lib/pdfGenerator';
@@ -14,13 +14,14 @@ import type { PAFData } from '@/types/paf';
 import { toast } from 'sonner';
 import { useState, useCallback } from 'react';
 
-// LCA Status Card with re-upload capability
+// LCA Status Card with re-upload capability + post remove date
 function LCAStatusCard({ pafRecord, pafId }: { pafRecord: any; pafId: string }) {
   const queryClient = useQueryClient();
   const lcaStatus = pafRecord.lca_status || 'certified';
   const isInProcess = lcaStatus === 'in_process';
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [postRemoveDate, setPostRemoveDate] = useState(pafRecord.notice_posting_end_date || '');
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,9 +57,12 @@ function LCAStatusCard({ pafRecord, pafId }: { pafRecord: any; pafId: string }) 
         return;
       }
 
-      // Update the PAF record status to certified and update case number if extracted
-      const updates: any = { lca_status: 'certified' };
+      // Update the PAF record: status to certified, case number, and post remove date
+      const updates: Record<string, unknown> = {
+        lca_status: 'certified',
+      };
       if (scanData.caseNumber) updates.lca_case_number = scanData.caseNumber;
+      if (postRemoveDate) updates.notice_posting_end_date = postRemoveDate;
 
       const { error: updateError } = await supabase
         .from('paf_records')
@@ -69,13 +73,30 @@ function LCAStatusCard({ pafRecord, pafId }: { pafRecord: any; pafId: string }) 
 
       queryClient.invalidateQueries({ queryKey: ['paf-record', pafId] });
       queryClient.invalidateQueries({ queryKey: ['all-pafs'] });
-      toast.success('LCA status updated to Certified!');
+      toast.success('LCA certified & posting closed successfully!');
       setUploadedFile(null);
     } catch (err: any) {
       console.error('Upload certified LCA error:', err);
       toast.error(err.message || 'Failed to process certified LCA');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  // Allow saving just the post remove date for already-certified records
+  const handleSavePostRemoveDate = async () => {
+    try {
+      const { error } = await supabase
+        .from('paf_records')
+        .update({ notice_posting_end_date: postRemoveDate || null })
+        .eq('id', pafId);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['paf-record', pafId] });
+      toast.success('Post remove date updated!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update date');
     }
   };
 
@@ -100,7 +121,7 @@ function LCAStatusCard({ pafRecord, pafId }: { pafRecord: any; pafId: string }) 
               <div className="text-sm">
                 <p className="font-medium text-foreground">LCA is still in process</p>
                 <p className="text-muted-foreground">
-                  Once your LCA is certified by DOL, upload the certified PDF below to update the status.
+                  Once your LCA is certified by DOL, upload the certified PDF and enter the post remove date to close the posting.
                 </p>
               </div>
             </div>
@@ -116,23 +137,6 @@ function LCAStatusCard({ pafRecord, pafId }: { pafRecord: any; pafId: string }) 
                     className="cursor-pointer"
                   />
                 </div>
-                <Button
-                  onClick={handleUploadCertifiedLCA}
-                  disabled={!uploadedFile || isUploading}
-                  variant="wizard"
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Scanning...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload & Certify
-                    </>
-                  )}
-                </Button>
               </div>
               {uploadedFile && (
                 <p className="text-xs text-muted-foreground">
@@ -140,15 +144,79 @@ function LCAStatusCard({ pafRecord, pafId }: { pafRecord: any; pafId: string }) 
                 </p>
               )}
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="postRemoveDate">LCA Post Remove Date</Label>
+              <Input
+                id="postRemoveDate"
+                type="date"
+                value={postRemoveDate}
+                onChange={(e) => setPostRemoveDate(e.target.value)}
+                className="max-w-xs"
+              />
+              <p className="text-xs text-muted-foreground">
+                Date the LCA notice was removed (after 10 business days)
+              </p>
+            </div>
+
+            <Button
+              onClick={handleUploadCertifiedLCA}
+              disabled={!uploadedFile || isUploading}
+              variant="wizard"
+              className="w-full"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Scanning & Certifying...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Certified LCA & Close Posting
+                </>
+              )}
+            </Button>
           </div>
         ) : (
-          <div className="flex items-start gap-3 p-4 bg-success/10 rounded-lg">
-            <CheckCircle className="h-5 w-5 text-success mt-0.5" />
-            <div className="text-sm">
-              <p className="font-medium text-foreground">LCA is certified</p>
-              <p className="text-muted-foreground">
-                This PAF has a certified LCA. You can download the complete PAF document.
-              </p>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 p-4 bg-success/10 rounded-lg">
+              <CheckCircle className="h-5 w-5 text-success mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-foreground">LCA is certified</p>
+                <p className="text-muted-foreground">
+                  This PAF has a certified LCA. You can download the complete PAF document.
+                </p>
+              </div>
+            </div>
+
+            {/* Show posting dates info */}
+            <div className="grid gap-3 sm:grid-cols-2 text-sm">
+              {pafRecord.notice_posting_start_date && (
+                <div>
+                  <p className="text-muted-foreground">Posting Start Date</p>
+                  <p className="font-medium">{new Date(pafRecord.notice_posting_start_date).toLocaleDateString()}</p>
+                </div>
+              )}
+              <div className="space-y-2">
+                <p className="text-muted-foreground">Post Remove Date</p>
+                {pafRecord.notice_posting_end_date ? (
+                  <p className="font-medium">{new Date(pafRecord.notice_posting_end_date).toLocaleDateString()}</p>
+                ) : (
+                  <div className="flex gap-2 items-end">
+                    <Input
+                      type="date"
+                      value={postRemoveDate}
+                      onChange={(e) => setPostRemoveDate(e.target.value)}
+                      className="max-w-[180px] h-8 text-sm"
+                    />
+                    <Button size="sm" variant="outline" onClick={handleSavePostRemoveDate} disabled={!postRemoveDate}>
+                      <Save className="mr-1 h-3 w-3" />
+                      Save
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -229,7 +297,7 @@ export default function EditPAF() {
     const pafData: PAFData = {
       visaType: pafRecord.visa_type as PAFData['visaType'],
       caseNumber: pafRecord.lca_case_number || undefined,
-      caseStatus: (pafRecord as any).lca_status === 'in_process' ? 'Pending' : 'Certified',
+      caseStatus: pafRecord.lca_status === 'in_process' ? 'In Process' : 'Certified',
       isH1BDependent: pafRecord.is_h1b_dependent,
       isWillfulViolator: pafRecord.is_willful_violator,
       employer: {
@@ -294,9 +362,23 @@ export default function EditPAF() {
       },
     };
 
+    // Build supportingDocs from stored posting data
+    const supportingDocs = {
+      lcaCaseNumber: pafRecord.lca_case_number || '',
+      lcaFile: null,
+      actualWageMemo: '',
+      noticePostingProof: null,
+      noticePostingStartDate: pafRecord.notice_posting_start_date || '',
+      noticePostingEndDate: pafRecord.notice_posting_end_date || '',
+      noticePostingLocation: pafRecord.notice_posting_location || '',
+      noticePostingLocation2: pafRecord.notice_posting_location2 || '',
+      benefitsComparisonFile: null,
+      benefitsNotes: '',
+    };
+
     try {
       toast.loading('Generating PDF...', { id: 'download' });
-      await downloadPAF(pafData, undefined);
+      await downloadPAF(pafData, supportingDocs);
       toast.success('PAF downloaded successfully', { id: 'download' });
     } catch (err) {
       console.error('Download error:', err);

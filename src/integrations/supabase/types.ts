@@ -265,7 +265,11 @@ export type Database = {
           lca_case_number: string | null
           lca_file_path: string | null
           lca_status: string
+          notice_posting_end_date: string | null
+          notice_posting_location: string | null
+          notice_posting_location2: string | null
           notice_posting_proof_path: string | null
+          notice_posting_start_date: string | null
           onet_code: string | null
           onet_title: string | null
           prevailing_wage: number
@@ -319,7 +323,11 @@ export type Database = {
           lca_case_number?: string | null
           lca_file_path?: string | null
           lca_status?: string
+          notice_posting_end_date?: string | null
+          notice_posting_location?: string | null
+          notice_posting_location2?: string | null
           notice_posting_proof_path?: string | null
+          notice_posting_start_date?: string | null
           onet_code?: string | null
           onet_title?: string | null
           prevailing_wage: number
@@ -373,7 +381,11 @@ export type Database = {
           lca_case_number?: string | null
           lca_file_path?: string | null
           lca_status?: string
+          notice_posting_end_date?: string | null
+          notice_posting_location?: string | null
+          notice_posting_location2?: string | null
           notice_posting_proof_path?: string | null
+          notice_posting_start_date?: string | null
           onet_code?: string | null
           onet_title?: string | null
           prevailing_wage?: number

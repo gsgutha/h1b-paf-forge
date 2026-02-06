@@ -610,16 +610,35 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, onScanC
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="noticePostingEndDate">Posting End Date</Label>
-                    <Input
-                      id="noticePostingEndDate"
-                      type="date"
-                      value={formData.noticePostingEndDate}
-                      onChange={(e) => updateField('noticePostingEndDate', e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Date the LCA notice was removed (after 10 business days)
-                    </p>
+                    <Label htmlFor="noticePostingEndDate" className={isManualMode && !formData.isCertifiedLCA ? 'text-muted-foreground' : ''}>
+                      Post Remove Date
+                    </Label>
+                    {isManualMode && !formData.isCertifiedLCA ? (
+                      <>
+                        <Input
+                          id="noticePostingEndDate"
+                          type="date"
+                          value=""
+                          disabled
+                          className="bg-muted/50 cursor-not-allowed"
+                        />
+                        <p className="text-xs text-warning bg-warning/10 p-2 rounded">
+                          ⚠ Post remove date will be available after you upload a certified LCA from the edit page.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Input
+                          id="noticePostingEndDate"
+                          type="date"
+                          value={formData.noticePostingEndDate}
+                          onChange={(e) => updateField('noticePostingEndDate', e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Date the LCA notice was removed (after 10 business days)
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
