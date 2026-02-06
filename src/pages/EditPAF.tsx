@@ -6,13 +6,156 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Download, FileText, Save, Pencil, X } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Save, Pencil, X, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { downloadPAF } from '@/lib/pdfGenerator';
 import type { PAFData } from '@/types/paf';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+
+// LCA Status Card with re-upload capability
+function LCAStatusCard({ pafRecord, pafId }: { pafRecord: any; pafId: string }) {
+  const queryClient = useQueryClient();
+  const lcaStatus = pafRecord.lca_status || 'certified';
+  const isInProcess = lcaStatus === 'in_process';
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setUploadedFile(file);
+  }, []);
+
+  const handleUploadCertifiedLCA = async () => {
+    if (!uploadedFile) return;
+    setIsUploading(true);
+    try {
+      // Scan the PDF with AI to verify it's certified
+      const arrayBuffer = await uploadedFile.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const pdfBase64 = btoa(binary);
+
+      const { data: scanResult, error: scanError } = await supabase.functions.invoke('scan-lca-pdf', {
+        body: { pdfBase64 },
+      });
+
+      if (scanError) throw scanError;
+      if (!scanResult?.success) throw new Error(scanResult?.error || 'Scan failed');
+
+      const scanData = scanResult.data;
+      const isCertified = scanData.caseStatus?.toLowerCase() === 'certified';
+
+      if (!isCertified) {
+        toast.error('This LCA is not certified. Please upload a certified LCA.');
+        setIsUploading(false);
+        return;
+      }
+
+      // Update the PAF record status to certified and update case number if extracted
+      const updates: any = { lca_status: 'certified' };
+      if (scanData.caseNumber) updates.lca_case_number = scanData.caseNumber;
+
+      const { error: updateError } = await supabase
+        .from('paf_records')
+        .update(updates)
+        .eq('id', pafId);
+
+      if (updateError) throw updateError;
+
+      queryClient.invalidateQueries({ queryKey: ['paf-record', pafId] });
+      queryClient.invalidateQueries({ queryKey: ['all-pafs'] });
+      toast.success('LCA status updated to Certified!');
+      setUploadedFile(null);
+    } catch (err: any) {
+      console.error('Upload certified LCA error:', err);
+      toast.error(err.message || 'Failed to process certified LCA');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <Card className={`md:col-span-2 border-2 ${isInProcess ? 'border-warning/30' : 'border-success/30'}`}>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg flex items-center gap-2">
+          LCA Status
+          <Badge
+            variant={isInProcess ? 'secondary' : 'default'}
+            className={isInProcess ? 'bg-warning/20 text-warning border-warning/30' : ''}
+          >
+            {isInProcess ? '🟡 In Process' : '🟢 Certified'}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isInProcess ? (
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 p-4 bg-warning/10 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-foreground">LCA is still in process</p>
+                <p className="text-muted-foreground">
+                  Once your LCA is certified by DOL, upload the certified PDF below to update the status.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Upload Certified LCA</Label>
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <Input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileChange}
+                    className="cursor-pointer"
+                  />
+                </div>
+                <Button
+                  onClick={handleUploadCertifiedLCA}
+                  disabled={!uploadedFile || isUploading}
+                  variant="wizard"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Scanning...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload & Certify
+                    </>
+                  )}
+                </Button>
+              </div>
+              {uploadedFile && (
+                <p className="text-xs text-muted-foreground">
+                  Selected: {uploadedFile.name} ({(uploadedFile.size / 1024).toFixed(1)} KB)
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start gap-3 p-4 bg-success/10 rounded-lg">
+            <CheckCircle className="h-5 w-5 text-success mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-foreground">LCA is certified</p>
+              <p className="text-muted-foreground">
+                This PAF has a certified LCA. You can download the complete PAF document.
+              </p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function EditPAF() {
   const { id } = useParams<{ id: string }>();
@@ -86,7 +229,7 @@ export default function EditPAF() {
     const pafData: PAFData = {
       visaType: pafRecord.visa_type as PAFData['visaType'],
       caseNumber: pafRecord.lca_case_number || undefined,
-      caseStatus: 'Certified',
+      caseStatus: (pafRecord as any).lca_status === 'in_process' ? 'Pending' : 'Certified',
       isH1BDependent: pafRecord.is_h1b_dependent,
       isWillfulViolator: pafRecord.is_willful_violator,
       employer: {
@@ -421,6 +564,9 @@ export default function EditPAF() {
               </div>
             </CardContent>
           </Card>
+
+          {/* LCA Status & Re-upload */}
+          <LCAStatusCard pafRecord={pafRecord} pafId={id!} />
 
           {/* Status */}
           <Card className="md:col-span-2">

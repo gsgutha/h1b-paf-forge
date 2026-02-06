@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -310,38 +310,58 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, onScanC
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Compliance Toggles - shown in manual mode */}
+                {/* Compliance Questions - shown in manual mode */}
                 {isManualMode && (
-                  <div className="grid gap-4 sm:grid-cols-2 p-4 bg-muted/30 rounded-lg border border-border">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="isCertifiedLCA" className="text-sm font-medium">
-                          Is this a Certified LCA?
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          Confirm the LCA has been certified by DOL
+                  <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-border">
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm font-medium">Is this a Certified LCA?</Label>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Has the LCA been certified by DOL? Select "No" if still in process.
                         </p>
                       </div>
-                      <Switch
-                        id="isCertifiedLCA"
-                        checked={formData.isCertifiedLCA ?? true}
-                        onCheckedChange={(checked) => updateField('isCertifiedLCA', checked)}
-                      />
+                      <RadioGroup
+                        value={formData.isCertifiedLCA ? 'yes' : 'no'}
+                        onValueChange={(val) => updateField('isCertifiedLCA', val === 'yes')}
+                        className="flex gap-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="certifiedYes" />
+                          <Label htmlFor="certifiedYes" className="cursor-pointer font-medium">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="certifiedNo" />
+                          <Label htmlFor="certifiedNo" className="cursor-pointer font-medium">No</Label>
+                        </div>
+                      </RadioGroup>
+                      {!formData.isCertifiedLCA && (
+                        <p className="text-xs text-warning bg-warning/10 p-2 rounded">
+                          ⚠ PAF will be saved as "In Process LCA". You can re-upload a certified LCA later from the edit page.
+                        </p>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="isH1BDependent" className="text-sm font-medium">
-                          H-1B Dependent Employer?
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
+
+                    <div className="border-t border-border pt-4 space-y-3">
+                      <div>
+                        <Label className="text-sm font-medium">Is this an H-1B Dependent Employer?</Label>
+                        <p className="text-xs text-muted-foreground mb-2">
                           Is the employer H-1B dependent per DOL standards?
                         </p>
                       </div>
-                      <Switch
-                        id="isH1BDependent"
-                        checked={formData.isH1BDependent ?? false}
-                        onCheckedChange={(checked) => updateField('isH1BDependent', checked)}
-                      />
+                      <RadioGroup
+                        value={formData.isH1BDependent ? 'yes' : 'no'}
+                        onValueChange={(val) => updateField('isH1BDependent', val === 'yes')}
+                        className="flex gap-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="h1bDepYes" />
+                          <Label htmlFor="h1bDepYes" className="cursor-pointer font-medium">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="h1bDepNo" />
+                          <Label htmlFor="h1bDepNo" className="cursor-pointer font-medium">No</Label>
+                        </div>
+                      </RadioGroup>
                     </div>
                   </div>
                 )}
