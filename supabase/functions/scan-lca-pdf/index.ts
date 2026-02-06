@@ -60,7 +60,7 @@ IMPORTANT:
 - Wage amounts must be plain numbers (no currency symbols or commas)
 - Boolean fields must be true or false (not strings)`;
 
-    const response = await fetch('https://api.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
