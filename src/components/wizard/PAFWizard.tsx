@@ -373,6 +373,14 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
           actual_wage: wage.actualWage,
           actual_wage_unit: wage.actualWageUnit,
 
+          // Posting dates and locations
+          notice_posting_start_date: pafData.supportingDocs?.noticePostingStartDate || null,
+          notice_posting_end_date: (isManual && pafData.supportingDocs?.isCertifiedLCA === false)
+            ? null  // Leave blank for in-process LCAs
+            : pafData.supportingDocs?.noticePostingEndDate || null,
+          notice_posting_location: pafData.supportingDocs?.noticePostingLocation || null,
+          notice_posting_location2: pafData.supportingDocs?.noticePostingLocation2 || null,
+
           // Optional file paths (not yet persisted to storage)
           lca_file_path: null,
           actual_wage_memo_path: null,
