@@ -98,7 +98,7 @@ export interface WageInfo {
 export interface PAFData {
   visaType: 'H-1B' | 'H-1B1 Chile' | 'H-1B1 Singapore' | 'E-3 Australia';
   caseNumber?: string;
-  caseStatus?: 'Certified' | 'Pending' | 'Denied' | 'Withdrawn';
+  caseStatus?: 'Certified' | 'In Process' | 'Pending' | 'Denied' | 'Withdrawn';
   employer: Employer;
   contact: EmployerContact;
   job: JobDetails;

@@ -231,6 +231,9 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
       ...prev,
       supportingDocs,
       isH1BDependent: supportingDocs.isH1BDependent ?? prev.isH1BDependent,
+      caseStatus: isManual
+        ? (supportingDocs.isCertifiedLCA === false ? 'In Process' : 'Certified')
+        : prev.caseStatus ?? 'Certified',
     }));
     setCurrentStep(stepIndex.review);
   };

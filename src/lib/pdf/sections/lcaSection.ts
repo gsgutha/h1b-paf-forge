@@ -156,7 +156,8 @@ export async function addLCASection(
     doc.setFont('helvetica', 'bold');
     ctx.yPos += 5;
     doc.text(`Case Number: ${supportingDocs.lcaCaseNumber}`, margin + 5, ctx.yPos);
-    doc.text(`Status: Certified`, margin + 100, ctx.yPos);
+    const lcaStatusLabel = data.caseStatus === 'In Process' ? 'In Process' : (data.caseStatus || 'Certified');
+    doc.text(`Status: ${lcaStatusLabel}`, margin + 100, ctx.yPos);
     doc.text(`Period: ${formatDate(data.job.beginDate)} to ${formatDate(data.job.endDate)}`, margin + 5, ctx.yPos + 6);
     ctx.yPos += 15;
   }

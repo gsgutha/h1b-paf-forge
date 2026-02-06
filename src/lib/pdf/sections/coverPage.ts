@@ -68,8 +68,9 @@ export function addCoverPage(
   
   ctx.yPos += 15;
   
+  const lcaLabel = data.caseStatus === 'In Process' ? 'In Process' : 'Certified';
   const tocItems = [
-    { num: '1.', text: 'Copy of the Certified Labor Condition Application' },
+    { num: '1.', text: `Copy of the ${lcaLabel} Labor Condition Application` },
     { num: '2.', text: 'Actual Wage Standards (Company-Wide Policy)' },
     { num: '3.', text: 'Actual Wage Determination (Position-Specific)' },
     { num: '4.', text: 'Prevailing Wage Rate and its Source' },
