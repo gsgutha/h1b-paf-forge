@@ -1,13 +1,20 @@
-import { Plus, Search, FileText, Download } from 'lucide-react';
+import { Plus, Search, FileText, PenLine } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 const actions = [
   {
     title: 'Create New PAF',
-    description: 'Start a new Public Access File',
+    description: 'Auto-fill from existing LCA',
     icon: Plus,
     href: '/create',
+    variant: 'hero' as const,
+  },
+  {
+    title: 'Manual PAF Entry',
+    description: 'Enter LCA details manually',
+    icon: PenLine,
+    href: '/create-manual',
     variant: 'hero' as const,
   },
   {

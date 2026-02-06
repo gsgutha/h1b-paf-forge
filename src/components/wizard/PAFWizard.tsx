@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
-const steps = [
+const lcaSteps = [
   { id: 0, title: 'Select LCA', description: 'Choose case' },
   { id: 1, title: 'Employer', description: 'Company info' },
   { id: 2, title: 'Job Details', description: 'Position & SOC' },
@@ -20,6 +20,15 @@ const steps = [
   { id: 4, title: 'Wages', description: 'Prevailing wage' },
   { id: 5, title: 'Documents', description: 'LCA & Supporting' },
   { id: 6, title: 'Review', description: 'Generate PAF' },
+];
+
+const manualSteps = [
+  { id: 0, title: 'Employer', description: 'Company info' },
+  { id: 1, title: 'Job Details', description: 'Position & SOC' },
+  { id: 2, title: 'Worksite', description: 'Location' },
+  { id: 3, title: 'Wages', description: 'Prevailing wage' },
+  { id: 4, title: 'Documents', description: 'LCA & Supporting' },
+  { id: 5, title: 'Review', description: 'Generate PAF' },
 ];
 
 export interface ExtendedPAFData extends PAFData {
@@ -79,7 +88,13 @@ function calculateWageSourceDate(lcaBeginDate: string | null): string {
 const DEFAULT_FEIN = '20-3420634';
 const DEFAULT_TRADE_NAME = 'SBS Corp';
 
-export function PAFWizard() {
+interface PAFWizardProps {
+  mode?: 'lca' | 'manual';
+}
+
+export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
+  const isManual = mode === 'manual';
+  const steps = isManual ? manualSteps : lcaSteps;
   const [currentStep, setCurrentStep] = useState(0);
   const [pafData, setPafData] = useState<Partial<ExtendedPAFData>>(initialPAFData);
   const [selectedLca, setSelectedLca] = useState<LCARecord | null>(null);
@@ -152,29 +167,41 @@ export function PAFWizard() {
     setCurrentStep(1);
   };
 
+  // Step indices differ based on mode
+  // LCA mode:    0=LCA, 1=Employer, 2=Job, 3=Worksite, 4=Wages, 5=Docs, 6=Review
+  // Manual mode: 0=Employer, 1=Job, 2=Worksite, 3=Wages, 4=Docs, 5=Review
+  const stepIndex = {
+    employer: isManual ? 0 : 1,
+    job: isManual ? 1 : 2,
+    worksite: isManual ? 2 : 3,
+    wages: isManual ? 3 : 4,
+    docs: isManual ? 4 : 5,
+    review: isManual ? 5 : 6,
+  };
+
   const handleEmployerNext = (employer: Employer) => {
     setPafData((prev) => ({ ...prev, employer }));
-    setCurrentStep(2);
+    setCurrentStep(stepIndex.job);
   };
 
   const handleJobNext = (job: JobDetails) => {
     setPafData((prev) => ({ ...prev, job }));
-    setCurrentStep(3);
+    setCurrentStep(stepIndex.worksite);
   };
 
   const handleWorksiteNext = (worksite: WorksiteLocation) => {
     setPafData((prev) => ({ ...prev, worksite }));
-    setCurrentStep(4);
+    setCurrentStep(stepIndex.wages);
   };
 
   const handleWageNext = (wage: WageInfo) => {
     setPafData((prev) => ({ ...prev, wage }));
-    setCurrentStep(5);
+    setCurrentStep(stepIndex.docs);
   };
 
   const handleSupportingDocsNext = (supportingDocs: SupportingDocs) => {
     setPafData((prev) => ({ ...prev, supportingDocs }));
-    setCurrentStep(6);
+    setCurrentStep(stepIndex.review);
   };
 
   const handleEdit = (step: number) => {
@@ -312,11 +339,11 @@ export function PAFWizard() {
       </div>
 
       <div className="paf-section">
-        {currentStep === 0 && (
+        {!isManual && currentStep === 0 && (
           <LCASelectionStep onSelect={handleLCASelect} />
         )}
 
-        {currentStep === 1 && (
+        {currentStep === stepIndex.employer && (
           <EmployerInfoStep 
             data={pafData.employer || {}} 
             onNext={handleEmployerNext}
@@ -324,7 +351,7 @@ export function PAFWizard() {
           />
         )}
 
-        {currentStep === 2 && (
+        {currentStep === stepIndex.job && (
           <JobDetailsStep 
             data={pafData.job || {}} 
             onNext={handleJobNext}
@@ -332,7 +359,7 @@ export function PAFWizard() {
           />
         )}
 
-        {currentStep === 3 && (
+        {currentStep === stepIndex.worksite && (
           <WorksiteStep 
             data={pafData.worksite || {}} 
             onNext={handleWorksiteNext}
@@ -340,7 +367,7 @@ export function PAFWizard() {
           />
         )}
 
-        {currentStep === 4 && (
+        {currentStep === stepIndex.wages && (
           <WageInfoStep 
             data={pafData.wage || {}} 
             worksite={pafData.worksite}
@@ -349,7 +376,7 @@ export function PAFWizard() {
           />
         )}
 
-        {currentStep === 5 && (
+        {currentStep === stepIndex.docs && (
           <SupportingDocsStep
             data={pafData.supportingDocs || {}}
             onNext={handleSupportingDocsNext}
@@ -357,7 +384,7 @@ export function PAFWizard() {
           />
         )}
 
-        {currentStep === 6 && pafData.employer && pafData.job && pafData.worksite && pafData.wage && (
+        {currentStep === stepIndex.review && pafData.employer && pafData.job && pafData.worksite && pafData.wage && (
           <ReviewStep 
             data={pafData as PAFData}
             supportingDocs={pafData.supportingDocs}
