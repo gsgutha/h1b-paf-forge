@@ -48,6 +48,33 @@ const initialPAFData: Partial<ExtendedPAFData> = {
   lcaId: undefined,
 };
 
+// Pre-populated employer for manual mode (same company, just no LCA linkage)
+const DEFAULT_EMPLOYER: Employer = {
+  legalBusinessName: 'Sai Business Solutions LLC',
+  tradeName: 'SBS Corp',
+  address1: '16001 Part Ten Pl',
+  address2: undefined,
+  city: 'Dallas',
+  state: 'Texas',
+  postalCode: '75248',
+  country: 'United States Of America',
+  telephone: '+12814776467',
+  fein: '20-3420634',
+  naicsCode: '541511',
+};
+
+const manualInitialPAFData: Partial<ExtendedPAFData> = {
+  visaType: 'H-1B',
+  isH1BDependent: false,
+  isWillfulViolator: false,
+  employer: DEFAULT_EMPLOYER,
+  job: {} as JobDetails,
+  worksite: {} as WorksiteLocation,
+  wage: {} as WageInfo,
+  supportingDocs: undefined,
+  lcaId: undefined,
+};
+
 // Helper to map LCA wage unit to PAF wage unit
 function mapWageUnit(unit: string | null): 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year' {
   if (!unit) return 'Year';
@@ -96,7 +123,7 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
   const isManual = mode === 'manual';
   const steps = isManual ? manualSteps : lcaSteps;
   const [currentStep, setCurrentStep] = useState(0);
-  const [pafData, setPafData] = useState<Partial<ExtendedPAFData>>(initialPAFData);
+  const [pafData, setPafData] = useState<Partial<ExtendedPAFData>>(isManual ? manualInitialPAFData : initialPAFData);
   const [selectedLca, setSelectedLca] = useState<LCARecord | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
