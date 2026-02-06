@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import CreatePAF from "./pages/CreatePAF";
+import CreateManualPAF from "./pages/CreateManualPAF";
 import EditPAF from "./pages/EditPAF";
 import GeneratedPAFs from "./pages/GeneratedPAFs";
 import Lookup from "./pages/Lookup";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><CreatePAF /></ProtectedRoute>} />
+            <Route path="/create-manual" element={<ProtectedRoute><CreateManualPAF /></ProtectedRoute>} />
             <Route path="/edit/:id" element={<ProtectedRoute><EditPAF /></ProtectedRoute>} />
             <Route path="/generated-pafs" element={<ProtectedRoute><GeneratedPAFs /></ProtectedRoute>} />
             <Route path="/lookup" element={<ProtectedRoute><Lookup /></ProtectedRoute>} />

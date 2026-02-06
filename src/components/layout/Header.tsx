@@ -1,4 +1,4 @@
-import { FileText, Home, Plus, Search, Settings, LogOut } from 'lucide-react';
+import { FileText, Home, Plus, Search, Settings, LogOut, PenLine } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/create', label: 'Create PAF', icon: Plus },
+  { href: '/create-manual', label: 'Manual PAF', icon: PenLine },
   { href: '/lookup', label: 'Lookup', icon: Search },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
