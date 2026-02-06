@@ -178,7 +178,7 @@ export function JobDetailsStep({ data, onNext, onBack }: JobDetailsStepProps) {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[500px] p-0" align="start">
-                  <Command>
+                  <Command shouldFilter={false}>
                     <CommandInput
                       placeholder="Search by code, title, or description..."
                       value={searchQuery}
