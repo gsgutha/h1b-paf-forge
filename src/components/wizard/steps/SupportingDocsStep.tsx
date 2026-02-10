@@ -52,6 +52,8 @@ export interface SupportingDocs {
   noticePostingEndDate: string;
   noticePostingLocation: string;
   noticePostingLocation2: string;
+  noticePostingLocation3?: string;
+  noticePostingLocation4?: string;
   benefitsComparisonFile: File | null;
   benefitsNotes: string;
   isCertifiedLCA?: boolean;
@@ -63,6 +65,7 @@ interface SupportingDocsStepProps {
   onNext: (data: SupportingDocs) => void;
   onBack: () => void;
   isManualMode?: boolean;
+  hasSecondaryWorksite?: boolean;
   onScanComplete?: (result: LCAScanResult) => void;
 }
 
@@ -156,7 +159,7 @@ function FileUploadZone({
   );
 }
 
-export function SupportingDocsStep({ data, onNext, onBack, isManualMode, onScanComplete }: SupportingDocsStepProps) {
+export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSecondaryWorksite, onScanComplete }: SupportingDocsStepProps) {
   const [formData, setFormData] = useState<Partial<SupportingDocs>>({
     lcaCaseNumber: data.lcaCaseNumber || '',
     lcaFile: data.lcaFile || null,
@@ -166,6 +169,8 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, onScanC
     noticePostingEndDate: data.noticePostingEndDate || '',
     noticePostingLocation: data.noticePostingLocation || '',
     noticePostingLocation2: data.noticePostingLocation2 || '',
+    noticePostingLocation3: data.noticePostingLocation3 || '',
+    noticePostingLocation4: data.noticePostingLocation4 || '',
     benefitsComparisonFile: data.benefitsComparisonFile || null,
     benefitsNotes: data.benefitsNotes || getDefaultBenefitsNotes(),
     isCertifiedLCA: data.isCertifiedLCA ?? true,
@@ -643,7 +648,7 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, onScanC
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="noticePostingLocation">Posting Location 1 *</Label>
+                    <Label htmlFor="noticePostingLocation">Primary Location 1 *</Label>
                     <Input
                       id="noticePostingLocation"
                       placeholder="e.g., Main lobby bulletin board"
@@ -651,11 +656,11 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, onScanC
                       onChange={(e) => updateField('noticePostingLocation', e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      First conspicuous location
+                      First conspicuous location at primary worksite
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="noticePostingLocation2">Posting Location 2 *</Label>
+                    <Label htmlFor="noticePostingLocation2">Primary Location 2 *</Label>
                     <Input
                       id="noticePostingLocation2"
                       placeholder="e.g., Break room bulletin board"
@@ -663,10 +668,46 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, onScanC
                       onChange={(e) => updateField('noticePostingLocation2', e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Second conspicuous location
+                      Second conspicuous location at primary worksite
                     </p>
                   </div>
                 </div>
+
+                {/* Secondary worksite posting locations */}
+                {hasSecondaryWorksite && (
+                  <div className="space-y-4 rounded-lg border border-accent/30 p-4 bg-accent/5">
+                    <div className="flex items-center gap-2">
+                      <Bell className="h-4 w-4 text-accent" />
+                      <p className="text-sm font-medium text-foreground">Secondary Worksite Posting Locations</p>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="noticePostingLocation3">Secondary Location 1 *</Label>
+                        <Input
+                          id="noticePostingLocation3"
+                          placeholder="e.g., Client site reception area"
+                          value={formData.noticePostingLocation3}
+                          onChange={(e) => updateField('noticePostingLocation3', e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          First conspicuous location at secondary worksite
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="noticePostingLocation4">Secondary Location 2 *</Label>
+                        <Input
+                          id="noticePostingLocation4"
+                          placeholder="e.g., Client site break room"
+                          value={formData.noticePostingLocation4}
+                          onChange={(e) => updateField('noticePostingLocation4', e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Second conspicuous location at secondary worksite
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label>Posting Proof (Photo/Screenshot)</Label>
