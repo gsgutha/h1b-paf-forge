@@ -162,10 +162,12 @@ export function addDateLine(ctx: PDFContext): void {
 }
 
 export function formatCurrency(amount: number, unit: string): string {
+  // Round to 2 decimal places to avoid floating-point precision issues (e.g. 84099.98 instead of 84100)
+  const rounded = Math.round(amount * 100) / 100;
   const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(amount);
+  }).format(rounded);
   return `${formatted} / ${unit}`;
 }
 
