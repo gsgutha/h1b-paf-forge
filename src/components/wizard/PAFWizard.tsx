@@ -380,6 +380,8 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
             : pafData.supportingDocs?.noticePostingEndDate || null,
           notice_posting_location: pafData.supportingDocs?.noticePostingLocation || null,
           notice_posting_location2: pafData.supportingDocs?.noticePostingLocation2 || null,
+          notice_posting_location3: pafData.supportingDocs?.noticePostingLocation3 || null,
+          notice_posting_location4: pafData.supportingDocs?.noticePostingLocation4 || null,
 
           // Optional file paths (not yet persisted to storage)
           lca_file_path: null,
@@ -489,6 +491,7 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
             onNext={handleSupportingDocsNext}
             onBack={goBack}
             isManualMode={isManual}
+            hasSecondaryWorksite={pafData.worksite?.hasSecondaryWorksite ?? false}
             onScanComplete={handleLCAScanComplete}
           />
         )}

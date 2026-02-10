@@ -268,6 +268,8 @@ export type Database = {
           notice_posting_end_date: string | null
           notice_posting_location: string | null
           notice_posting_location2: string | null
+          notice_posting_location3: string | null
+          notice_posting_location4: string | null
           notice_posting_proof_path: string | null
           notice_posting_start_date: string | null
           onet_code: string | null
@@ -326,6 +328,8 @@ export type Database = {
           notice_posting_end_date?: string | null
           notice_posting_location?: string | null
           notice_posting_location2?: string | null
+          notice_posting_location3?: string | null
+          notice_posting_location4?: string | null
           notice_posting_proof_path?: string | null
           notice_posting_start_date?: string | null
           onet_code?: string | null
@@ -384,6 +388,8 @@ export type Database = {
           notice_posting_end_date?: string | null
           notice_posting_location?: string | null
           notice_posting_location2?: string | null
+          notice_posting_location3?: string | null
+          notice_posting_location4?: string | null
           notice_posting_proof_path?: string | null
           notice_posting_start_date?: string | null
           onet_code?: string | null
