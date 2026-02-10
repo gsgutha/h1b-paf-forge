@@ -196,7 +196,7 @@ export async function addWageMemoSection(
     ['Wage Type', 'Amount', 'Source'],
     ['Prevailing Wage', formatCurrency(prevailingWage, data.wage.prevailingWageUnit), data.wage.wageSource],
     ['Wage Level', data.wage.wageLevel, `As of ${formatDate(data.wage.wageSourceDate)}`],
-    ['Actual Wage Offered', formatCurrency(data.job.wageRateFrom, data.job.wageUnit), 'Employer Determination'],
+    ['Actual Wage Offered', formatCurrency(actualWage, data.wage.actualWageUnit), 'Employer Determination'],
     ['Final Wage (Higher Of)', formatCurrency(higherWage, data.wage.actualWageUnit), wageSource === 'actual wage' ? 'Actual Wage Applied' : 'Prevailing Wage Applied'],
   ];
   
