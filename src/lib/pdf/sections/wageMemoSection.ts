@@ -137,7 +137,8 @@ export async function addWageMemoSection(
   // Wage Confirmation Box - CRITICAL COMPLIANCE ELEMENT
   const actualWage = data.wage.actualWage;
   const prevailingWage = data.wage.prevailingWage;
-  const higherWage = Math.max(actualWage, prevailingWage);
+  // The wizard already enforces actualWage >= prevailingWage, so actualWage IS the final wage
+  const higherWage = actualWage;
   const wageSource = actualWage >= prevailingWage ? 'actual wage' : 'prevailing wage';
   
   doc.setFillColor(220, 245, 220); // Light green
