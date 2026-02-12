@@ -42,10 +42,13 @@ export function LCALookup() {
     queryFn: async () => {
       if (!searchQuery || searchQuery.length < 2) return [];
       
+      // Escape special ILIKE characters to prevent injection
+      const escaped = searchQuery.replace(/[%_\\]/g, '\\$&');
+      
       const { data, error } = await supabase
         .from("lca_disclosure")
         .select("*")
-        .or(`employer_name.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%`)
+        .or(`employer_name.ilike.%${escaped}%,case_number.ilike.%${escaped}%`)
         .order("decision_date", { ascending: false })
         .limit(100);
       

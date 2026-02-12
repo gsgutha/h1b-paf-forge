@@ -72,6 +72,30 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { zipUrl, wageYear: customWageYear, skipRows = 0, clearExisting = true } = await req.json();
 
     if (!zipUrl) {
@@ -81,11 +105,27 @@ Deno.serve(async (req) => {
       );
     }
 
+    // SSRF protection: only allow downloads from approved DOL domains
+    const ALLOWED_DOMAINS = ['www.flcdatacenter.com', 'flag.dol.gov', 'www.dol.gov', 'flcdatacenter.com'];
+    try {
+      const parsedUrl = new URL(zipUrl);
+      if (!ALLOWED_DOMAINS.includes(parsedUrl.hostname)) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'URL must be from an approved DOL data source' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid URL provided' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const wageYear = customWageYear || getWageYear(zipUrl);
     console.log(`Importing wage data for year: ${wageYear} from ${zipUrl}, skipRows: ${skipRows}`);
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    // Initialize Supabase client with service role
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
