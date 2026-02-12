@@ -133,12 +133,22 @@ export async function addPostingNoticeSection(
   
   ctx.yPos += 5;
   
-  // Display Areas - Two conspicuous locations as per DOL requirements
-  addSubsectionHeader(ctx, 'Display Areas (Two Conspicuous Locations)');
+  // Display Areas - Two conspicuous locations per worksite as per DOL requirements
+  const hasSecondary = data.worksite.hasSecondaryWorksite && data.worksite.secondaryWorksite;
+  addSubsectionHeader(ctx, hasSecondary ? 'Display Areas (Primary Worksite)' : 'Display Areas (Two Conspicuous Locations)');
   const location1 = supportingDocs?.noticePostingLocation || `${data.employer.legalBusinessName} - Location 1`;
   const location2 = supportingDocs?.noticePostingLocation2 || `${data.employer.legalBusinessName} - Location 2`;
   addLabelValue(ctx, 'Display Area 1', location1, 45);
   addLabelValue(ctx, 'Display Area 2', location2, 45);
+  
+  if (hasSecondary) {
+    ctx.yPos += 5;
+    addSubsectionHeader(ctx, 'Display Areas (Secondary Worksite)');
+    const location3 = supportingDocs?.noticePostingLocation3 || `${data.employer.legalBusinessName} - Secondary Location 1`;
+    const location4 = supportingDocs?.noticePostingLocation4 || `${data.employer.legalBusinessName} - Secondary Location 2`;
+    addLabelValue(ctx, 'Display Area 3', location3, 45);
+    addLabelValue(ctx, 'Display Area 4', location4, 45);
+  }
   
   ctx.yPos += 10;
   
@@ -167,9 +177,29 @@ export async function addPostingNoticeSection(
     }, data.employer.legalBusinessName, false);
   }
   
-  // ----- Page 2: LCA Posting Notice -----
+  // ----- Page 2: LCA Posting Notice (Primary Worksite) -----
+  const primaryLocation = `${worksiteNameText}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`;
+  addPostingNoticePage(ctx, data, primaryLocation, hasSecondary ? 'Primary Worksite' : undefined);
+  
+  // ----- Page 3: LCA Posting Notice (Secondary Worksite) - only if secondary exists -----
+  if (hasSecondary) {
+    const secondary = data.worksite.secondaryWorksite!;
+    const secondaryNameText = secondary.worksiteName ? `${secondary.worksiteName}: ` : '';
+    const secondaryFullLocation = `${secondaryNameText}${secondary.address1}${secondary.address2 ? ', ' + secondary.address2 : ''}, ${secondary.city}, ${secondary.state} ${secondary.postalCode}`;
+    addPostingNoticePage(ctx, data, secondaryFullLocation, 'Secondary Worksite');
+  }
+}
+
+function addPostingNoticePage(
+  ctx: PDFContext, 
+  data: PAFData, 
+  worksiteLocation: string,
+  worksiteLabel?: string
+): void {
+  const { doc, pageWidth, margin } = ctx;
+  
   doc.addPage();
-  addPageHeader(ctx, 'LCA Posting Notice');
+  addPageHeader(ctx, worksiteLabel ? `LCA Posting Notice - ${worksiteLabel}` : 'LCA Posting Notice');
   
   ctx.yPos += 10;
   addCenteredTitle(ctx, 'LCA POSTING NOTICE', 14);
@@ -188,7 +218,7 @@ export async function addPostingNoticeSection(
     ['Job Position:', data.job.jobTitle],
     ['Wages Offered:', formatCurrency(data.job.wageRateFrom, data.job.wageUnit)],
     ['Period of Employment:', `${formatDate(data.job.beginDate)} to ${formatDate(data.job.endDate)} (As per LCA)`],
-    ['Location where H-1B non-immigrant worker will work:', clientLocation],
+    ['Location where H-1B non-immigrant worker will work:', worksiteLocation],
   ];
   
   doc.setFontSize(10);
