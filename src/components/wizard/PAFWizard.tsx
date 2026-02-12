@@ -273,13 +273,25 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
       }
 
       // Update worksite
-      if (scanData.worksiteCity || scanData.worksiteState) {
+      if (scanData.worksiteCity || scanData.worksiteState || scanData.worksiteAddress) {
+        const hasSecondary = scanData.hasSecondaryWorksite && (scanData.secondaryWorksiteCity || scanData.secondaryWorksiteState);
         updated.worksite = {
           ...(updated.worksite || ({} as WorksiteLocation)),
+          ...(scanData.worksiteAddress && { address1: scanData.worksiteAddress }),
           ...(scanData.worksiteCity && { city: scanData.worksiteCity }),
           ...(scanData.worksiteState && { state: scanData.worksiteState }),
           ...(scanData.worksitePostalCode && { postalCode: scanData.worksitePostalCode }),
           ...(scanData.worksiteCounty && { county: scanData.worksiteCounty }),
+          ...(hasSecondary && {
+            hasSecondaryWorksite: true,
+            secondaryWorksite: {
+              ...(scanData.secondaryWorksiteAddress && { address1: scanData.secondaryWorksiteAddress }),
+              ...(scanData.secondaryWorksiteCity && { city: scanData.secondaryWorksiteCity }),
+              ...(scanData.secondaryWorksiteState && { state: scanData.secondaryWorksiteState }),
+              ...(scanData.secondaryWorksitePostalCode && { postalCode: scanData.secondaryWorksitePostalCode }),
+              ...(scanData.secondaryWorksiteCounty && { county: scanData.secondaryWorksiteCounty }),
+            },
+          }),
         };
       }
 

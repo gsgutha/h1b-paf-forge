@@ -19,6 +19,7 @@ export interface LCAScanResult {
   employerCity?: string;
   employerState?: string;
   employerPostalCode?: string;
+  employerPhone?: string;
   employerFein?: string;
   naicsCode?: string;
   jobTitle?: string;
@@ -33,10 +34,17 @@ export interface LCAScanResult {
   prevailingWage?: number;
   prevailingWageUnit?: string;
   wageLevel?: string;
+  worksiteAddress?: string;
   worksiteCity?: string;
   worksiteState?: string;
   worksitePostalCode?: string;
   worksiteCounty?: string;
+  hasSecondaryWorksite?: boolean;
+  secondaryWorksiteAddress?: string;
+  secondaryWorksiteCity?: string;
+  secondaryWorksiteState?: string;
+  secondaryWorksitePostalCode?: string;
+  secondaryWorksiteCounty?: string;
   h1bDependent?: boolean;
   willfulViolator?: boolean;
   visaClass?: string;
