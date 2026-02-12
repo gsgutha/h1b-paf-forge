@@ -57,6 +57,9 @@ Deno.serve(async (req) => {
   "worksiteState": "string - primary worksite state (full name)",
   "worksitePostalCode": "string - primary worksite zip code",
   "worksiteCounty": "string - primary worksite county",
+  "worksiteName": "string or null - the name of the secondary entity / place of employment at the primary worksite (Section F, question 3 on page 3, the legal business name of the secondary entity where the worker is placed)",
+
+  "wageSourceYear": "string or null - the OES/prevailing wage source period date shown on page 3 (e.g. 'July 2025' or '07/01/2025'). Extract the FIRST date if a range is shown (e.g. from 'July 1, 2025 - June 30, 2026' extract 'July 1, 2025'). Return in YYYY-MM-DD format.",
 
   "hasSecondaryWorksite": "boolean - true if there is a secondary/additional worksite listed (check page 7 / Appendix A)",
   "secondaryWorksiteAddress": "string or null - secondary worksite street address from Appendix A or additional worksite section",
@@ -64,6 +67,7 @@ Deno.serve(async (req) => {
   "secondaryWorksiteState": "string or null - secondary worksite state (full name)",
   "secondaryWorksitePostalCode": "string or null - secondary worksite zip code",
   "secondaryWorksiteCounty": "string or null - secondary worksite county",
+  "secondaryWorksiteName": "string or null - the name of the secondary entity / place of employment at the SECONDARY worksite (page 7 / Appendix A, question 3, the legal business name of the secondary entity where the worker is placed)",
 
   "h1bDependent": "boolean - whether the employer is H-1B dependent",
   "willfulViolator": "boolean - whether the employer is a willful violator"

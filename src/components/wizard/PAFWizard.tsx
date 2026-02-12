@@ -298,6 +298,7 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
           ...(scanData.worksiteState && { state: scanData.worksiteState }),
           ...(scanData.worksitePostalCode && { postalCode: scanData.worksitePostalCode }),
           ...(scanData.worksiteCounty && { county: scanData.worksiteCounty }),
+          ...(scanData.worksiteName && { worksiteName: scanData.worksiteName }),
           ...(hasSecondary && {
             hasSecondaryWorksite: true,
             secondaryWorksite: {
@@ -306,18 +307,20 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
               ...(scanData.secondaryWorksiteState && { state: scanData.secondaryWorksiteState }),
               ...(scanData.secondaryWorksitePostalCode && { postalCode: scanData.secondaryWorksitePostalCode }),
               ...(scanData.secondaryWorksiteCounty && { county: scanData.secondaryWorksiteCounty }),
+              ...(scanData.secondaryWorksiteName && { worksiteName: scanData.secondaryWorksiteName }),
             },
           }),
         };
       }
 
       // Update wage info
-      if (scanData.prevailingWage !== undefined) {
+      if (scanData.prevailingWage !== undefined || scanData.wageSourceYear) {
         updated.wage = {
           ...(updated.wage || ({} as WageInfo)),
           ...(scanData.prevailingWage !== undefined && { prevailingWage: scanData.prevailingWage }),
           ...(scanData.prevailingWageUnit && { prevailingWageUnit: mapWageUnit(scanData.prevailingWageUnit) }),
           ...(scanData.wageLevel && { wageLevel: mapWageLevel(scanData.wageLevel) }),
+          ...(scanData.wageSourceYear && { wageSourceDate: scanData.wageSourceYear }),
         };
       }
 
