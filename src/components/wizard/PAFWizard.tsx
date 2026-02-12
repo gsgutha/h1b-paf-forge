@@ -6,6 +6,7 @@ import { JobDetailsStep } from './steps/JobDetailsStep';
 import { WorksiteStep } from './steps/WorksiteStep';
 import { WageInfoStep } from './steps/WageInfoStep';
 import { SupportingDocsStep, type SupportingDocs, type LCAScanResult } from './steps/SupportingDocsStep';
+import { LCAScanStep } from './steps/LCAScanStep';
 import { ReviewStep } from './steps/ReviewStep';
 import type { PAFData, Employer, JobDetails, WorksiteLocation, WageInfo } from '@/types/paf';
 import { useToast } from '@/hooks/use-toast';
@@ -24,11 +25,12 @@ const lcaSteps = [
 
 const manualSteps = [
   { id: 0, title: 'Employer', description: 'Company info' },
-  { id: 1, title: 'Job Details', description: 'Position & SOC' },
-  { id: 2, title: 'Worksite', description: 'Location' },
-  { id: 3, title: 'Wages', description: 'Prevailing wage' },
-  { id: 4, title: 'Documents', description: 'LCA & Supporting' },
-  { id: 5, title: 'Review', description: 'Generate PAF' },
+  { id: 1, title: 'Scan LCA', description: 'Upload & extract' },
+  { id: 2, title: 'Job Details', description: 'Position & SOC' },
+  { id: 3, title: 'Worksite', description: 'Location' },
+  { id: 4, title: 'Wages', description: 'Prevailing wage' },
+  { id: 5, title: 'Documents', description: 'LCA & Supporting' },
+  { id: 6, title: 'Review', description: 'Generate PAF' },
 ];
 
 export interface ExtendedPAFData extends PAFData {
@@ -199,15 +201,29 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
   // Manual mode: 0=Employer, 1=Job, 2=Worksite, 3=Wages, 4=Docs, 5=Review
   const stepIndex = {
     employer: isManual ? 0 : 1,
-    job: isManual ? 1 : 2,
-    worksite: isManual ? 2 : 3,
-    wages: isManual ? 3 : 4,
-    docs: isManual ? 4 : 5,
-    review: isManual ? 5 : 6,
+    lcaScan: 1, // only used in manual mode
+    job: isManual ? 2 : 2,
+    worksite: isManual ? 3 : 3,
+    wages: isManual ? 4 : 4,
+    docs: isManual ? 5 : 5,
+    review: isManual ? 6 : 6,
   };
 
   const handleEmployerNext = (employer: Employer) => {
     setPafData((prev) => ({ ...prev, employer }));
+    setCurrentStep(isManual ? stepIndex.lcaScan : stepIndex.job);
+  };
+
+  const handleLCAScanNext = (file: File | null, scanResult: LCAScanResult | null) => {
+    // Store the LCA file in supportingDocs for later use
+    setPafData((prev) => ({
+      ...prev,
+      supportingDocs: {
+        ...(prev.supportingDocs || {}),
+        lcaFile: file,
+        lcaCaseNumber: scanResult?.caseNumber || prev.supportingDocs?.lcaCaseNumber || '',
+      } as SupportingDocs,
+    }));
     setCurrentStep(stepIndex.job);
   };
 
@@ -469,6 +485,14 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
             data={pafData.employer || {}} 
             onNext={handleEmployerNext}
             onBack={goBack}
+          />
+        )}
+
+        {isManual && currentStep === stepIndex.lcaScan && (
+          <LCAScanStep
+            onNext={handleLCAScanNext}
+            onBack={goBack}
+            onScanComplete={handleLCAScanComplete}
           />
         )}
 
