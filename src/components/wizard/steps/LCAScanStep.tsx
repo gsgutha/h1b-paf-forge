@@ -261,7 +261,7 @@ export function LCAScanStep({ onNext, onBack, onScanComplete }: LCAScanStepProps
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Primary Worksite</span>
                       <span className="font-medium">
-                        {[scanResult.worksiteAddress, scanResult.worksiteCity, scanResult.worksiteState].filter(Boolean).join(', ')}
+                        {[scanResult.worksiteName, scanResult.worksiteAddress, scanResult.worksiteCity, scanResult.worksiteState].filter(Boolean).join(', ')}
                       </span>
                     </div>
                   )}
@@ -269,8 +269,14 @@ export function LCAScanStep({ onNext, onBack, onScanComplete }: LCAScanStepProps
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Secondary Worksite</span>
                       <span className="font-medium">
-                        {[scanResult.secondaryWorksiteAddress, scanResult.secondaryWorksiteCity, scanResult.secondaryWorksiteState].filter(Boolean).join(', ')}
+                        {[scanResult.secondaryWorksiteName, scanResult.secondaryWorksiteAddress, scanResult.secondaryWorksiteCity, scanResult.secondaryWorksiteState].filter(Boolean).join(', ')}
                       </span>
+                    </div>
+                  )}
+                  {scanResult.wageSourceYear && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Wage Source Date</span>
+                      <span className="font-medium">{scanResult.wageSourceYear}</span>
                     </div>
                   )}
                   {scanResult.h1bDependent !== undefined && scanResult.h1bDependent !== null && (

@@ -39,12 +39,15 @@ export interface LCAScanResult {
   worksiteState?: string;
   worksitePostalCode?: string;
   worksiteCounty?: string;
+  worksiteName?: string;
+  wageSourceYear?: string;
   hasSecondaryWorksite?: boolean;
   secondaryWorksiteAddress?: string;
   secondaryWorksiteCity?: string;
   secondaryWorksiteState?: string;
   secondaryWorksitePostalCode?: string;
   secondaryWorksiteCounty?: string;
+  secondaryWorksiteName?: string;
   h1bDependent?: boolean;
   willfulViolator?: boolean;
   visaClass?: string;
