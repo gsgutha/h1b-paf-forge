@@ -19,46 +19,64 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) throw new Error('LOVABLE_API_KEY not configured');
 
-    const extractionPrompt = `Analyze this LCA (Labor Condition Application, Form ETA 9035/9035E) document and extract the following fields. Return ONLY a JSON object with these fields (no markdown, no explanation):
+    const extractionPrompt = `Analyze this LCA (Labor Condition Application, Form ETA 9035/9035E) document thoroughly across ALL pages and extract the following fields. Return ONLY a JSON object with these fields (no markdown, no explanation):
 
 {
   "caseNumber": "string - the LCA case number (format: I-XXX-XXXXX-XXXXXX)",
   "caseStatus": "string - Certified, Pending, Denied, or Withdrawn",
+  "visaClass": "string - visa classification (e.g., H-1B)",
+
   "employerName": "string - legal business name",
   "employerAddress": "string - street address",
   "employerCity": "string",
   "employerState": "string - full state name",
   "employerPostalCode": "string",
+  "employerPhone": "string - employer phone number",
   "employerFein": "string - Federal Employer Identification Number",
   "naicsCode": "string - NAICS code",
+
   "jobTitle": "string - the job title for the H-1B position",
   "socCode": "string - Standard Occupational Classification code (format: XX-XXXX)",
   "socTitle": "string - SOC occupation title",
   "isFullTime": "boolean - whether this is a full-time position",
+  "totalWorkers": "number - total number of workers requested",
+
   "beginDate": "string - employment begin date in YYYY-MM-DD format",
   "endDate": "string - employment end date in YYYY-MM-DD format",
+
   "wageRateFrom": "number - wage rate from (numeric only, no dollar sign)",
   "wageRateTo": "number or null - wage rate to, if a range",
   "wageUnit": "string - Year, Hour, Week, Bi-Weekly, or Month",
+
   "prevailingWage": "number - prevailing wage amount (numeric only)",
   "prevailingWageUnit": "string - Year, Hour, Week, Bi-Weekly, or Month",
   "wageLevel": "string - Level I, Level II, Level III, or Level IV",
+
+  "worksiteAddress": "string - primary worksite street address (Section F on page 3)",
   "worksiteCity": "string - primary worksite city",
   "worksiteState": "string - primary worksite state (full name)",
   "worksitePostalCode": "string - primary worksite zip code",
   "worksiteCounty": "string - primary worksite county",
+
+  "hasSecondaryWorksite": "boolean - true if there is a secondary/additional worksite listed (check page 7 / Appendix A)",
+  "secondaryWorksiteAddress": "string or null - secondary worksite street address from Appendix A or additional worksite section",
+  "secondaryWorksiteCity": "string or null - secondary worksite city",
+  "secondaryWorksiteState": "string or null - secondary worksite state (full name)",
+  "secondaryWorksitePostalCode": "string or null - secondary worksite zip code",
+  "secondaryWorksiteCounty": "string or null - secondary worksite county",
+
   "h1bDependent": "boolean - whether the employer is H-1B dependent",
-  "willfulViolator": "boolean - whether the employer is a willful violator",
-  "visaClass": "string - visa classification (e.g., H-1B)",
-  "totalWorkers": "number - total number of workers requested"
+  "willfulViolator": "boolean - whether the employer is a willful violator"
 }
 
 IMPORTANT:
+- Carefully check ALL pages including page 3 (Section F - primary worksite) and page 7 or Appendix A (additional/secondary worksites)
 - Return ONLY the JSON object, no markdown code fences, no explanation text
 - Use null for any field that cannot be determined from the document
 - Dates must be in YYYY-MM-DD format
 - Wage amounts must be plain numbers (no currency symbols or commas)
-- Boolean fields must be true or false (not strings)`;
+- Boolean fields must be true or false (not strings)
+- For secondary worksite, check the "Additional Worksite" or "Appendix A" section`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -83,7 +101,7 @@ IMPORTANT:
           },
         ],
         temperature: 0.1,
-        max_tokens: 2000,
+        max_tokens: 3000,
       }),
     });
 
