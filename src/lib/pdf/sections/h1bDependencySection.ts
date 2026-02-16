@@ -16,6 +16,20 @@ import {
 import { addDigitalSignature, SignatoryWithImage } from '../signatureRenderer';
 import { supabase } from '@/integrations/supabase/client';
 
+function annualizeWage(wage: number, unit: string): number {
+  switch (unit) {
+    case 'Hour': return wage * 2080;
+    case 'Week': return wage * 52;
+    case 'Bi-Weekly': return wage * 26;
+    case 'Month': return wage * 12;
+    case 'Year': return wage;
+    default: return wage;
+  }
+}
+
+function formatWageCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
+}
 async function getSignatoryFromDB(signatoryId?: string): Promise<SignatoryWithImage | null> {
   try {
     // First try to get by signatoryId if provided
@@ -132,21 +146,51 @@ export async function addH1BDependencySection(
   ctx.yPos += 5;
   
   if (data.isH1BDependent) {
-    addBoldParagraph(ctx, 'As an H-1B dependent employer, the following additional attestations apply to this LCA:', 10);
+    // Check for exempt H-1B nonimmigrant under 20 CFR § 655.737
+    const annualizedWage = annualizeWage(data.job.wageRateFrom, data.job.wageUnit);
+    const isWageExempt = annualizedWage >= 60000;
     
-    const additionalAttestations = [
-      '1. The employer will not displace any similarly employed U.S. worker within 90 days before or after filing an H-1B petition.',
-      '2. The employer will not place the H-1B worker at another employer\'s worksite unless the employer has inquired whether the other employer has displaced or will displace a similarly employed U.S. worker within 90 days before or after the placement.',
-      '3. The employer has taken good faith steps to recruit U.S. workers for the job using industry-wide standards and offering compensation at least as great as required by the LCA.',
-      '4. The employer has offered the job to any U.S. worker who applies and is equally or better qualified for the job.',
-    ];
-    
-    additionalAttestations.forEach(attestation => {
-      checkPageBreak(ctx, 15);
-      const lines = doc.splitTextToSize(attestation, pageWidth - margin * 2 - 5);
-      doc.text(lines, margin + 5, ctx.yPos);
-      ctx.yPos += lines.length * 5 + 3;
-    });
+    if (isWageExempt) {
+      addBoldParagraph(ctx, 'EXEMPT H-1B NONIMMIGRANT — Additional Attestations Not Required', 11);
+      
+      const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, the H-1B nonimmigrant worker named in this LCA qualifies as an "exempt" H-1B nonimmigrant under 20 CFR § 655.737. The offered annual wage of ${formatWageCurrency(annualizedWage)} exceeds the statutory threshold of $60,000 per year as specified in INA § 212(n)(3)(B).`;
+      addParagraph(ctx, exemptExplanation);
+      
+      ctx.yPos += 3;
+      
+      const exemptConsequence = `Pursuant to 20 CFR § 655.737(b), because this worker is an exempt H-1B nonimmigrant, the employer is NOT required to make the additional attestations regarding non-displacement of U.S. workers (20 CFR § 655.738) and recruitment of U.S. workers (20 CFR § 655.739) that would otherwise apply to H-1B dependent employers. See LCA Form ETA-9035, Section H, Item H-4.`;
+      addParagraph(ctx, exemptConsequence);
+      
+      ctx.yPos += 3;
+      
+      addSubsectionHeader(ctx, 'Exemption Criteria Met');
+      const exemptCriteria = [
+        `• Annual wage offered: ${formatWageCurrency(annualizedWage)} (≥ $60,000 threshold) ✓`,
+      ];
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      exemptCriteria.forEach(criterion => {
+        checkPageBreak(ctx, 8);
+        doc.text(criterion, margin + 5, ctx.yPos);
+        ctx.yPos += 6;
+      });
+    } else {
+      addBoldParagraph(ctx, 'As an H-1B dependent employer, the following additional attestations apply to this LCA:', 10);
+      
+      const additionalAttestations = [
+        '1. The employer will not displace any similarly employed U.S. worker within 90 days before or after filing an H-1B petition.',
+        '2. The employer will not place the H-1B worker at another employer\'s worksite unless the employer has inquired whether the other employer has displaced or will displace a similarly employed U.S. worker within 90 days before or after the placement.',
+        '3. The employer has taken good faith steps to recruit U.S. workers for the job using industry-wide standards and offering compensation at least as great as required by the LCA.',
+        '4. The employer has offered the job to any U.S. worker who applies and is equally or better qualified for the job.',
+      ];
+      
+      additionalAttestations.forEach(attestation => {
+        checkPageBreak(ctx, 15);
+        const lines = doc.splitTextToSize(attestation, pageWidth - margin * 2 - 5);
+        doc.text(lines, margin + 5, ctx.yPos);
+        ctx.yPos += lines.length * 5 + 3;
+      });
+    }
   } else {
     addParagraph(ctx, 'The employer is not H-1B dependent and therefore is not subject to the additional attestation requirements regarding displacement and recruitment under 20 CFR § 655.738-739.');
   }
