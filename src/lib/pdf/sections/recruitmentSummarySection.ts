@@ -80,11 +80,11 @@ export async function addRecruitmentSummarySection(
   data: PAFData,
   supportingDocs?: SupportingDocs
 ): Promise<void> {
-  // Only add this section if employer is H-1B dependent
-  if (!data.isH1BDependent) {
-    return;
-  }
-  
+  // Only add this section if employer is H-1B dependent AND non-exempt
+  if (!data.isH1BDependent) return;
+  const exemptionType = supportingDocs?.exemptionType || 'wage';
+  if (exemptionType !== 'none') return; // Exempt workers don't need recruitment summary
+
   const { doc, pageWidth, margin } = ctx;
   
   // Start new page
@@ -118,62 +118,69 @@ export async function addRecruitmentSummarySection(
     doc.setFont('helvetica', 'bold');
     doc.text(label, margin, ctx.yPos);
     doc.setFont('helvetica', 'normal');
-    doc.text(value, margin + 50, ctx.yPos);
+    doc.text(value, margin + 55, ctx.yPos);
     ctx.yPos += 7;
   });
   
   ctx.yPos += 10;
   
-  // Section 2: Recruitment Methods Used
-  addSectionHeader(ctx, '2. Recruitment Methods Used');
+  // Section 2: Recruitment Timeframe
+  addSectionHeader(ctx, '2. Recruitment Timeframe');
+
+  const beginDate = parseLocalDate(data.job.beginDate);
+  let recruitmentStartStr: string;
+  let recruitmentEndStr: string;
+
+  if (supportingDocs?.recruitmentStartDate) {
+    recruitmentStartStr = format(parseLocalDate(supportingDocs.recruitmentStartDate), 'MMMM d, yyyy');
+  } else {
+    const fallbackStart = new Date(beginDate);
+    fallbackStart.setDate(fallbackStart.getDate() - 60);
+    recruitmentStartStr = format(fallbackStart, 'MMMM d, yyyy');
+  }
+
+  if (supportingDocs?.recruitmentEndDate) {
+    recruitmentEndStr = format(parseLocalDate(supportingDocs.recruitmentEndDate), 'MMMM d, yyyy');
+  } else {
+    recruitmentEndStr = 'Present';
+  }
+
+  addParagraph(ctx, `Recruitment efforts for this position were conducted from ${recruitmentStartStr} through ${recruitmentEndStr}, in accordance with 20 CFR § 655.739.`);
+
+  ctx.yPos += 5;
   
-  addParagraph(ctx, 'The employer has used the following industry-wide recruitment methods to recruit U.S. workers for this position:');
+  // Section 3: Recruitment Methods / Platforms
+  addSectionHeader(ctx, '3. Recruitment Methods Used');
   
-  const recruitmentMethods = [
-    {
-      method: 'Online Job Posting',
-      description: 'Position posted on major job boards including company website, LinkedIn, Indeed, and/or other industry-specific platforms.',
-    },
-    {
-      method: 'Professional Networks',
-      description: 'Position shared through professional networks, industry associations, and employee referral programs.',
-    },
-    {
-      method: 'Campus Recruitment',
-      description: 'If applicable, position advertised at relevant educational institutions and career fairs.',
-    },
-    {
-      method: 'Internal Posting',
-      description: 'Position posted internally to provide opportunity for current employees to apply.',
-    },
-  ];
+  addParagraph(ctx, 'The employer used the following industry-wide recruitment methods to recruit U.S. workers for this position:');
   
-  recruitmentMethods.forEach((item, index) => {
-    checkPageBreak(ctx, 20);
+  const platformsRaw = supportingDocs?.recruitmentPlatforms || 'LinkedIn, Indeed, Company Website';
+  const platforms = platformsRaw.split(',').map(p => p.trim()).filter(Boolean);
+
+  doc.setFontSize(10);
+  platforms.forEach((platform, i) => {
+    checkPageBreak(ctx, 8);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${index + 1}. ${item.method}`, margin + 5, ctx.yPos);
+    doc.text(`${i + 1}. ${platform}`, margin + 5, ctx.yPos);
     ctx.yPos += 6;
     doc.setFont('helvetica', 'normal');
-    const descLines = doc.splitTextToSize(item.description, pageWidth - margin * 2 - 10);
-    doc.text(descLines, margin + 10, ctx.yPos);
-    ctx.yPos += descLines.length * 5 + 5;
   });
   
   ctx.yPos += 5;
   
-  // Section 3: Timeframes
-  addSectionHeader(ctx, '3. Recruitment Timeframe');
-  
-  const beginDate = parseLocalDate(data.job.beginDate);
-  const recruitmentStart = new Date(beginDate);
-  recruitmentStart.setDate(recruitmentStart.getDate() - 60);
-  
-  addParagraph(ctx, `Recruitment efforts for this position were conducted during the period from ${format(recruitmentStart, 'MMMM d, yyyy')} through the present date, in accordance with the requirement that recruitment must occur within 180 days before filing the LCA.`);
-  
-  ctx.yPos += 5;
-  
-  // Section 4: Results
+  // Section 4: Recruitment Results
   addSectionHeader(ctx, '4. Recruitment Results');
+
+  const applicantCount = supportingDocs?.usApplicantsCount;
+  if (applicantCount !== undefined && applicantCount !== null) {
+    checkPageBreak(ctx, 8);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Number of U.S. Applicants Reviewed:', margin, ctx.yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.text(String(applicantCount), margin + 90, ctx.yPos);
+    ctx.yPos += 8;
+  }
   
   addParagraph(ctx, 'The employer certifies that:');
   
@@ -193,6 +200,17 @@ export async function addRecruitmentSummarySection(
     doc.text(lines, margin + 15, ctx.yPos);
     ctx.yPos += lines.length * 5 + 4;
   });
+
+  // Non-selection reasons
+  if (supportingDocs?.nonSelectionReasons && supportingDocs.nonSelectionReasons.trim().length > 0) {
+    ctx.yPos += 5;
+    addSubsectionHeader(ctx, 'Lawful Job-Related Reasons for Non-Selection of U.S. Applicants');
+    const reasonLines = doc.splitTextToSize(supportingDocs.nonSelectionReasons, pageWidth - margin * 2 - 5);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(reasonLines, margin + 5, ctx.yPos);
+    ctx.yPos += reasonLines.length * 5 + 5;
+  }
   
   ctx.yPos += 10;
   
@@ -204,6 +222,7 @@ export async function addRecruitmentSummarySection(
   const displacementAttestations = [
     'No similarly employed U.S. worker has been or will be displaced within 90 days before or after the filing of an H-1B petition supported by this LCA.',
     'Before placing the H-1B worker at another employer\'s worksite, the employer has made a bona fide inquiry as to whether the other employer has or will displace a similarly employed U.S. worker within 90 days before or after the placement.',
+    'Where applicable, written confirmation has been obtained from the secondary employer (client site) that no displacement will occur.',
   ];
   
   displacementAttestations.forEach((attestation, index) => {

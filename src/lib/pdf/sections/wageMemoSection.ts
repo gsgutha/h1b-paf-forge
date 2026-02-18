@@ -250,7 +250,11 @@ export async function addWageMemoSection(
     },
     {
       factor: 'Comparable Employees',
-      analysis: `The wage was compared against rates paid to similarly employed U.S. workers in comparable positions within the Company to ensure internal equity.`
+      analysis: supportingDocs?.noComparableWorkers
+        ? `No similarly employed U.S. workers exist in this position at ${data.employer.legalBusinessName}. This is the first H-1B worker hired into this role, so no internal comparables are available.`
+        : supportingDocs?.comparableWorkersCount
+          ? `The wage was compared against ${supportingDocs.comparableWorkersCount} similarly employed worker(s) in comparable roles at ${data.employer.legalBusinessName}, whose wages range from $${(supportingDocs.comparableWageMin || 0).toLocaleString()} to $${(supportingDocs.comparableWageMax || 0).toLocaleString()} per year. The offered wage is consistent with internal pay equity standards.`
+          : `The wage was compared against rates paid to similarly employed U.S. workers in comparable positions within the Company to ensure internal equity.`
     }
   ];
   

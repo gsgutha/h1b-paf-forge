@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FileText, Upload, X, Check, AlertCircle, FileUp, Building2, Bell, Users, Loader2, Sparkles, ShieldCheck } from 'lucide-react';
+import { FileText, Upload, X, Check, AlertCircle, FileUp, Building2, Bell, Users, Loader2, Sparkles, ShieldCheck, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -69,6 +69,27 @@ export interface SupportingDocs {
   benefitsNotes: string;
   isCertifiedLCA?: boolean;
   isH1BDependent?: boolean;
+
+  // H-1B Dependency Worksheet
+  totalFTECount?: number;
+  totalH1BCount?: number;
+  dependencyCalculationDate?: string;
+
+  // Exemption type (for H-1B dependent employers)
+  exemptionType?: 'wage' | 'degree' | 'none'; // 'wage' = $60K, 'degree' = Master's, 'none' = non-exempt
+
+  // Recruitment details (for non-exempt H-1B dependent employers)
+  recruitmentStartDate?: string;
+  recruitmentEndDate?: string;
+  recruitmentPlatforms?: string; // comma-separated list of platforms
+  usApplicantsCount?: number;
+  nonSelectionReasons?: string;
+
+  // Comparable wage details
+  comparableWorkersCount?: number;
+  comparableWageMin?: number;
+  comparableWageMax?: number;
+  noComparableWorkers?: boolean;
 }
 
 interface SupportingDocsStepProps {
@@ -186,6 +207,20 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
     benefitsNotes: data.benefitsNotes || getDefaultBenefitsNotes(),
     isCertifiedLCA: data.isCertifiedLCA ?? true,
     isH1BDependent: data.isH1BDependent ?? false,
+    // H-1B Compliance fields
+    totalFTECount: data.totalFTECount || undefined,
+    totalH1BCount: data.totalH1BCount || undefined,
+    dependencyCalculationDate: data.dependencyCalculationDate || '',
+    exemptionType: data.exemptionType || 'wage',
+    recruitmentStartDate: data.recruitmentStartDate || '',
+    recruitmentEndDate: data.recruitmentEndDate || '',
+    recruitmentPlatforms: data.recruitmentPlatforms || 'LinkedIn, Indeed, Company Website',
+    usApplicantsCount: data.usApplicantsCount || undefined,
+    nonSelectionReasons: data.nonSelectionReasons || '',
+    comparableWorkersCount: data.comparableWorkersCount || undefined,
+    comparableWageMin: data.comparableWageMin || undefined,
+    comparableWageMax: data.comparableWageMax || undefined,
+    noComparableWorkers: data.noComparableWorkers ?? false,
   });
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<LCAScanResult | null>(null);
@@ -259,10 +294,12 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const isComplete = (section: 'lca' | 'wage' | 'notice' | 'benefits') => {
+  const isComplete = (section: 'lca' | 'h1b' | 'wage' | 'notice' | 'benefits') => {
     switch (section) {
       case 'lca':
         return !!formData.lcaCaseNumber || !!formData.lcaFile;
+      case 'h1b':
+        return !!formData.totalFTECount && !!formData.totalH1BCount && !!formData.dependencyCalculationDate;
       case 'wage':
         return !!formData.actualWageMemo && formData.actualWageMemo.length > 50;
       case 'notice':
@@ -290,23 +327,28 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Tabs defaultValue="lca" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="lca" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="lca" className="flex items-center gap-1">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">LCA</span>
               {isComplete('lca') && <Badge variant="secondary" className="h-5 w-5 p-0 justify-center bg-success/20 text-success"><Check className="h-3 w-3" /></Badge>}
             </TabsTrigger>
-            <TabsTrigger value="wage" className="flex items-center gap-2">
+            <TabsTrigger value="h1b" className="flex items-center gap-1">
+              <ClipboardList className="h-4 w-4" />
+              <span className="hidden sm:inline">H-1B</span>
+              {isComplete('h1b') && <Badge variant="secondary" className="h-5 w-5 p-0 justify-center bg-success/20 text-success"><Check className="h-3 w-3" /></Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="wage" className="flex items-center gap-1">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Wage</span>
               {isComplete('wage') && <Badge variant="secondary" className="h-5 w-5 p-0 justify-center bg-success/20 text-success"><Check className="h-3 w-3" /></Badge>}
             </TabsTrigger>
-            <TabsTrigger value="notice" className="flex items-center gap-2">
+            <TabsTrigger value="notice" className="flex items-center gap-1">
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Notice</span>
               {isComplete('notice') && <Badge variant="secondary" className="h-5 w-5 p-0 justify-center bg-success/20 text-success"><Check className="h-3 w-3" /></Badge>}
             </TabsTrigger>
-            <TabsTrigger value="benefits" className="flex items-center gap-2">
+            <TabsTrigger value="benefits" className="flex items-center gap-1">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Benefits</span>
               {isComplete('benefits') && <Badge variant="secondary" className="h-5 w-5 p-0 justify-center bg-success/20 text-success"><Check className="h-3 w-3" /></Badge>}
@@ -556,6 +598,262 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* H-1B Compliance Tab */}
+          <TabsContent value="h1b" className="mt-6">
+            <div className="space-y-6">
+              {/* Dependency Worksheet */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-accent" />
+                    H-1B Dependency Worksheet
+                  </CardTitle>
+                  <CardDescription>
+                    Document your FTE / H-1B count used to determine dependency status per 20 CFR § 655.736
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="totalFTECount">Total FTE Employees *</Label>
+                      <Input
+                        id="totalFTECount"
+                        type="number"
+                        min={1}
+                        placeholder="e.g. 87"
+                        value={formData.totalFTECount ?? ''}
+                        onChange={(e) => updateField('totalFTECount', e.target.value ? Number(e.target.value) : undefined)}
+                      />
+                      <p className="text-xs text-muted-foreground">Full-time equivalent headcount</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="totalH1BCount">Total H-1B Workers *</Label>
+                      <Input
+                        id="totalH1BCount"
+                        type="number"
+                        min={0}
+                        placeholder="e.g. 14"
+                        value={formData.totalH1BCount ?? ''}
+                        onChange={(e) => updateField('totalH1BCount', e.target.value ? Number(e.target.value) : undefined)}
+                      />
+                      <p className="text-xs text-muted-foreground">Current H-1B workers employed</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>H-1B Percentage</Label>
+                      <div className="h-10 flex items-center px-3 rounded-md border border-border bg-muted/50 text-sm font-medium">
+                        {formData.totalFTECount && formData.totalH1BCount
+                          ? `${((formData.totalH1BCount / formData.totalFTECount) * 100).toFixed(1)}%`
+                          : '—'}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Auto-calculated</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dependencyCalculationDate">Date Calculation Performed *</Label>
+                    <Input
+                      id="dependencyCalculationDate"
+                      type="date"
+                      value={formData.dependencyCalculationDate ?? ''}
+                      onChange={(e) => updateField('dependencyCalculationDate', e.target.value)}
+                      className="max-w-xs"
+                    />
+                  </div>
+                  {formData.totalFTECount && formData.totalH1BCount && (
+                    <div className={`p-3 rounded-lg text-sm ${
+                      formData.isH1BDependent ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'
+                    }`}>
+                      {formData.isH1BDependent
+                        ? `⚠ H-1B Dependent: ${formData.totalH1BCount} H-1B workers out of ${formData.totalFTECount} FTEs (${((formData.totalH1BCount / formData.totalFTECount) * 100).toFixed(1)}%)`
+                        : `✓ Not H-1B Dependent: ${formData.totalH1BCount} H-1B workers out of ${formData.totalFTECount} FTEs (${((formData.totalH1BCount / formData.totalFTECount) * 100).toFixed(1)}%)`}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Exemption Type - only show if H-1B dependent */}
+              {formData.isH1BDependent && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Exemption Documentation</CardTitle>
+                    <CardDescription>
+                      How does this worker qualify as exempt from additional attestations?
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <RadioGroup
+                      value={formData.exemptionType || 'wage'}
+                      onValueChange={(val) => updateField('exemptionType', val as 'wage' | 'degree' | 'none')}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-start gap-3 p-3 rounded-lg border border-border">
+                        <RadioGroupItem value="wage" id="exemptWage" className="mt-0.5" />
+                        <Label htmlFor="exemptWage" className="cursor-pointer">
+                          <p className="font-medium">Wage Exemption — Salary ≥ $60,000/year</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Worker's annualized wage meets or exceeds $60,000 (INA § 212(n)(3)(B)(i))</p>
+                        </Label>
+                      </div>
+                      <div className="flex items-start gap-3 p-3 rounded-lg border border-border">
+                        <RadioGroupItem value="degree" id="exemptDegree" className="mt-0.5" />
+                        <Label htmlFor="exemptDegree" className="cursor-pointer">
+                          <p className="font-medium">Degree Exemption — Master's Degree or Equivalent</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Worker holds a U.S. Master's degree or equivalent in a specialty related to the employment (INA § 212(n)(3)(B)(ii))</p>
+                        </Label>
+                      </div>
+                      <div className="flex items-start gap-3 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                        <RadioGroupItem value="none" id="exemptNone" className="mt-0.5" />
+                        <Label htmlFor="exemptNone" className="cursor-pointer">
+                          <p className="font-medium text-destructive">Non-Exempt — Full Attestations Required</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Worker does not qualify for exemption. Recruitment summary and displacement attestations are required.</p>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Recruitment Details - only show if non-exempt */}
+              {formData.isH1BDependent && formData.exemptionType === 'none' && (
+                <Card className="border-warning/30">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Users className="h-4 w-4 text-warning" />
+                      Recruitment Summary Details
+                    </CardTitle>
+                    <CardDescription>
+                      Required for non-exempt H-1B dependent employers per 20 CFR § 655.739
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="recruitmentStartDate">Recruitment Start Date</Label>
+                        <Input
+                          id="recruitmentStartDate"
+                          type="date"
+                          value={formData.recruitmentStartDate ?? ''}
+                          onChange={(e) => updateField('recruitmentStartDate', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="recruitmentEndDate">Recruitment End Date</Label>
+                        <Input
+                          id="recruitmentEndDate"
+                          type="date"
+                          value={formData.recruitmentEndDate ?? ''}
+                          onChange={(e) => updateField('recruitmentEndDate', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="recruitmentPlatforms">Platforms / Where Ads Were Posted</Label>
+                      <Input
+                        id="recruitmentPlatforms"
+                        placeholder="e.g. LinkedIn, Indeed, Company Website, Dice"
+                        value={formData.recruitmentPlatforms ?? ''}
+                        onChange={(e) => updateField('recruitmentPlatforms', e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">Comma-separated list of job boards and platforms used</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="usApplicantsCount">Number of U.S. Applicants Reviewed</Label>
+                      <Input
+                        id="usApplicantsCount"
+                        type="number"
+                        min={0}
+                        placeholder="e.g. 12"
+                        value={formData.usApplicantsCount ?? ''}
+                        onChange={(e) => updateField('usApplicantsCount', e.target.value ? Number(e.target.value) : undefined)}
+                        className="max-w-xs"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="nonSelectionReasons">Lawful Job-Related Reasons for Non-Selection</Label>
+                      <Textarea
+                        id="nonSelectionReasons"
+                        rows={4}
+                        placeholder="e.g. U.S. applicants lacked required experience with [specific technology/skill]. No applicant met the minimum qualification of [X years] in [specific area]..."
+                        value={formData.nonSelectionReasons ?? ''}
+                        onChange={(e) => updateField('nonSelectionReasons', e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">Describe the lawful, job-related reasons no qualified U.S. worker was selected</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Comparable Wage Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Comparable Wage Details</CardTitle>
+                  <CardDescription>
+                    Document wages paid to similarly employed U.S. workers per 20 CFR § 655.731
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-border">
+                    <input
+                      type="checkbox"
+                      id="noComparableWorkers"
+                      checked={formData.noComparableWorkers ?? false}
+                      onChange={(e) => updateField('noComparableWorkers', e.target.checked)}
+                      className="h-4 w-4 rounded border-border accent-primary"
+                    />
+                    <Label htmlFor="noComparableWorkers" className="cursor-pointer">
+                      No similarly employed U.S. workers exist in this position at this company
+                    </Label>
+                  </div>
+                  {!formData.noComparableWorkers && (
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="comparableWorkersCount">Number of Similarly Employed Workers</Label>
+                        <Input
+                          id="comparableWorkersCount"
+                          type="number"
+                          min={1}
+                          placeholder="e.g. 5"
+                          value={formData.comparableWorkersCount ?? ''}
+                          onChange={(e) => updateField('comparableWorkersCount', e.target.value ? Number(e.target.value) : undefined)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="comparableWageMin">Wage Range — Min ($/yr)</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                          <Input
+                            id="comparableWageMin"
+                            type="number"
+                            min={0}
+                            step={1000}
+                            placeholder="85000"
+                            value={formData.comparableWageMin ?? ''}
+                            onChange={(e) => updateField('comparableWageMin', e.target.value ? Number(e.target.value) : undefined)}
+                            className="pl-7"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="comparableWageMax">Wage Range — Max ($/yr)</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                          <Input
+                            id="comparableWageMax"
+                            type="number"
+                            min={0}
+                            step={1000}
+                            placeholder="120000"
+                            value={formData.comparableWageMax ?? ''}
+                            onChange={(e) => updateField('comparableWageMax', e.target.value ? Number(e.target.value) : undefined)}
+                            className="pl-7"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Actual Wage Memo Tab */}
