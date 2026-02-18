@@ -15,12 +15,13 @@ import { useQueryClient } from '@tanstack/react-query';
 
 const lcaSteps = [
   { id: 0, title: 'Select LCA', description: 'Choose case' },
-  { id: 1, title: 'Employer', description: 'Company info' },
-  { id: 2, title: 'Job Details', description: 'Position & SOC' },
-  { id: 3, title: 'Worksite', description: 'Location' },
-  { id: 4, title: 'Wages', description: 'Prevailing wage' },
-  { id: 5, title: 'Documents', description: 'LCA & Supporting' },
-  { id: 6, title: 'Review', description: 'Generate PAF' },
+  { id: 1, title: 'Scan LCA', description: 'Upload & extract' },
+  { id: 2, title: 'Employer', description: 'Company info' },
+  { id: 3, title: 'Job Details', description: 'Position & SOC' },
+  { id: 4, title: 'Worksite', description: 'Location' },
+  { id: 5, title: 'Wages', description: 'Prevailing wage' },
+  { id: 6, title: 'Documents', description: 'LCA & Supporting' },
+  { id: 7, title: 'Review', description: 'Generate PAF' },
 ];
 
 const manualSteps = [
@@ -193,25 +194,25 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
       wage: wage as WageInfo,
     }));
 
-    setCurrentStep(1);
+    setCurrentStep(1); // Go to LCA Scan step
   };
 
   // Step indices differ based on mode
-  // LCA mode:    0=LCA, 1=Employer, 2=Job, 3=Worksite, 4=Wages, 5=Docs, 6=Review
-  // Manual mode: 0=Employer, 1=Job, 2=Worksite, 3=Wages, 4=Docs, 5=Review
+  // LCA mode:    0=LCA, 1=ScanLCA, 2=Employer, 3=Job, 4=Worksite, 5=Wages, 6=Docs, 7=Review
+  // Manual mode: 0=Employer, 1=ScanLCA, 2=Job, 3=Worksite, 4=Wages, 5=Docs, 6=Review
   const stepIndex = {
-    employer: isManual ? 0 : 1,
-    lcaScan: 1, // only used in manual mode
-    job: isManual ? 2 : 2,
-    worksite: isManual ? 3 : 3,
-    wages: isManual ? 4 : 4,
-    docs: isManual ? 5 : 5,
-    review: isManual ? 6 : 6,
+    employer: isManual ? 0 : 2,
+    lcaScan: 1, // step 1 in both modes (after LCA selection in lca mode, after employer in manual mode)
+    job: isManual ? 2 : 3,
+    worksite: isManual ? 3 : 4,
+    wages: isManual ? 4 : 5,
+    docs: isManual ? 5 : 6,
+    review: isManual ? 6 : 7,
   };
 
   const handleEmployerNext = (employer: Employer) => {
     setPafData((prev) => ({ ...prev, employer }));
-    setCurrentStep(isManual ? stepIndex.lcaScan : stepIndex.job);
+    setCurrentStep(stepIndex.job);
   };
 
   const handleLCAScanNext = (file: File | null, scanResult: LCAScanResult | null) => {
@@ -483,19 +484,19 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
           <LCASelectionStep onSelect={handleLCASelect} />
         )}
 
+        {currentStep === stepIndex.lcaScan && (
+          <LCAScanStep
+            onNext={handleLCAScanNext}
+            onBack={goBack}
+            onScanComplete={handleLCAScanComplete}
+          />
+        )}
+
         {currentStep === stepIndex.employer && (
           <EmployerInfoStep 
             data={pafData.employer || {}} 
             onNext={handleEmployerNext}
             onBack={goBack}
-          />
-        )}
-
-        {isManual && currentStep === stepIndex.lcaScan && (
-          <LCAScanStep
-            onNext={handleLCAScanNext}
-            onBack={goBack}
-            onScanComplete={handleLCAScanComplete}
           />
         )}
 
