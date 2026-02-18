@@ -216,16 +216,29 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
   };
 
   const handleLCAScanNext = (file: File | null, scanResult: LCAScanResult | null) => {
-    // Store the LCA file in supportingDocs for later use
-    setPafData((prev) => ({
-      ...prev,
-      supportingDocs: {
-        ...(prev.supportingDocs || {}),
-        lcaFile: file,
-        lcaCaseNumber: scanResult?.caseNumber || prev.supportingDocs?.lcaCaseNumber || '',
-      } as SupportingDocs,
-    }));
-    setCurrentStep(stepIndex.job);
+    // Store the LCA file and apply scan result data to pafData
+    setPafData((prev) => {
+      const updated: Partial<ExtendedPAFData> = {
+        ...prev,
+        supportingDocs: {
+          ...(prev.supportingDocs || {}),
+          lcaFile: file,
+          lcaCaseNumber: scanResult?.caseNumber || prev.supportingDocs?.lcaCaseNumber || '',
+        } as SupportingDocs,
+      };
+
+      // Apply h1bDependent and willfulViolator from scan result if available
+      if (scanResult?.h1bDependent !== undefined && scanResult?.h1bDependent !== null) {
+        updated.isH1BDependent = scanResult.h1bDependent;
+      }
+      if (scanResult?.willfulViolator !== undefined && scanResult?.willfulViolator !== null) {
+        updated.isWillfulViolator = scanResult.willfulViolator;
+      }
+
+      return updated;
+    });
+    // In LCA mode go to employer step; in manual mode go directly to job step
+    setCurrentStep(isManual ? stepIndex.job : stepIndex.employer);
   };
 
   const handleJobNext = (job: JobDetails) => {
