@@ -123,10 +123,36 @@ export async function addH1BDependencySection(
   doc.setTextColor(...PDF_CONFIG.colors.black);
   ctx.yPos += 10;
   
-  // Explanation of H-1B dependency calculation
-  addSubsectionHeader(ctx, 'H-1B Dependency Calculation Method');
+  // Section 1b: Dependency Calculation Worksheet
+  addSubsectionHeader(ctx, 'H-1B Dependency Calculation Worksheet');
+
+  if (supportingDocs?.totalFTECount && supportingDocs?.totalH1BCount) {
+    const pct = ((supportingDocs.totalH1BCount / supportingDocs.totalFTECount) * 100).toFixed(1);
+    const worksheetRows = [
+      ['Total Full-Time Equivalent (FTE) Employees:', String(supportingDocs.totalFTECount)],
+      ['Total H-1B Workers Currently Employed:', String(supportingDocs.totalH1BCount)],
+      ['H-1B Percentage of Workforce:', `${pct}%`],
+      ['Date Calculation Performed:', supportingDocs.dependencyCalculationDate || '—'],
+    ];
+    doc.setFontSize(10);
+    worksheetRows.forEach(([label, value]) => {
+      checkPageBreak(ctx, 8);
+      doc.setFont('helvetica', 'bold');
+      doc.text(label, margin + 5, ctx.yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(value, margin + 110, ctx.yPos);
+      ctx.yPos += 7;
+    });
+  } else {
+    addParagraph(ctx, 'See attached dependency worksheet. Employer has determined dependency status based on current FTE headcount and H-1B worker count per 20 CFR § 655.736.');
+  }
+
+  ctx.yPos += 5;
+
+  // Explanation of H-1B dependency thresholds
+  addSubsectionHeader(ctx, 'Statutory Thresholds (20 CFR § 655.736)');
   
-  const calcExplanation = `Under 20 CFR § 655.736, an employer is considered "H-1B dependent" if it meets one of the following thresholds based on full-time equivalent (FTE) employees:`;
+  const calcExplanation = `An employer is considered "H-1B dependent" if it meets one of the following thresholds:`;
   addParagraph(ctx, calcExplanation);
   
   const thresholds = [
@@ -146,34 +172,41 @@ export async function addH1BDependencySection(
   ctx.yPos += 5;
   
   if (data.isH1BDependent) {
-    // Check for exempt H-1B nonimmigrant under 20 CFR § 655.737
+    // Determine exemption type from supportingDocs
+    const exemptionType = supportingDocs?.exemptionType || 'wage';
     const annualizedWage = annualizeWage(data.job.wageRateFrom, data.job.wageUnit);
-    const isWageExempt = annualizedWage >= 60000;
+    const isWageExempt = exemptionType === 'wage' && annualizedWage >= 60000;
+    const isDegreeExempt = exemptionType === 'degree';
+    const isExempt = isWageExempt || isDegreeExempt;
     
-    if (isWageExempt) {
+    if (isExempt) {
       addBoldParagraph(ctx, 'EXEMPT H-1B NONIMMIGRANT — Additional Attestations Not Required', 11);
       
-      const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, the H-1B nonimmigrant worker named in this LCA qualifies as an "exempt" H-1B nonimmigrant under 20 CFR § 655.737. The offered annual wage of ${formatWageCurrency(annualizedWage)} exceeds the statutory threshold of $60,000 per year as specified in INA § 212(n)(3)(B).`;
-      addParagraph(ctx, exemptExplanation);
+      if (isWageExempt) {
+        const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, the H-1B nonimmigrant worker named in this LCA qualifies as an "exempt" H-1B nonimmigrant under 20 CFR § 655.737. The offered annual wage of ${formatWageCurrency(annualizedWage)} exceeds the statutory threshold of $60,000 per year as specified in INA § 212(n)(3)(B)(i).`;
+        addParagraph(ctx, exemptExplanation);
+        ctx.yPos += 3;
+        addSubsectionHeader(ctx, 'Exemption Criteria Met');
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        checkPageBreak(ctx, 8);
+        doc.text(`• Wage Exemption: Annual wage offered ${formatWageCurrency(annualizedWage)} ≥ $60,000 threshold ✓`, margin + 5, ctx.yPos);
+        ctx.yPos += 6;
+      } else {
+        const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, the H-1B nonimmigrant worker named in this LCA qualifies as an "exempt" H-1B nonimmigrant under 20 CFR § 655.737 by virtue of holding a Master's degree or its equivalent in a specialty related to the employment, as specified in INA § 212(n)(3)(B)(ii).`;
+        addParagraph(ctx, exemptExplanation);
+        ctx.yPos += 3;
+        addSubsectionHeader(ctx, 'Exemption Criteria Met');
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        checkPageBreak(ctx, 8);
+        doc.text('• Degree Exemption: Worker holds a U.S. Master\'s degree or equivalent in a specialty related to employment ✓', margin + 5, ctx.yPos);
+        ctx.yPos += 6;
+      }
       
       ctx.yPos += 3;
-      
       const exemptConsequence = `Pursuant to 20 CFR § 655.737(b), because this worker is an exempt H-1B nonimmigrant, the employer is NOT required to make the additional attestations regarding non-displacement of U.S. workers (20 CFR § 655.738) and recruitment of U.S. workers (20 CFR § 655.739) that would otherwise apply to H-1B dependent employers. See LCA Form ETA-9035, Section H, Item H-4.`;
       addParagraph(ctx, exemptConsequence);
-      
-      ctx.yPos += 3;
-      
-      addSubsectionHeader(ctx, 'Exemption Criteria Met');
-      const exemptCriteria = [
-        `• Annual wage offered: ${formatWageCurrency(annualizedWage)} (≥ $60,000 threshold) ✓`,
-      ];
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      exemptCriteria.forEach(criterion => {
-        checkPageBreak(ctx, 8);
-        doc.text(criterion, margin + 5, ctx.yPos);
-        ctx.yPos += 6;
-      });
     } else {
       addBoldParagraph(ctx, 'As an H-1B dependent employer, the following additional attestations apply to this LCA:', 10);
       
