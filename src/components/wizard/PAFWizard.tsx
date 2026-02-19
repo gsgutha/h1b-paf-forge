@@ -81,8 +81,9 @@ const manualInitialPAFData: Partial<ExtendedPAFData> = {
 // Helper to map LCA wage unit to PAF wage unit
 function mapWageUnit(unit: string | null): 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year' {
   if (!unit) return 'Year';
-  const lower = unit.toLowerCase();
+  const lower = unit.toLowerCase().replace(/[-\s]/g, '');
   if (lower.includes('hour')) return 'Hour';
+  if (lower.includes('biweekly') || lower.includes('bi-weekly')) return 'Bi-Weekly';
   if (lower.includes('week')) return 'Week';
   if (lower.includes('month')) return 'Month';
   return 'Year';
@@ -180,14 +181,15 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
       wageSource: 'OFLC Online Wage Library',
       wageSourceDate: wageSourceDate,
     };
+    // Note: h1b_dependent may be null in older LCA imports — scan step will override from PDF
     setPafData((prev) => ({
       ...prev,
       lcaId: lca.id,
       caseNumber: lca.case_number,
       caseStatus: 'Certified',
-      visaType: lca.visa_class === 'H-1B' ? 'H-1B' : 'H-1B',
-      isH1BDependent: lca.h1b_dependent ?? false,
-      isWillfulViolator: lca.willful_violator ?? false,
+      visaType: 'H-1B',
+      isH1BDependent: lca.h1b_dependent === true, // only true if explicitly true; scan step overrides from PDF
+      isWillfulViolator: lca.willful_violator === true,
       employer,
       job,
       worksite,

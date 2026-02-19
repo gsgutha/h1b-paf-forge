@@ -280,11 +280,18 @@ export function LCAScanStep({ onNext, onBack, onScanComplete }: LCAScanStepProps
                     </div>
                   )}
                   {scanResult.h1bDependent !== undefined && scanResult.h1bDependent !== null && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">H-1B Dependent</span>
-                      <Badge variant={scanResult.h1bDependent ? 'destructive' : 'secondary'}>
-                        {scanResult.h1bDependent ? 'Yes' : 'No'}
-                      </Badge>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">H-1B Dependent (from LCA)</span>
+                        <Badge variant={scanResult.h1bDependent ? 'destructive' : 'secondary'}>
+                          {scanResult.h1bDependent ? 'Yes' : 'No'}
+                        </Badge>
+                      </div>
+                      {!scanResult.h1bDependent && (
+                        <p className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1">
+                          ℹ️ This reflects what is checked on the LCA (Section H). If your company is H-1B dependent but this LCA predates reclassification, you can override this on the Supporting Docs step.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
