@@ -49,6 +49,16 @@ const wageSchema = z.object({
   wageSourceDate: z.string().min(1, 'Source date is required'),
   actualWage: z.number().min(0.01, 'Actual wage is required'),
   actualWageUnit: z.enum(['Hour', 'Week', 'Bi-Weekly', 'Month', 'Year']),
+  wageLevelData: z.object({
+    levelI_hourly: z.number().nullable().optional(),
+    levelI_annual: z.number().nullable().optional(),
+    levelII_hourly: z.number().nullable().optional(),
+    levelII_annual: z.number().nullable().optional(),
+    levelIII_hourly: z.number().nullable().optional(),
+    levelIII_annual: z.number().nullable().optional(),
+    levelIV_hourly: z.number().nullable().optional(),
+    levelIV_annual: z.number().nullable().optional(),
+  }).optional(),
   hasSecondaryWage: z.boolean().optional(),
   secondaryWage: z.object({
     prevailingWage: z.number().optional(),
@@ -143,6 +153,16 @@ interface PrevailingWageLookupProps {
     prevailingWage: number;
     prevailingWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
     wageYear: string;
+    wageLevelData: {
+      levelI_hourly: number | null;
+      levelI_annual: number | null;
+      levelII_hourly: number | null;
+      levelII_annual: number | null;
+      levelIII_hourly: number | null;
+      levelIII_annual: number | null;
+      levelIV_hourly: number | null;
+      levelIV_annual: number | null;
+    };
   }) => void;
   label?: string;
 }
@@ -199,13 +219,23 @@ function PrevailingWageLookup({ socCode, areaCode, areaName, onSelect, label = '
   }, [socCode, areaCode, wageYear]);
 
   const handleSelectLevel = (row: WageLevelRow) => {
-    if (!row.annual) return;
+    if (!row.annual || !wageRecord) return;
     setSelectedLevel(row.level);
     onSelect({
       wageLevel: row.level,
       prevailingWage: row.annual,
       prevailingWageUnit: 'Year',
       wageYear,
+      wageLevelData: {
+        levelI_hourly: wageRecord.level_1_hourly,
+        levelI_annual: wageRecord.level_1_annual,
+        levelII_hourly: wageRecord.level_2_hourly,
+        levelII_annual: wageRecord.level_2_annual,
+        levelIII_hourly: wageRecord.level_3_hourly,
+        levelIII_annual: wageRecord.level_3_annual,
+        levelIV_hourly: wageRecord.level_4_hourly,
+        levelIV_annual: wageRecord.level_4_annual,
+      },
     });
   };
 
@@ -388,11 +418,12 @@ export function WageInfoStep({ data, worksite, job, onNext, onBack }: WageInfoSt
   const canProceed = isWageCompliant || actualWage === 0 || prevailingWage === 0;
 
   // Lookup handlers
-  const handlePrimaryLookupSelect = ({ wageLevel, prevailingWage, prevailingWageUnit, wageYear }: {
+  const handlePrimaryLookupSelect = ({ wageLevel, prevailingWage, prevailingWageUnit, wageYear, wageLevelData }: {
     wageLevel: 'Level I' | 'Level II' | 'Level III' | 'Level IV';
     prevailingWage: number;
     prevailingWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
     wageYear: string;
+    wageLevelData: WageInfo['wageLevelData'];
   }) => {
     setValue('wageLevel', wageLevel);
     setValue('prevailingWage', prevailingWage);
@@ -401,6 +432,7 @@ export function WageInfoStep({ data, worksite, job, onNext, onBack }: WageInfoSt
     // Set source date to July 1 of the first year in the range (e.g., 2024-2025 → 2024-07-01)
     const startYear = wageYear.split('-')[0];
     setValue('wageSourceDate', `${startYear}-07-01`);
+    setValue('wageLevelData', wageLevelData);
   };
 
   const handleSecondaryLookupSelect = ({ wageLevel, prevailingWage, prevailingWageUnit, wageYear }: {
@@ -408,6 +440,7 @@ export function WageInfoStep({ data, worksite, job, onNext, onBack }: WageInfoSt
     prevailingWage: number;
     prevailingWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
     wageYear: string;
+    wageLevelData: WageInfo['wageLevelData'];
   }) => {
     setValue('secondaryWage.wageLevel', wageLevel);
     setValue('secondaryWage.prevailingWage', prevailingWage);

@@ -25,6 +25,67 @@ interface WageReportData {
   wageLevel: string;
   wageSource: string;
   wageSourceDate: string;
+  // Real level values from DB lookup (all 4 levels)
+  wageLevelData?: {
+    levelI_hourly: number | null;
+    levelI_annual: number | null;
+    levelII_hourly: number | null;
+    levelII_annual: number | null;
+    levelIII_hourly: number | null;
+    levelIII_annual: number | null;
+    levelIV_hourly: number | null;
+    levelIV_annual: number | null;
+  };
+}
+
+interface LevelEntry {
+  label: string;
+  hourly: number;
+  annual: number;
+}
+
+function buildLevelEntries(wageData: WageReportData): LevelEntry[] {
+  const ld = wageData.wageLevelData;
+
+  // If we have real DB level data, use it directly
+  if (
+    ld &&
+    ld.levelI_annual != null &&
+    ld.levelII_annual != null &&
+    ld.levelIII_annual != null &&
+    ld.levelIV_annual != null
+  ) {
+    return [
+      { label: 'Level I', hourly: ld.levelI_hourly ?? (ld.levelI_annual / 2080), annual: ld.levelI_annual },
+      { label: 'Level II', hourly: ld.levelII_hourly ?? (ld.levelII_annual / 2080), annual: ld.levelII_annual },
+      { label: 'Level III', hourly: ld.levelIII_hourly ?? (ld.levelIII_annual / 2080), annual: ld.levelIII_annual },
+      { label: 'Level IV', hourly: ld.levelIV_hourly ?? (ld.levelIV_annual / 2080), annual: ld.levelIV_annual },
+    ];
+  }
+
+  // Fallback: derive from prevailing wage using multipliers relative to the selected level
+  const baseWage = wageData.prevailingWage;
+  const yearlyBase = wageData.prevailingWageUnit === 'Year' ? baseWage : baseWage * 2080;
+  const hourlyBase = wageData.prevailingWageUnit === 'Year' ? baseWage / 2080 : baseWage;
+
+  // Multipliers relative to selected level
+  const levelMultipliers: Record<string, number> = {
+    'Level I': 0.785,
+    'Level II': 1,
+    'Level III': 1.215,
+    'Level IV': 1.43,
+  };
+
+  const selectedMultiplier = levelMultipliers[wageData.wageLevel] ?? 1;
+
+  return ['Level I', 'Level II', 'Level III', 'Level IV'].map(level => {
+    const ratio = levelMultipliers[level] / selectedMultiplier;
+    return {
+      label: level,
+      hourly: hourlyBase * ratio,
+      annual: yearlyBase * ratio,
+    };
+  });
 }
 
 function renderWageReport(ctx: PDFContext, wageData: WageReportData, isFirst: boolean): void {
@@ -61,7 +122,7 @@ function renderWageReport(ctx: PDFContext, wageData: WageReportData, isFirst: bo
   addSectionHeader(ctx, 'Your search returned the following:');
   
   // Create wage results table
-  const tableData = [
+  const tableData: [string, string][] = [
     ['Area Code:', wageData.areaCode || 'N/A'],
     ['Area Title:', wageData.areaName],
     ['County:', wageData.county || 'N/A'],
@@ -69,26 +130,15 @@ function renderWageReport(ctx: PDFContext, wageData: WageReportData, isFirst: bo
     ['OEWS/SOC Title:', wageData.socTitle],
   ];
   
-  // Calculate wage levels (approximation based on prevailing wage)
-  const baseWage = wageData.prevailingWage;
-  const hourlyBase = wageData.prevailingWageUnit === 'Year' ? baseWage / 2080 : baseWage;
-  const yearlyBase = wageData.prevailingWageUnit === 'Year' ? baseWage : baseWage * 2080;
-  
-  // Add wage levels to table
-  const levelMultipliers = {
-    'Level I': 0.785,
-    'Level II': 1,
-    'Level III': 1.215,
-    'Level IV': 1.43,
-  };
-  
-  const selectedLevel = wageData.wageLevel as keyof typeof levelMultipliers;
-  
-  Object.entries(levelMultipliers).forEach(([level, multiplier]) => {
-    const hourly = (hourlyBase * multiplier).toFixed(2);
-    const yearly = Math.round(yearlyBase * multiplier).toLocaleString();
-    const highlight = level === selectedLevel ? ' ← SELECTED' : '';
-    tableData.push([`${level} Wage:`, `$${hourly}/hour - $${yearly}/year${highlight}`]);
+  // Build real level entries
+  const levelEntries = buildLevelEntries(wageData);
+
+  levelEntries.forEach(({ label, hourly, annual }) => {
+    const highlight = label === wageData.wageLevel ? ' ← SELECTED' : '';
+    tableData.push([
+      `${label} Wage:`,
+      `$${hourly.toFixed(2)}/hour - $${Math.round(annual).toLocaleString()}/year${highlight}`,
+    ]);
   });
   
   // Draw table
@@ -98,8 +148,8 @@ function renderWageReport(ctx: PDFContext, wageData: WageReportData, isFirst: bo
   tableData.forEach((row, index) => {
     checkPageBreak(ctx, 8);
     
-    // Check if this is the selected wage level row (exact match)
-    const isSelectedWageLevel = row[0] === `${selectedLevel} Wage:`;
+    // Check if this is the selected wage level row
+    const isSelectedWageLevel = row[0] === `${wageData.wageLevel} Wage:`;
     
     // Highlight selected wage level row with green, otherwise alternate gray
     if (isSelectedWageLevel) {
@@ -170,6 +220,7 @@ export function addPrevailingWageSection(ctx: PDFContext, data: PAFData): void {
     wageLevel: data.wage.wageLevel,
     wageSource: data.wage.wageSource,
     wageSourceDate: data.wage.wageSourceDate,
+    wageLevelData: data.wage.wageLevelData,
   };
   
   // Start new page for primary
@@ -197,10 +248,10 @@ export function addPrevailingWageSection(ctx: PDFContext, data: PAFData): void {
       onetCode: data.job.onetCode,
       onetTitle: data.job.onetTitle,
       prevailingWage: secondaryWage.prevailingWage,
-      prevailingWageUnit: secondaryWage.prevailingWageUnit,
-      wageLevel: secondaryWage.wageLevel,
-      wageSource: secondaryWage.wageSource,
-      wageSourceDate: secondaryWage.wageSourceDate,
+      prevailingWageUnit: secondaryWage.prevailingWageUnit ?? 'Year',
+      wageLevel: secondaryWage.wageLevel ?? 'Level I',
+      wageSource: secondaryWage.wageSource ?? '',
+      wageSourceDate: secondaryWage.wageSourceDate ?? '',
     };
     
     renderWageReport(ctx, secondaryWageData, false);
