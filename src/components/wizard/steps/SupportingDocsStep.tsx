@@ -52,6 +52,10 @@ export interface LCAScanResult {
   willfulViolator?: boolean;
   visaClass?: string;
   totalWorkers?: number;
+  // Section H-4 exemption box verification
+  h1bExemptionChecked?: boolean | null;
+  // LCA filing date for dependency worksheet
+  lcaReceivedDate?: string | null;
 }
 
 export interface SupportingDocs {
@@ -70,22 +74,25 @@ export interface SupportingDocs {
   isCertifiedLCA?: boolean;
   isH1BDependent?: boolean;
 
-  // H-1B Dependency Worksheet
+  // H-1B Dependency Worksheet — stamped with LCA filing date
   totalFTECount?: number;
   totalH1BCount?: number;
   dependencyCalculationDate?: string;
 
   // Exemption type (for H-1B dependent employers)
-  exemptionType?: 'wage' | 'degree' | 'none'; // 'wage' = $60K, 'degree' = Master's, 'none' = non-exempt
+  exemptionType?: 'wage' | 'degree' | 'none';
+
+  // Section H-4 exemption box verified from LCA scan
+  h1bExemptionChecked?: boolean | null;
 
   // Recruitment details (for non-exempt H-1B dependent employers)
   recruitmentStartDate?: string;
   recruitmentEndDate?: string;
-  recruitmentPlatforms?: string; // comma-separated list of platforms
+  recruitmentPlatforms?: string;
   usApplicantsCount?: number;
   nonSelectionReasons?: string;
 
-  // Comparable wage details
+  // Comparable wage details — one of these paths must be explicitly chosen
   comparableWorkersCount?: number;
   comparableWageMin?: number;
   comparableWageMax?: number;
@@ -263,6 +270,17 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
       if (scanData.caseStatus) {
         updateField('isCertifiedLCA', scanData.caseStatus.toLowerCase() === 'certified');
       }
+      // Store H-4 exemption verification result from LCA scan
+      if (scanData.h1bExemptionChecked !== undefined) {
+        updateField('h1bExemptionChecked', scanData.h1bExemptionChecked);
+      }
+      // Auto-populate dependency calculation date from LCA filing date
+      if (scanData.lcaReceivedDate) {
+        updateField('dependencyCalculationDate', scanData.lcaReceivedDate);
+      } else if (scanData.beginDate && !formData.dependencyCalculationDate) {
+        // Fallback: use LCA begin date if received date not available
+        updateField('dependencyCalculationDate', scanData.beginDate);
+      }
 
       if (onScanComplete) {
         onScanComplete(scanData);
@@ -287,6 +305,19 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate comparable wage: must explicitly choose "no comparables" OR provide count + wage range
+    const hasComparableData = formData.noComparableWorkers ||
+      (formData.comparableWorkersCount && formData.comparableWageMin && formData.comparableWageMax);
+    if (!hasComparableData) {
+      toast({
+        title: 'Comparable Wage Required',
+        description: 'Please complete the Comparable Wage section in the H-1B tab: either enter worker count + wage range, or check "No similarly employed workers".',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     onNext(formData as SupportingDocs);
   };
 
@@ -298,10 +329,14 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
     switch (section) {
       case 'lca':
         return !!formData.lcaCaseNumber || !!formData.lcaFile;
-      case 'h1b':
-        return !!formData.totalFTECount && !!formData.totalH1BCount && !!formData.dependencyCalculationDate;
+      case 'h1b': {
+        const hasWorksheet = !!formData.totalFTECount && !!formData.totalH1BCount && !!formData.dependencyCalculationDate;
+        const hasComparable = formData.noComparableWorkers ||
+          (!!formData.comparableWorkersCount && !!formData.comparableWageMin && !!formData.comparableWageMax);
+        return hasWorksheet && !!hasComparable;
+      }
       case 'wage':
-        return !!formData.actualWageMemo && formData.actualWageMemo.length > 50;
+        return true; // Auto-generated, always complete
       case 'notice':
         return !!formData.noticePostingStartDate || !!formData.noticePostingProof;
       case 'benefits':
@@ -310,6 +345,7 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
         return false;
     }
   };
+
 
   return (
     <div className="fade-in">
@@ -568,10 +604,25 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
                                 </Badge>
                               </div>
                             )}
+                            {scanResult.h1bDependent && scanResult.h1bExemptionChecked !== undefined && scanResult.h1bExemptionChecked !== null && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Section H-4 Exemption Box</span>
+                                <Badge variant={scanResult.h1bExemptionChecked ? 'default' : 'destructive'}>
+                                  {scanResult.h1bExemptionChecked ? '✓ Checked' : '✗ Not Checked'}
+                                </Badge>
+                              </div>
+                            )}
+                            {scanResult.lcaReceivedDate && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">LCA Filing Date</span>
+                                <span className="font-medium">{scanResult.lcaReceivedDate}</span>
+                              </div>
+                            )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-3">
                             Extracted data has been applied to your wizard fields. Review and adjust as needed.
                           </p>
+
                         </CardContent>
                       </Card>
                     )}
@@ -783,25 +834,40 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
                 </Card>
               )}
 
-              {/* Comparable Wage Details */}
-              <Card>
+              {/* Comparable Wage Details — Required */}
+              <Card className={
+                !formData.noComparableWorkers && !(formData.comparableWorkersCount && formData.comparableWageMin && formData.comparableWageMax)
+                  ? 'border-warning/50'
+                  : ''
+              }>
                 <CardHeader>
-                  <CardTitle className="text-base">Comparable Wage Details</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    Comparable Wage Details
+                    <Badge variant="secondary" className="text-xs font-normal bg-warning/15 text-warning border-warning/30">Required</Badge>
+                  </CardTitle>
                   <CardDescription>
-                    Document wages paid to similarly employed U.S. workers per 20 CFR § 655.731
+                    Required per 20 CFR § 655.731 — document wages of similarly employed U.S. workers, or confirm none exist
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-border">
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
                     <input
                       type="checkbox"
                       id="noComparableWorkers"
                       checked={formData.noComparableWorkers ?? false}
-                      onChange={(e) => updateField('noComparableWorkers', e.target.checked)}
+                      onChange={(e) => {
+                        updateField('noComparableWorkers', e.target.checked);
+                        if (e.target.checked) {
+                          updateField('comparableWorkersCount', undefined);
+                          updateField('comparableWageMin', undefined);
+                          updateField('comparableWageMax', undefined);
+                        }
+                      }}
                       className="h-4 w-4 rounded border-border accent-primary"
                     />
                     <Label htmlFor="noComparableWorkers" className="cursor-pointer">
-                      No similarly employed U.S. workers exist in this position at this company
+                      <span className="font-medium">No similarly employed U.S. workers exist in this position at this company</span>
+                      <p className="text-xs text-muted-foreground font-normal mt-0.5">This is the first H-1B worker hired into this role — no internal comparables available</p>
                     </Label>
                   </div>
                   {!formData.noComparableWorkers && (
@@ -850,6 +916,16 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
                         </div>
                       </div>
                     </div>
+                  )}
+                  {!formData.noComparableWorkers && !(formData.comparableWorkersCount && formData.comparableWageMin && formData.comparableWageMax) && (
+                    <p className="text-xs text-warning bg-warning/10 p-2 rounded">
+                      ⚠ Required: Enter the count and wage range of similarly employed workers, or check the box above if none exist.
+                    </p>
+                  )}
+                  {formData.noComparableWorkers && (
+                    <p className="text-xs text-success bg-success/10 p-2 rounded">
+                      ✓ Confirmed: No comparable workers. This will be noted in the Actual Wage Determination.
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -1019,13 +1095,19 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
                 )}
 
                 <div className="space-y-2">
-                  <Label>Posting Proof (Photo/Screenshot)</Label>
+                  <div className="flex items-center gap-2">
+                    <Label>Posting Proof (Photo/Screenshot)</Label>
+                    <Badge variant="secondary" className="text-xs font-normal">Optional</Badge>
+                  </div>
                   <FileUploadZone
-                    label="Upload proof of notice posting"
+                    label="Upload proof of notice posting (photo, affidavit, or screenshot)"
                     file={formData.noticePostingProof || null}
                     onFileChange={(file) => updateField('noticePostingProof', file)}
                     onRemove={() => updateField('noticePostingProof', null)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Recommended for audit defense. Retain the original proof internally even if not uploaded here.
+                  </p>
                 </div>
 
                 <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">

@@ -95,17 +95,22 @@ Deno.serve(async (req) => {
   "secondaryWorksiteName": "string or null - the name of the secondary entity / place of employment at the SECONDARY worksite (page 7 / Appendix A, question 3, the legal business name of the secondary entity where the worker is placed)",
 
   "h1bDependent": "boolean - whether the employer is H-1B dependent",
-  "willfulViolator": "boolean - whether the employer is a willful violator"
+  "willfulViolator": "boolean - whether the employer is a willful violator",
+  "h1bExemptionChecked": "boolean or null - whether the H-1B exemption box (Section H, Item H-4) is checked on the LCA, indicating the worker is exempt from displacement/recruitment attestations. Return true if H-4 is checked, false if not, null if not determinable.",
+  "lcaReceivedDate": "string or null - the date the LCA was received/filed with DOL, in YYYY-MM-DD format (often shown as 'Date Received' near top of form)"
 }
 
 IMPORTANT:
 - Carefully check ALL pages including page 3 (Section F - primary worksite) and page 7 or Appendix A (additional/secondary worksites)
+- For h1bExemptionChecked: look at Section H on the LCA form - find Item H-4 which is the exemption attestation box
 - Return ONLY the JSON object, no markdown code fences, no explanation text
 - Use null for any field that cannot be determined from the document
 - Dates must be in YYYY-MM-DD format
 - Wage amounts must be plain numbers (no currency symbols or commas)
 - Boolean fields must be true or false (not strings)
-- For secondary worksite, check the "Additional Worksite" or "Appendix A" section`;
+- For secondary worksite, check the "Additional Worksite" or "Appendix A" section
+
+- lcaReceivedDate can often be found as a stamped date or 'Received' field at the top of certified LCA copies`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
