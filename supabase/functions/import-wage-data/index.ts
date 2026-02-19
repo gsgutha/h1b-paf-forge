@@ -234,11 +234,27 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Use larger batches for efficiency
-    const batchSize = 1000;
+    // Use larger batches and parallel inserts for efficiency
+    const batchSize = 2000;
     let totalInserted = 0;
     let batch: WageRecord[] = [];
     let skipped = 0;
+    const pendingUpserts: Promise<void>[] = [];
+
+    const flushBatch = async (records: WageRecord[]) => {
+      const { error: upsertError } = await supabase
+        .from('oflc_prevailing_wages')
+        .upsert(records, { onConflict: 'wage_year,area_code,soc_code' });
+
+      if (upsertError) {
+        console.error(`Batch upsert error:`, upsertError.message);
+      } else {
+        totalInserted += records.length;
+        if (totalInserted % 50000 === 0) {
+          console.log(`Upserted ${totalInserted} records...`);
+        }
+      }
+    };
 
     // Start from skipRows + 1 (accounting for header)
     const startRow = 1 + skipRows;
@@ -286,33 +302,21 @@ Deno.serve(async (req) => {
       batch.push(record);
 
       if (batch.length >= batchSize) {
-        const { error: insertError } = await supabase
-          .from('oflc_prevailing_wages')
-          .insert(batch);
-
-        if (insertError) {
-          console.error(`Batch insert error at row ${i}:`, insertError);
-        } else {
-          totalInserted += batch.length;
-          if (totalInserted % 10000 === 0) {
-            console.log(`Inserted ${totalInserted} records...`);
-          }
-        }
+        // Run up to 5 upserts in parallel
+        pendingUpserts.push(flushBatch([...batch]));
         batch = [];
+        if (pendingUpserts.length >= 5) {
+          await Promise.all(pendingUpserts.splice(0));
+        }
       }
     }
 
     // Insert remaining records
     if (batch.length > 0) {
-      const { error: insertError } = await supabase
-        .from('oflc_prevailing_wages')
-        .insert(batch);
-
-      if (insertError) {
-        console.error('Final batch insert error:', insertError);
-      } else {
-        totalInserted += batch.length;
-      }
+      pendingUpserts.push(flushBatch([...batch]));
+    }
+    if (pendingUpserts.length > 0) {
+      await Promise.all(pendingUpserts);
     }
 
     console.log(`Import complete! Total records: ${totalInserted}, Skipped: ${skipped}`);
