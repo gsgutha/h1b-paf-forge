@@ -551,6 +551,7 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
           <WageInfoStep 
             data={pafData.wage || {}} 
             worksite={pafData.worksite}
+            job={pafData.job}
             onNext={handleWageNext}
             onBack={goBack}
           />
