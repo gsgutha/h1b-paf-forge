@@ -82,6 +82,17 @@ export interface SecondaryWageInfo {
   areaName?: string;
 }
 
+export interface WageLevelData {
+  levelI_hourly: number | null;
+  levelI_annual: number | null;
+  levelII_hourly: number | null;
+  levelII_annual: number | null;
+  levelIII_hourly: number | null;
+  levelIII_annual: number | null;
+  levelIV_hourly: number | null;
+  levelIV_annual: number | null;
+}
+
 export interface WageInfo {
   prevailingWage: number;
   prevailingWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
@@ -90,6 +101,8 @@ export interface WageInfo {
   wageSourceDate: string;
   actualWage: number;
   actualWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
+  // All 4 wage levels from DB lookup (used in PDF generation)
+  wageLevelData?: WageLevelData;
   // Secondary worksite wage (when in different county)
   hasSecondaryWage?: boolean;
   secondaryWage?: SecondaryWageInfo;
