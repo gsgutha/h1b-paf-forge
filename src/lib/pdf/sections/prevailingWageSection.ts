@@ -97,8 +97,50 @@ function renderWageReport(ctx: PDFContext, wageData: WageReportData, isFirst: bo
   
   addPageHeader(ctx, `Prevailing Wage Rate and Source - ${wageData.locationLabel}`);
   
-  ctx.yPos += 10;
-  addCenteredTitle(ctx, 'FLC Wage Results', 14);
+  ctx.yPos += 6;
+
+  // FLAG.DOL.GOV branded header box
+  const headerBoxY = ctx.yPos;
+  const headerBoxH = 22;
+  doc.setFillColor(13, 47, 99); // DOL navy blue
+  doc.rect(margin, headerBoxY, pageWidth - margin * 2, headerBoxH, 'F');
+
+  // DOL seal circle (simulated)
+  doc.setFillColor(255, 255, 255);
+  doc.circle(margin + 12, headerBoxY + headerBoxH / 2, 8, 'F');
+  doc.setFillColor(13, 47, 99);
+  doc.circle(margin + 12, headerBoxY + headerBoxH / 2, 7, 'F');
+  doc.setFillColor(255, 255, 255);
+  doc.circle(margin + 12, headerBoxY + headerBoxH / 2, 5, 'F');
+  doc.setFillColor(13, 47, 99);
+  doc.setFontSize(5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('DOL', margin + 12, headerBoxY + headerBoxH / 2 + 1.5, { align: 'center' });
+
+  // FLAG.DOL.GOV text
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('FLAG', margin + 23, headerBoxY + 10);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text('.DOL.GOV', margin + 37, headerBoxY + 10);
+
+  // FLC Wage Results label
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('FLC Wage Results', pageWidth / 2, headerBoxY + headerBoxH / 2 + 2, { align: 'center' });
+
+  // Subtitle
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(200, 215, 235);
+  doc.text('Foreign Labor Certification Data Center', pageWidth / 2, headerBoxY + headerBoxH / 2 + 8, { align: 'center' });
+
+  doc.setTextColor(...PDF_CONFIG.colors.black);
+  ctx.yPos = headerBoxY + headerBoxH + 6;
   
   ctx.yPos += 8;
   

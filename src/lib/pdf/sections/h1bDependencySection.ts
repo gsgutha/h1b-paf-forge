@@ -198,7 +198,7 @@ export async function addH1BDependencySection(
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         checkPageBreak(ctx, 8);
-        doc.text(`• Wage Exemption: Annual wage offered ${formatWageCurrency(annualizedWage)} ≥ $60,000 threshold ✓`, margin + 5, ctx.yPos);
+        doc.text(`• Wage Exemption: Annual wage offered ${formatWageCurrency(annualizedWage)} meets or exceeds $60,000 threshold [MEETS]`, margin + 5, ctx.yPos);
         ctx.yPos += 6;
       } else {
         const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, the H-1B nonimmigrant worker named in this LCA qualifies as an "exempt" H-1B nonimmigrant under 20 CFR § 655.737 by virtue of holding a Master's degree or its equivalent in a specialty related to the employment, as specified in INA § 212(n)(3)(B)(ii).`;
