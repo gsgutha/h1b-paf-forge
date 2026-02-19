@@ -133,37 +133,24 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: false, error: 'Could not load any area name mappings from the ZIP file' }), { headers: corsHeaders });
     }
 
-    // Step 3: Batch UPDATE area_name for this wage_year where area_name is blank
-    let totalUpdated = 0;
-    const updateBatches = Array.from(mergedMap.entries());
-    const batchSize = 100;
+    // Step 3: Single RPC call to update all area_names at once (much faster than individual UPDATEs)
+    const areaCodes = Array.from(mergedMap.keys());
+    const areaNames = areaCodes.map(code => mergedMap.get(code)!);
 
-    for (let i = 0; i < updateBatches.length; i += batchSize) {
-      const chunk = updateBatches.slice(i, i + batchSize);
-      
-      // Build a CASE statement update for efficiency
-      await Promise.all(
-        chunk.map(async ([areaCode, areaName]) => {
-          const { data, error } = await supabase
-            .from('oflc_prevailing_wages')
-            .update({ area_name: areaName })
-            .eq('wage_year', wageYear)
-            .eq('area_code', areaCode);
+    console.log(`Calling patch_area_names for ${areaCodes.length} area codes in ${wageYear}...`);
+    const { data: updatedRows, error: rpcError } = await supabase.rpc('patch_area_names', {
+      p_wage_year: wageYear,
+      p_area_codes: areaCodes,
+      p_area_names: areaNames,
+    });
 
-          if (error) {
-            console.error(`Update error for area ${areaCode}:`, error.message);
-          } else {
-            totalUpdated++;
-          }
-        })
-      );
-
-      if ((i + batchSize) % 1000 === 0) {
-        console.log(`Updated ${totalUpdated} area codes so far...`);
-      }
+    if (rpcError) {
+      console.error('RPC error:', rpcError);
+      throw new Error(`patch_area_names failed: ${rpcError.message}`);
     }
 
-    console.log(`Patch complete! Updated area_name for ${totalUpdated} area codes in ${wageYear}`);
+    const totalUpdated = updatedRows as number;
+    console.log(`Patch complete! Updated ${totalUpdated} rows for ${wageYear}`);
 
     return new Response(JSON.stringify({
       success: true,

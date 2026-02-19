@@ -424,7 +424,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      patch_area_names: {
+        Args: {
+          p_area_codes: string[]
+          p_area_names: string[]
+          p_wage_year: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
