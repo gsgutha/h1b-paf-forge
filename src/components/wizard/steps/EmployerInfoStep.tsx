@@ -1,7 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building2, PenTool } from 'lucide-react';
+import { Building2, PenTool, MapPin } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +16,27 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { AUTHORIZED_SIGNATORIES, getSignatoryById } from '@/config/signatories';
 import type { Employer } from '@/types/paf';
+
+const PRESET_ADDRESSES = [
+  {
+    id: 'fulshear',
+    label: '5757 Flewellen Oaks Ln, Suite 704 – Fulshear, TX 77441',
+    address1: '5757 Flewellen Oaks Ln',
+    address2: 'Suite 704',
+    city: 'Fulshear',
+    state: 'Texas',
+    postalCode: '77441',
+  },
+  {
+    id: 'houston',
+    label: '16001 Park Ten PL, Suite 400L – Houston, TX 77084',
+    address1: '16001 Park Ten PL',
+    address2: 'Suite 400L',
+    city: 'Houston',
+    state: 'Texas',
+    postalCode: '77084',
+  },
+];
 
 const US_STATES = [
   'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
@@ -127,6 +149,38 @@ export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps
               className="mt-1.5"
               placeholder="Doing Business As name"
             />
+          </div>
+
+          {/* Preset Address Quick-Fill */}
+          <div className="md:col-span-2">
+            <Label className="flex items-center gap-1.5 mb-2">
+              <MapPin className="h-3.5 w-3.5 text-accent" />
+              Quick-Fill Employer Address
+            </Label>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {PRESET_ADDRESSES.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => {
+                    setValue('address1', preset.address1);
+                    setValue('address2', preset.address2);
+                    setValue('city', preset.city);
+                    setValue('state', preset.state);
+                    setValue('postalCode', preset.postalCode);
+                  }}
+                  className={`text-left rounded-lg border px-4 py-3 text-sm transition-colors hover:border-primary hover:bg-primary/5 ${
+                    watch('address1') === preset.address1 && watch('city') === preset.city
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border'
+                  }`}
+                >
+                  <p className="font-medium text-foreground">{preset.address1}, {preset.address2}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{preset.city}, {preset.state} {preset.postalCode}</p>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">Select a location above to auto-fill, or type manually below.</p>
           </div>
 
           <div className="md:col-span-2">
