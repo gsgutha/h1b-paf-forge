@@ -1,7 +1,8 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { DollarSign, Info, MapPin, Building2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { DollarSign, Info, MapPin, Building2, Search, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +26,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { WageInfo, WorksiteLocation } from '@/types/paf';
+import { Badge } from '@/components/ui/badge';
+import type { WageInfo, WorksiteLocation, JobDetails } from '@/types/paf';
+import { supabase } from '@/integrations/supabase/client';
 
 const secondaryWageSchema = z.object({
   prevailingWage: z.number().min(0.01, 'Prevailing wage is required'),
@@ -47,7 +50,6 @@ const wageSchema = z.object({
   actualWage: z.number().min(0.01, 'Actual wage is required'),
   actualWageUnit: z.enum(['Hour', 'Week', 'Bi-Weekly', 'Month', 'Year']),
   hasSecondaryWage: z.boolean().optional(),
-  // Secondary wage is optional - only validated when hasSecondaryWage is true
   secondaryWage: z.object({
     prevailingWage: z.number().optional(),
     prevailingWageUnit: z.enum(['Hour', 'Week', 'Bi-Weekly', 'Month', 'Year']).optional(),
@@ -58,7 +60,6 @@ const wageSchema = z.object({
     areaName: z.string().optional(),
   }).optional(),
 }).superRefine((data, ctx) => {
-  // Only validate secondary wage fields when hasSecondaryWage is true
   if (data.hasSecondaryWage) {
     if (!data.secondaryWage?.prevailingWage || data.secondaryWage.prevailingWage < 0.01) {
       ctx.addIssue({
@@ -91,14 +92,245 @@ const wageLevelDescriptions = {
   'Level IV': 'Fully competent - 67th percentile wage',
 };
 
+const WAGE_YEARS = [
+  '2025-2026',
+  '2024-2025',
+  '2023-2024',
+  '2022-2023',
+  '2021-2022',
+  '2020-2021',
+  '2019-2020',
+];
+
+interface WageRecord {
+  area_code: string;
+  area_name: string;
+  soc_code: string;
+  soc_title: string;
+  level_1_hourly: number | null;
+  level_1_annual: number | null;
+  level_2_hourly: number | null;
+  level_2_annual: number | null;
+  level_3_hourly: number | null;
+  level_3_annual: number | null;
+  level_4_hourly: number | null;
+  level_4_annual: number | null;
+  mean_hourly: number | null;
+  mean_annual: number | null;
+}
+
+interface WageLevelRow {
+  level: 'Level I' | 'Level II' | 'Level III' | 'Level IV';
+  hourly: number | null;
+  annual: number | null;
+}
+
+function getWageLevelRows(record: WageRecord): WageLevelRow[] {
+  return [
+    { level: 'Level I', hourly: record.level_1_hourly, annual: record.level_1_annual },
+    { level: 'Level II', hourly: record.level_2_hourly, annual: record.level_2_annual },
+    { level: 'Level III', hourly: record.level_3_hourly, annual: record.level_3_annual },
+    { level: 'Level IV', hourly: record.level_4_hourly, annual: record.level_4_annual },
+  ];
+}
+
+interface PrevailingWageLookupProps {
+  socCode?: string;
+  areaCode?: string;
+  areaName?: string;
+  onSelect: (params: {
+    wageLevel: 'Level I' | 'Level II' | 'Level III' | 'Level IV';
+    prevailingWage: number;
+    prevailingWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
+    wageYear: string;
+  }) => void;
+  label?: string;
+}
+
+function PrevailingWageLookup({ socCode, areaCode, areaName, onSelect, label = 'Primary' }: PrevailingWageLookupProps) {
+  const [wageYear, setWageYear] = useState<string>('2024-2025');
+  const [loading, setLoading] = useState(false);
+  const [wageRecord, setWageRecord] = useState<WageRecord | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+
+  const canLookup = !!socCode && !!areaCode;
+
+  const handleLookup = async () => {
+    if (!canLookup) return;
+    setLoading(true);
+    setError(null);
+    setWageRecord(null);
+    setSelectedLevel(null);
+
+    // Normalize SOC code: strip trailing .00 or similar suffixes
+    const normalizedSoc = socCode.replace(/\..*$/, '');
+
+    const { data, error: dbError } = await supabase
+      .from('oflc_prevailing_wages')
+      .select('*')
+      .eq('wage_year', wageYear)
+      .eq('area_code', areaCode)
+      .ilike('soc_code', `${normalizedSoc}%`)
+      .limit(1)
+      .maybeSingle();
+
+    setLoading(false);
+
+    if (dbError) {
+      setError('Database error: ' + dbError.message);
+      return;
+    }
+
+    if (!data) {
+      setError(`No wage data found for SOC ${normalizedSoc} in area ${areaCode} for ${wageYear}. Please enter manually.`);
+      return;
+    }
+
+    setWageRecord(data as WageRecord);
+  };
+
+  // Auto-lookup when area code or soc code changes
+  useEffect(() => {
+    if (canLookup) {
+      handleLookup();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socCode, areaCode, wageYear]);
+
+  const handleSelectLevel = (row: WageLevelRow) => {
+    if (!row.annual) return;
+    setSelectedLevel(row.level);
+    onSelect({
+      wageLevel: row.level,
+      prevailingWage: row.annual,
+      prevailingWageUnit: 'Year',
+      wageYear,
+    });
+  };
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <Search className="h-4 w-4 text-primary" />
+        <span className="text-sm font-semibold text-foreground">
+          OFLC Prevailing Wage Lookup — {label}
+        </span>
+        {!canLookup && (
+          <Badge variant="outline" className="text-xs text-muted-foreground">
+            Area code required from Worksite step
+          </Badge>
+        )}
+      </div>
+
+      {canLookup && (
+        <>
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <Label className="text-xs text-muted-foreground">SOC Code</Label>
+              <div className="text-sm font-mono font-medium text-foreground">{socCode}</div>
+            </div>
+            <div className="flex-1">
+              <Label className="text-xs text-muted-foreground">Area Code</Label>
+              <div className="text-sm font-mono font-medium text-foreground">{areaCode}</div>
+            </div>
+            {areaName && (
+              <div className="flex-2">
+                <Label className="text-xs text-muted-foreground">Area</Label>
+                <div className="text-sm font-medium text-foreground truncate max-w-[200px]">{areaName}</div>
+              </div>
+            )}
+            <div className="w-40">
+              <Label className="text-xs text-muted-foreground">Wage Year</Label>
+              <Select value={wageYear} onValueChange={setWageYear}>
+                <SelectTrigger className="h-8 text-xs mt-0.5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {WAGE_YEARS.map(y => (
+                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Looking up prevailing wages...
+            </div>
+          )}
+
+          {error && (
+            <div className="text-sm text-destructive bg-destructive/10 rounded p-2">{error}</div>
+          )}
+
+          {wageRecord && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground mb-2">
+                Click a row to auto-fill the prevailing wage fields below:
+              </p>
+              <div className="rounded border border-border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted text-muted-foreground text-xs">
+                      <th className="text-left px-3 py-2">Level</th>
+                      <th className="text-right px-3 py-2">Hourly</th>
+                      <th className="text-right px-3 py-2">Annual</th>
+                      <th className="px-3 py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getWageLevelRows(wageRecord).map((row) => {
+                      const isSelected = selectedLevel === row.level;
+                      return (
+                        <tr
+                          key={row.level}
+                          className={`border-t border-border cursor-pointer transition-colors ${
+                            isSelected
+                              ? 'bg-primary/10 text-primary'
+                              : 'hover:bg-accent/5'
+                          }`}
+                          onClick={() => handleSelectLevel(row)}
+                        >
+                          <td className="px-3 py-2 font-medium">{row.level}</td>
+                          <td className="px-3 py-2 text-right font-mono">
+                            {row.hourly != null ? `$${row.hourly.toFixed(2)}/hr` : '—'}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono">
+                            {row.annual != null ? `$${row.annual.toLocaleString()}/yr` : '—'}
+                          </td>
+                          <td className="px-3 py-2 text-center w-10">
+                            {isSelected && <CheckCircle2 className="h-4 w-4 text-primary inline" />}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Source: FLAG.gov OFLC OES — {wageYear}
+                {wageRecord.area_name ? ` · ${wageRecord.area_name}` : ''}
+              </p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 interface WageInfoStepProps {
   data: Partial<WageInfo>;
   worksite?: WorksiteLocation;
+  job?: Partial<JobDetails>;
   onNext: (data: WageInfo) => void;
   onBack: () => void;
 }
 
-export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepProps) {
+export function WageInfoStep({ data, worksite, job, onNext, onBack }: WageInfoStepProps) {
   const hasSecondaryWorksite = worksite?.hasSecondaryWorksite && worksite?.secondaryWorksite;
   const primaryCounty = worksite?.county || '';
   const secondaryCounty = worksite?.secondaryWorksite?.county || '';
@@ -135,7 +367,6 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
   });
 
   const onSubmit = (formData: WageInfo) => {
-    // Clean up secondary wage data if not enabled
     if (!formData.hasSecondaryWage) {
       formData.secondaryWage = undefined;
     }
@@ -149,17 +380,42 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
   const prevailingWageUnit = watch('prevailingWageUnit');
   const actualWageUnit = watch('actualWageUnit');
   
-  // Check compliance: actual wage must be >= MAX of both prevailing wages
   const maxPrevailingWage = hasSecondaryWage && secondaryPrevailingWage 
     ? Math.max(prevailingWage || 0, secondaryPrevailingWage) 
     : prevailingWage;
   const isWageCompliant = actualWage >= maxPrevailingWage;
-  
-  // Check if wage units are not Year (Rule 4: Unit Consistency)
   const hasNonYearUnit = prevailingWageUnit !== 'Year' || actualWageUnit !== 'Year';
-  
-  // Block PAF generation if wage is non-compliant
   const canProceed = isWageCompliant || actualWage === 0 || prevailingWage === 0;
+
+  // Lookup handlers
+  const handlePrimaryLookupSelect = ({ wageLevel, prevailingWage, prevailingWageUnit, wageYear }: {
+    wageLevel: 'Level I' | 'Level II' | 'Level III' | 'Level IV';
+    prevailingWage: number;
+    prevailingWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
+    wageYear: string;
+  }) => {
+    setValue('wageLevel', wageLevel);
+    setValue('prevailingWage', prevailingWage);
+    setValue('prevailingWageUnit', prevailingWageUnit);
+    setValue('wageSource', 'OES');
+    // Set source date to July 1 of the first year in the range (e.g., 2024-2025 → 2024-07-01)
+    const startYear = wageYear.split('-')[0];
+    setValue('wageSourceDate', `${startYear}-07-01`);
+  };
+
+  const handleSecondaryLookupSelect = ({ wageLevel, prevailingWage, prevailingWageUnit, wageYear }: {
+    wageLevel: 'Level I' | 'Level II' | 'Level III' | 'Level IV';
+    prevailingWage: number;
+    prevailingWageUnit: 'Hour' | 'Week' | 'Bi-Weekly' | 'Month' | 'Year';
+    wageYear: string;
+  }) => {
+    setValue('secondaryWage.wageLevel', wageLevel);
+    setValue('secondaryWage.prevailingWage', prevailingWage);
+    setValue('secondaryWage.prevailingWageUnit', prevailingWageUnit);
+    setValue('secondaryWage.wageSource', 'OES');
+    const startYear = wageYear.split('-')[0];
+    setValue('secondaryWage.wageSourceDate', `${startYear}-07-01`);
+  };
 
   return (
     <div className="fade-in">
@@ -202,7 +458,16 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
               </CardDescription>
             )}
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-5">
+            {/* Lookup Panel */}
+            <PrevailingWageLookup
+              socCode={job?.socCode}
+              areaCode={worksite?.areaCode}
+              areaName={worksite?.areaName}
+              onSelect={handlePrimaryLookupSelect}
+              label="Primary Worksite"
+            />
+
             <div className="grid gap-6 md:grid-cols-2">
               <div>
                 <Label htmlFor="prevailingWage">Prevailing Wage Rate *</Label>
@@ -356,7 +621,16 @@ export function WageInfoStep({ data, worksite, onNext, onBack }: WageInfoStepPro
             </CardHeader>
             
             {hasSecondaryWage && (
-              <CardContent>
+              <CardContent className="space-y-5">
+                {/* Secondary Lookup Panel */}
+                <PrevailingWageLookup
+                  socCode={job?.socCode}
+                  areaCode={worksite?.secondaryWorksite ? (worksite as any).secondaryAreaCode : undefined}
+                  areaName={worksite?.secondaryWorksite?.county ? `${worksite.secondaryWorksite.city}, ${worksite.secondaryWorksite.state}` : undefined}
+                  onSelect={handleSecondaryLookupSelect}
+                  label="Secondary Worksite"
+                />
+
                 <div className="grid gap-6 md:grid-cols-2">
                   <div>
                     <Label htmlFor="secondaryPrevailingWage">Prevailing Wage Rate *</Label>
