@@ -240,12 +240,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Use larger batches and parallel inserts for efficiency
-    const batchSize = 2000;
+    // Use smaller batches and sequential inserts to avoid DB statement timeouts
+    const batchSize = 500;
     let totalInserted = 0;
     let batch: WageRecord[] = [];
     let skipped = 0;
-    const pendingUpserts: Promise<void>[] = [];
 
     const flushBatch = async (records: WageRecord[]) => {
       const { error: upsertError } = await supabase
@@ -256,7 +255,7 @@ Deno.serve(async (req) => {
         console.error(`Batch upsert error:`, upsertError.message);
       } else {
         totalInserted += records.length;
-        if (totalInserted % 50000 === 0) {
+        if (totalInserted % 10000 === 0) {
           console.log(`Upserted ${totalInserted} records...`);
         }
       }
@@ -308,21 +307,14 @@ Deno.serve(async (req) => {
       batch.push(record);
 
       if (batch.length >= batchSize) {
-        // Run up to 5 upserts in parallel
-        pendingUpserts.push(flushBatch([...batch]));
+        await flushBatch([...batch]);
         batch = [];
-        if (pendingUpserts.length >= 5) {
-          await Promise.all(pendingUpserts.splice(0));
-        }
       }
     }
 
     // Insert remaining records
     if (batch.length > 0) {
-      pendingUpserts.push(flushBatch([...batch]));
-    }
-    if (pendingUpserts.length > 0) {
-      await Promise.all(pendingUpserts);
+      await flushBatch([...batch]);
     }
 
     console.log(`Import complete! Total records: ${totalInserted}, Skipped: ${skipped}`);
