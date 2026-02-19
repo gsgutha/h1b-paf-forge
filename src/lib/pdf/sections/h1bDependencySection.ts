@@ -128,12 +128,20 @@ export async function addH1BDependencySection(
 
   if (supportingDocs?.totalFTECount && supportingDocs?.totalH1BCount) {
     const pct = ((supportingDocs.totalH1BCount / supportingDocs.totalFTECount) * 100).toFixed(1);
+    const calcDate = supportingDocs.dependencyCalculationDate || '—';
     const worksheetRows = [
       ['Total Full-Time Equivalent (FTE) Employees:', String(supportingDocs.totalFTECount)],
       ['Total H-1B Workers Currently Employed:', String(supportingDocs.totalH1BCount)],
       ['H-1B Percentage of Workforce:', `${pct}%`],
-      ['Date Calculation Performed:', supportingDocs.dependencyCalculationDate || '—'],
+      ['Calculation Date (as of LCA Filing):', calcDate],
     ];
+    // Show H-4 exemption verification if available
+    if (supportingDocs.h1bExemptionChecked !== undefined && supportingDocs.h1bExemptionChecked !== null) {
+      worksheetRows.push([
+        'Section H-4 Exemption Box (from LCA):',
+        supportingDocs.h1bExemptionChecked ? 'Checked ✓ (Worker is Exempt)' : 'Not Checked (Worker is Non-Exempt)',
+      ]);
+    }
     doc.setFontSize(10);
     worksheetRows.forEach(([label, value]) => {
       checkPageBreak(ctx, 8);

@@ -364,6 +364,22 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
         ? (pafData.supportingDocs?.isCertifiedLCA === false ? 'in_process' : 'certified')
         : 'certified';
 
+      // Upload posting proof file if provided (optional)
+      let noticePostingProofPath: string | null = null;
+      if (pafData.supportingDocs?.noticePostingProof) {
+        const proofFile = pafData.supportingDocs.noticePostingProof;
+        const ext = proofFile.name.split('.').pop() || 'pdf';
+        const filePath = `posting-proofs/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('paf-documents')
+          .upload(filePath, proofFile, { contentType: proofFile.type });
+        if (!uploadError) {
+          noticePostingProofPath = filePath;
+        } else {
+          console.warn('Posting proof upload failed (non-fatal):', uploadError.message);
+        }
+      }
+
       const { data: created, error: insertError } = await supabase
         .from('paf_records')
         .insert({
@@ -428,10 +444,10 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
           notice_posting_location3: pafData.supportingDocs?.noticePostingLocation3 || null,
           notice_posting_location4: pafData.supportingDocs?.noticePostingLocation4 || null,
 
-          // Optional file paths (not yet persisted to storage)
+          // File paths
           lca_file_path: null,
           actual_wage_memo_path: null,
-          notice_posting_proof_path: null,
+          notice_posting_proof_path: noticePostingProofPath,
           benefits_comparison_path: null,
         })
         .select('id')
