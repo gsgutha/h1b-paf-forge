@@ -27,11 +27,27 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ success: false, error: 'Auth required' }), { status: 401, headers: corsHeaders });
-    }
+    const adminKey = req.headers.get('x-admin-key');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const isAdminKeyAuth = adminKey && lovableApiKey && adminKey === lovableApiKey;
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    
+    if (!isAdminKeyAuth) {
+      if (!authHeader?.startsWith('Bearer ')) {
+        return new Response(JSON.stringify({ success: false, error: 'Auth required' }), { status: 401, headers: corsHeaders });
+      }
+      const token = authHeader.replace('Bearer ', '');
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+      const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
+      const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims) {
+        return new Response(JSON.stringify({ success: false, error: 'Invalid authentication' }), { status: 401, headers: corsHeaders });
+      }
+    }
+
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
