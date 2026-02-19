@@ -36,14 +36,14 @@ export function addCoverPage(
   
   ctx.yPos += 10;
   doc.setFontSize(11);
-  const worksiteAddress = `Primary Worksite: ${data.worksite.address1}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`;
+  const worksiteAddress = `Primary Worksite: ${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`;
   doc.text(worksiteAddress, pageWidth / 2, ctx.yPos, { align: 'center' });
   
   // Secondary worksite if present
   if (data.worksite.hasSecondaryWorksite && data.worksite.secondaryWorksite) {
     ctx.yPos += 8;
     doc.setFontSize(10);
-    const secondaryAddress = `Secondary Worksite: ${data.worksite.secondaryWorksite.address1}, ${data.worksite.secondaryWorksite.city}, ${data.worksite.secondaryWorksite.state} ${data.worksite.secondaryWorksite.postalCode}`;
+    const secondaryAddress = `Secondary Worksite: ${data.worksite.secondaryWorksite.address1}${data.worksite.secondaryWorksite.address2 ? ', ' + data.worksite.secondaryWorksite.address2 : ''}, ${data.worksite.secondaryWorksite.city}, ${data.worksite.secondaryWorksite.state} ${data.worksite.secondaryWorksite.postalCode}`;
     doc.text(secondaryAddress, pageWidth / 2, ctx.yPos, { align: 'center' });
   }
   

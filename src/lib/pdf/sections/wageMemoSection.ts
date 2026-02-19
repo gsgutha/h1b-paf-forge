@@ -129,7 +129,7 @@ export async function addWageMemoSection(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   
-  const introPara = `This Actual Wage Determination is prepared for the position of ${data.job.jobTitle} (SOC ${data.job.socCode}) in accordance with 20 CFR § 655.731 and the Company's Actual Wage Standards policy. This determination applies specifically to ${employeeName} for employment at ${data.worksite.worksiteName ? data.worksite.worksiteName + ', ' : ''}${data.worksite.address1}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`;
+  const introPara = `This Actual Wage Determination is prepared for the position of ${data.job.jobTitle} (SOC ${data.job.socCode}) in accordance with 20 CFR § 655.731 and the Company's Actual Wage Standards policy. This determination applies specifically to ${employeeName} for employment at ${data.worksite.worksiteName ? data.worksite.worksiteName + ', ' : ''}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`;
   addParagraph(ctx, introPara);
   
   ctx.yPos += 5;
