@@ -94,8 +94,11 @@ export async function addWageMemoSection(
   
   ctx.yPos += 10;
   
-  // Employee name for personalization
-  const employeeName = data.employer.employeeName || 'the H-1B worker';
+  // Multi-worker LCA: use position-based language; single-worker: use name
+  const isMultiWorker = (data.job.workersNeeded ?? 1) > 1;
+  const employeeName = isMultiWorker
+    ? 'the H-1B worker(s) covered under this LCA'
+    : (data.employer.employeeName || 'the H-1B worker');
   
   // Position Identification Box
   doc.setFillColor(...PDF_CONFIG.colors.lightGray);
@@ -118,7 +121,7 @@ export async function addWageMemoSection(
     doc.text(`O*NET Code: ${data.job.onetCode}${data.job.onetTitle ? ' - ' + data.job.onetTitle : ''}`, margin + 5, ctx.yPos);
     ctx.yPos += 6;
   }
-  doc.text(`Worker: ${employeeName}`, margin + 5, ctx.yPos);
+  doc.text(isMultiWorker ? `Workers: All H-1B workers covered under this LCA (${data.job.workersNeeded} positions)` : `Worker: ${employeeName}`, margin + 5, ctx.yPos);
   ctx.yPos += 15;
   
   // Introduction - position specific
@@ -129,7 +132,9 @@ export async function addWageMemoSection(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   
-  const introPara = `This Actual Wage Determination is prepared for the position of ${data.job.jobTitle} (SOC ${data.job.socCode}) in accordance with 20 CFR § 655.731 and the Company's Actual Wage Standards policy. This determination applies specifically to ${employeeName} for employment at ${data.worksite.worksiteName ? data.worksite.worksiteName + ', ' : ''}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`;
+  const introPara = isMultiWorker
+    ? `This Actual Wage Determination is prepared for the position of ${data.job.jobTitle} (SOC ${data.job.socCode}) in accordance with 20 CFR § 655.731 and the Company's Actual Wage Standards policy. This determination applies to all H-1B workers (${data.job.workersNeeded} positions) covered under this LCA, employed at ${data.worksite.worksiteName ? data.worksite.worksiteName + ', ' : ''}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`
+    : `This Actual Wage Determination is prepared for the position of ${data.job.jobTitle} (SOC ${data.job.socCode}) in accordance with 20 CFR § 655.731 and the Company's Actual Wage Standards policy. This determination applies specifically to ${employeeName} for employment at ${data.worksite.worksiteName ? data.worksite.worksiteName + ', ' : ''}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`;
   addParagraph(ctx, introPara);
   
   ctx.yPos += 5;
@@ -151,7 +156,9 @@ export async function addWageMemoSection(
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(0, 100, 0);
-  const wageConfirmation = `WAGE CONFIRMATION: ${employeeName} will be paid ${formatCurrency(higherWage, data.wage.actualWageUnit)}, which is the HIGHER of the actual wage or the prevailing wage, as required by 20 CFR § 655.731(a).`;
+  const wageConfirmation = isMultiWorker
+    ? `WAGE CONFIRMATION: All H-1B workers covered under this LCA will be paid ${formatCurrency(higherWage, data.wage.actualWageUnit)}, which is the HIGHER of the actual wage or the prevailing wage, as required by 20 CFR § 655.731(a).`
+    : `WAGE CONFIRMATION: ${employeeName} will be paid ${formatCurrency(higherWage, data.wage.actualWageUnit)}, which is the HIGHER of the actual wage or the prevailing wage, as required by 20 CFR § 655.731(a).`;
   const confirmLines = doc.splitTextToSize(wageConfirmation, pageWidth - margin * 2 - 10);
   doc.text(confirmLines, margin + 5, ctx.yPos);
   doc.setTextColor(0, 0, 0); // Reset to black
@@ -232,7 +239,9 @@ export async function addWageMemoSection(
   const positionFactors = [
     {
       factor: 'Experience Requirements',
-      analysis: `The position of ${data.job.jobTitle} requires experience commensurate with a ${data.wage.wageLevel} wage level. ${employeeName}'s prior experience in similar roles was evaluated against the requirements.`
+      analysis: isMultiWorker
+        ? `The position of ${data.job.jobTitle} requires experience commensurate with a ${data.wage.wageLevel} wage level. Prior experience of workers in similar roles was evaluated against the requirements for this position.`
+        : `The position of ${data.job.jobTitle} requires experience commensurate with a ${data.wage.wageLevel} wage level. ${employeeName}'s prior experience in similar roles was evaluated against the requirements.`
     },
     {
       factor: 'Educational Qualifications',
@@ -281,7 +290,9 @@ export async function addWageMemoSection(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   
-  const conclusion = `Based on the application of the Company's Actual Wage Standards to this specific position, it is determined that ${employeeName} shall be compensated at a rate of ${formatCurrency(higherWage, data.wage.actualWageUnit)} for the position of ${data.job.jobTitle}. This rate equals or exceeds both the actual wage paid to similarly employed workers and the ${data.wage.wageLevel} prevailing wage of ${formatCurrency(prevailingWage, data.wage.prevailingWageUnit)} for SOC ${data.job.socCode} in the ${data.worksite.areaName || data.worksite.city + ', ' + data.worksite.state} area.`;
+  const conclusion = isMultiWorker
+    ? `Based on the application of the Company's Actual Wage Standards to this specific position, it is determined that all H-1B workers covered under this LCA shall be compensated at a rate of ${formatCurrency(higherWage, data.wage.actualWageUnit)} for the position of ${data.job.jobTitle}. This rate equals or exceeds both the actual wage paid to similarly employed workers and the ${data.wage.wageLevel} prevailing wage of ${formatCurrency(prevailingWage, data.wage.prevailingWageUnit)} for SOC ${data.job.socCode} in the ${data.worksite.areaName || data.worksite.city + ', ' + data.worksite.state} area.`
+    : `Based on the application of the Company's Actual Wage Standards to this specific position, it is determined that ${employeeName} shall be compensated at a rate of ${formatCurrency(higherWage, data.wage.actualWageUnit)} for the position of ${data.job.jobTitle}. This rate equals or exceeds both the actual wage paid to similarly employed workers and the ${data.wage.wageLevel} prevailing wage of ${formatCurrency(prevailingWage, data.wage.prevailingWageUnit)} for SOC ${data.job.socCode} in the ${data.worksite.areaName || data.worksite.city + ', ' + data.worksite.state} area.`;
   addParagraph(ctx, conclusion);
   
   // If user provided additional notes, include them

@@ -11,8 +11,9 @@ import {
 export function addWorkerReceiptSection(ctx: PDFContext, data: PAFData, supportingDocs?: SupportingDocs): void {
   const { doc, margin } = ctx;
   
-  // Get employee name from employer data or use placeholder
-  const employeeName = data.employer.employeeName?.trim() || '[Worker Name]';
+  const isMultiWorker = (data.job.workersNeeded ?? 1) > 1;
+  // Multi-worker: no name; single-worker: use name or placeholder
+  const employeeName = isMultiWorker ? null : (data.employer.employeeName?.trim() || '[Worker Name]');
   
   // Start new page
   doc.addPage();
@@ -25,7 +26,9 @@ export function addWorkerReceiptSection(ctx: PDFContext, data: PAFData, supporti
   
   ctx.yPos += 15;
   
-  const receiptText = `By signing this form, ${employeeName} affirms that on or before the day he/she began work as an H-1B employee for ${data.employer.legalBusinessName}, he/she was provided with a copy of the Labor Condition Application as certified by the Department of Labor that was filed in support of ${employeeName}'s H-1B nonimmigrant petition.`;
+  const receiptText = isMultiWorker
+    ? `By signing this form, each H-1B worker covered under this LCA affirms that on or before the day he/she began work as an H-1B employee for ${data.employer.legalBusinessName}, he/she was provided with a copy of the Labor Condition Application as certified by the Department of Labor that was filed in support of his/her H-1B nonimmigrant petition.`
+    : `By signing this form, ${employeeName} affirms that on or before the day he/she began work as an H-1B employee for ${data.employer.legalBusinessName}, he/she was provided with a copy of the Labor Condition Application as certified by the Department of Labor that was filed in support of ${employeeName}'s H-1B nonimmigrant petition.`;
   addParagraph(ctx, receiptText);
   
   ctx.yPos += 20;
@@ -40,7 +43,8 @@ export function addWorkerReceiptSection(ctx: PDFContext, data: PAFData, supporti
   doc.line(margin, ctx.yPos + 15, margin + 100, ctx.yPos + 15);
   
   ctx.yPos += 25;
-  doc.text(employeeName, margin, ctx.yPos);
+  // Multi-worker: generic label; single-worker: print the name
+  doc.text(isMultiWorker ? 'H-1B Worker Name (Print)' : employeeName!, margin, ctx.yPos);
   
   ctx.yPos += 20;
   doc.text('Date: ____________________', margin, ctx.yPos);

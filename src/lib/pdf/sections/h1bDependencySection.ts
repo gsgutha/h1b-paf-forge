@@ -186,12 +186,15 @@ export async function addH1BDependencySection(
     const isWageExempt = exemptionType === 'wage' && annualizedWage >= 60000;
     const isDegreeExempt = exemptionType === 'degree';
     const isExempt = isWageExempt || isDegreeExempt;
+    const isMultiWorker = (data.job.workersNeeded ?? 1) > 1;
+    const workerRef = isMultiWorker ? 'the H-1B workers covered under this LCA' : 'the H-1B nonimmigrant worker named in this LCA';
+    const pronounRef = isMultiWorker ? 'they' : 'he/she';
     
     if (isExempt) {
       addBoldParagraph(ctx, 'EXEMPT H-1B NONIMMIGRANT — Additional Attestations Not Required', 11);
       
       if (isWageExempt) {
-        const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, the H-1B nonimmigrant worker named in this LCA qualifies as an "exempt" H-1B nonimmigrant under 20 CFR § 655.737. The offered annual wage of ${formatWageCurrency(annualizedWage)} exceeds the statutory threshold of $60,000 per year as specified in INA § 212(n)(3)(B)(i).`;
+        const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, ${workerRef} qualifies as an "exempt" H-1B nonimmigrant under 20 CFR § 655.737. The offered annual wage of ${formatWageCurrency(annualizedWage)} exceeds the statutory threshold of $60,000 per year as specified in INA § 212(n)(3)(B)(i).`;
         addParagraph(ctx, exemptExplanation);
         ctx.yPos += 3;
         addSubsectionHeader(ctx, 'Exemption Criteria Met');
@@ -201,19 +204,19 @@ export async function addH1BDependencySection(
         doc.text(`• Wage Exemption: Annual wage offered ${formatWageCurrency(annualizedWage)} meets or exceeds $60,000 threshold [MEETS]`, margin + 5, ctx.yPos);
         ctx.yPos += 6;
       } else {
-        const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, the H-1B nonimmigrant worker named in this LCA qualifies as an "exempt" H-1B nonimmigrant under 20 CFR § 655.737 by virtue of holding a Master's degree or its equivalent in a specialty related to the employment, as specified in INA § 212(n)(3)(B)(ii).`;
+        const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, ${workerRef} qualifies as an "exempt" H-1B nonimmigrant under 20 CFR § 655.737 by virtue of holding a Master's degree or its equivalent in a specialty related to the employment, as specified in INA § 212(n)(3)(B)(ii).`;
         addParagraph(ctx, exemptExplanation);
         ctx.yPos += 3;
         addSubsectionHeader(ctx, 'Exemption Criteria Met');
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         checkPageBreak(ctx, 8);
-        doc.text('• Degree Exemption: Worker holds a U.S. Master\'s degree or equivalent in a specialty related to employment ✓', margin + 5, ctx.yPos);
+        doc.text(`• Degree Exemption: ${isMultiWorker ? 'Workers hold' : 'Worker holds'} a U.S. Master's degree or equivalent in a specialty related to employment ✓`, margin + 5, ctx.yPos);
         ctx.yPos += 6;
       }
       
       ctx.yPos += 3;
-      const exemptConsequence = `Pursuant to 20 CFR § 655.737(b), because this worker is an exempt H-1B nonimmigrant, the employer is NOT required to make the additional attestations regarding non-displacement of U.S. workers (20 CFR § 655.738) and recruitment of U.S. workers (20 CFR § 655.739) that would otherwise apply to H-1B dependent employers. See LCA Form ETA-9035, Section H, Item H-4.`;
+      const exemptConsequence = `Pursuant to 20 CFR § 655.737(b), because ${isMultiWorker ? 'these workers are' : 'this worker is an'} exempt H-1B nonimmigrant${isMultiWorker ? 's' : ''}, the employer is NOT required to make the additional attestations regarding non-displacement of U.S. workers (20 CFR § 655.738) and recruitment of U.S. workers (20 CFR § 655.739) that would otherwise apply to H-1B dependent employers. See LCA Form ETA-9035, Section H, Item H-4.`;
       addParagraph(ctx, exemptConsequence);
     } else {
       addBoldParagraph(ctx, 'As an H-1B dependent employer, the following additional attestations apply to this LCA:', 10);
