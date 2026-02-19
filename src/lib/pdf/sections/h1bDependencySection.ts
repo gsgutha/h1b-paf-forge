@@ -194,7 +194,9 @@ export async function addH1BDependencySection(
       addBoldParagraph(ctx, 'EXEMPT H-1B NONIMMIGRANT — Additional Attestations Not Required', 11);
       
       if (isWageExempt) {
-        const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, ${workerRef} qualifies as an "exempt" H-1B nonimmigrant under 20 CFR § 655.737. The offered annual wage of ${formatWageCurrency(annualizedWage)} exceeds the statutory threshold of $60,000 per year as specified in INA § 212(n)(3)(B)(i).`;
+        const qualifyVerb = isMultiWorker ? 'qualify' : 'qualifies';
+        const nonimmigrantNoun = isMultiWorker ? 'nonimmigrants' : 'nonimmigrant';
+        const exemptExplanation = `Although ${data.employer.legalBusinessName} is classified as an H-1B dependent employer, ${workerRef} ${qualifyVerb} as "exempt" H-1B ${nonimmigrantNoun} under 20 CFR § 655.737. The offered annual wage of ${formatWageCurrency(annualizedWage)} exceeds the statutory threshold of $60,000 per year as specified in INA § 212(n)(3)(B)(i).`;
         addParagraph(ctx, exemptExplanation);
         ctx.yPos += 3;
         addSubsectionHeader(ctx, 'Exemption Criteria Met');
