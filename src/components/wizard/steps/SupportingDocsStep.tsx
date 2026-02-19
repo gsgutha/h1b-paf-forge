@@ -213,7 +213,7 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
     benefitsComparisonFile: data.benefitsComparisonFile || null,
     benefitsNotes: data.benefitsNotes || getDefaultBenefitsNotes(),
     isCertifiedLCA: data.isCertifiedLCA ?? true,
-    isH1BDependent: data.isH1BDependent ?? false,
+    isH1BDependent: data.isH1BDependent, // undefined = not yet chosen; user must explicitly pick in H-1B tab
     // H-1B Compliance fields
     totalFTECount: data.totalFTECount || undefined,
     totalH1BCount: data.totalH1BCount || undefined,
@@ -264,9 +264,7 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
       if (scanData.caseNumber) {
         updateField('lcaCaseNumber', scanData.caseNumber);
       }
-      if (scanData.h1bDependent !== undefined && scanData.h1bDependent !== null) {
-        updateField('isH1BDependent', scanData.h1bDependent);
-      }
+      // NOTE: h1bDependent from scan is shown as info only — user must explicitly override in H-1B tab
       if (scanData.caseStatus) {
         updateField('isCertifiedLCA', scanData.caseStatus.toLowerCase() === 'certified');
       }
@@ -330,10 +328,11 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
       case 'lca':
         return !!formData.lcaCaseNumber || !!formData.lcaFile;
       case 'h1b': {
+        const dependencySet = formData.isH1BDependent !== undefined;
         const hasWorksheet = !!formData.totalFTECount && !!formData.totalH1BCount && !!formData.dependencyCalculationDate;
         const hasComparable = formData.noComparableWorkers ||
           (!!formData.comparableWorkersCount && !!formData.comparableWageMin && !!formData.comparableWageMax);
-        return hasWorksheet && !!hasComparable;
+        return dependencySet && hasWorksheet && !!hasComparable;
       }
       case 'wage':
         return true; // Auto-generated, always complete
@@ -435,28 +434,6 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
                       )}
                     </div>
 
-                    <div className="border-t border-border pt-4 space-y-3">
-                      <div>
-                        <Label className="text-sm font-medium">Is this an H-1B Dependent Employer?</Label>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Is the employer H-1B dependent per DOL standards?
-                        </p>
-                      </div>
-                      <RadioGroup
-                        value={formData.isH1BDependent ? 'yes' : 'no'}
-                        onValueChange={(val) => updateField('isH1BDependent', val === 'yes')}
-                        className="flex gap-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="yes" id="h1bDepYes" />
-                          <Label htmlFor="h1bDepYes" className="cursor-pointer font-medium">Yes</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="no" id="h1bDepNo" />
-                          <Label htmlFor="h1bDepNo" className="cursor-pointer font-medium">No</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
                   </div>
                 )}
 
@@ -654,6 +631,52 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
           {/* H-1B Compliance Tab */}
           <TabsContent value="h1b" className="mt-6">
             <div className="space-y-6">
+              {/* H-1B Dependency Status — user must explicitly set this */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-accent" />
+                    H-1B Dependent Employer Status
+                  </CardTitle>
+                  <CardDescription>
+                    Confirm whether your company is classified as an H-1B dependent employer under 20 CFR § 655.736
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Show scanned value as info only */}
+                  {scanResult?.h1bDependent !== undefined && scanResult?.h1bDependent !== null && (
+                    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border text-sm">
+                      <span className="text-muted-foreground">LCA (Section H) shows:</span>
+                      <Badge variant={scanResult.h1bDependent ? 'destructive' : 'secondary'}>
+                        {scanResult.h1bDependent ? 'H-1B Dependent' : 'Not Dependent'}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">— override below if your current status differs</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Is this employer H-1B Dependent? *</Label>
+                    <p className="text-xs text-muted-foreground">
+                      An employer is H-1B dependent if H-1B workers make up ≥15% of its workforce (or ≥25% if &lt;26 FTE employees).
+                    </p>
+                    <RadioGroup
+                      value={formData.isH1BDependent === true ? 'yes' : formData.isH1BDependent === false ? 'no' : ''}
+                      onValueChange={(val) => updateField('isH1BDependent', val === 'yes')}
+                      className="flex gap-6 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="h1bDepYesH1BTab" />
+                        <Label htmlFor="h1bDepYesH1BTab" className="cursor-pointer font-medium text-destructive">Yes — H-1B Dependent</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="h1bDepNoH1BTab" />
+                        <Label htmlFor="h1bDepNoH1BTab" className="cursor-pointer font-medium text-success">No — Not Dependent</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Dependency Worksheet */}
               <Card>
                 <CardHeader>
