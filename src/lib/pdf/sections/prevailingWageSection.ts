@@ -105,27 +105,14 @@ function renderWageReport(ctx: PDFContext, wageData: WageReportData, isFirst: bo
   doc.setFillColor(13, 47, 99); // DOL navy blue
   doc.rect(margin, headerBoxY, pageWidth - margin * 2, headerBoxH, 'F');
 
-  // DOL seal circle (simulated)
-  doc.setFillColor(255, 255, 255);
-  doc.circle(margin + 12, headerBoxY + headerBoxH / 2, 8, 'F');
-  doc.setFillColor(13, 47, 99);
-  doc.circle(margin + 12, headerBoxY + headerBoxH / 2, 7, 'F');
-  doc.setFillColor(255, 255, 255);
-  doc.circle(margin + 12, headerBoxY + headerBoxH / 2, 5, 'F');
-  doc.setFillColor(13, 47, 99);
-  doc.setFontSize(5);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text('DOL', margin + 12, headerBoxY + headerBoxH / 2 + 1.5, { align: 'center' });
-
   // FLAG.DOL.GOV text
   doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('FLAG', margin + 23, headerBoxY + 10);
+  doc.text('FLAG', margin + 5, headerBoxY + 10);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text('.DOL.GOV', margin + 37, headerBoxY + 10);
+  doc.text('.DOL.GOV', margin + 19, headerBoxY + 10);
 
   // FLC Wage Results label
   doc.setFontSize(12);
