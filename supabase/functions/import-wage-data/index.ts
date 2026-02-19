@@ -229,14 +229,14 @@ Deno.serve(async (req) => {
 
     // Only delete if clearExisting and not resuming
     if (clearExisting && skipRows === 0) {
-      console.log(`Deleting existing data for ${wageYear}...`);
-      const { error: deleteError } = await supabase
-        .from('oflc_prevailing_wages')
-        .delete()
-        .eq('wage_year', wageYear);
+      console.log(`Clearing existing data for ${wageYear} using batched delete...`);
+      const { data: deletedCount, error: deleteError } = await supabase
+        .rpc('clear_wage_year', { p_wage_year: wageYear });
 
       if (deleteError) {
         console.error('Delete error:', deleteError);
+      } else {
+        console.log(`Cleared ${deletedCount} existing records for ${wageYear}`);
       }
     }
 

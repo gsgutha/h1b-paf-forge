@@ -424,6 +424,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clear_wage_year: { Args: { p_wage_year: string }; Returns: number }
       patch_area_names: {
         Args: {
           p_area_codes: string[]
