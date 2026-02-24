@@ -70,13 +70,13 @@ export async function addPayrollStatementSection(ctx: PDFContext, data: PAFData)
   ctx.yPos += 15;
   const signatory = await getSignatoryFromDB(data.employer.signatoryId);
   if (signatory) {
-    await addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName, true);
+    await addCompactDigitalSignature(ctx, signatory, data.employer.legalBusinessName, false);
   } else {
     await addCompactDigitalSignature(ctx, {
       id: 'fallback',
       name: 'Authorized Signatory',
       title: 'Authorized Representative',
       signatureImagePath: null,
-    }, data.employer.legalBusinessName, true);
+    }, data.employer.legalBusinessName, false);
   }
 }
