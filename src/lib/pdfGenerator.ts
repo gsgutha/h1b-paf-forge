@@ -19,6 +19,7 @@ export interface PAFDocumentOptions {
   includeLCA?: boolean;
   includeActualWageStandards?: boolean;
   includeWageMemo?: boolean;
+  includePayrollStatement?: boolean;
   includePrevailingWage?: boolean;
   includePostingNotice?: boolean;
   includeBenefits?: boolean;
@@ -31,6 +32,7 @@ const defaultOptions: PAFDocumentOptions = {
   includeLCA: true,
   includeActualWageStandards: true,
   includeWageMemo: true,
+  includePayrollStatement: true,
   includePrevailingWage: true,
   includePostingNotice: true,
   includeBenefits: true,
