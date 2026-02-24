@@ -5,7 +5,10 @@ import {
   addPageHeader,
   addCenteredTitle,
   addParagraph,
+  addSubsectionHeader,
   addSignatureLine,
+  checkPageBreak,
+  formatCurrency,
 } from '../pdfHelpers';
 
 export function addWorkerReceiptSection(ctx: PDFContext, data: PAFData, supportingDocs?: SupportingDocs): void {
@@ -31,6 +34,25 @@ export function addWorkerReceiptSection(ctx: PDFContext, data: PAFData, supporti
     : `By signing this form, ${employeeName} affirms that on or before the day he/she began work as an H-1B employee for ${data.employer.legalBusinessName}, he/she was provided with a copy of the Labor Condition Application as certified by the Department of Labor that was filed in support of ${employeeName}'s H-1B nonimmigrant petition.`;
   addParagraph(ctx, receiptText);
   
+  ctx.yPos += 10;
+  checkPageBreak(ctx, 60);
+  
+  // Payroll Statement subsection
+  addSubsectionHeader(ctx, 'Payroll Statement');
+  
+  const annualSalary = formatCurrency(data.wage.actualWage, data.wage.actualWageUnit);
+  const payrollCycle = data.job.isFullTime ? 'bi-weekly' : 'bi-weekly';
+  
+  const payrollPara1 = `The Company compensates H-1B employees at or above the required wage listed on the certified Labor Condition Application for this position, consistent with 20 CFR § 655.731.`;
+  addParagraph(ctx, payrollPara1);
+  
+  const workerLabel = isMultiWorker ? 'The employee' : employeeName;
+  const payrollPara2 = `${workerLabel} will be paid ${annualSalary} annually through the Company's regular ${payrollCycle} payroll cycle, which is applied consistently to similarly situated employees.`;
+  addParagraph(ctx, payrollPara2);
+  
+  const payrollPara3 = `The Company pays for all nonproductive time in accordance with 20 CFR § 655.731(c)(7) and does not place H-1B employees in unpaid status due to lack of assigned work. The required wage will be paid beginning no later than the employee's first day of employment, as required by regulation.`;
+  addParagraph(ctx, payrollPara3);
+  
   ctx.yPos += 20;
   
   // Worker signature line
@@ -43,7 +65,6 @@ export function addWorkerReceiptSection(ctx: PDFContext, data: PAFData, supporti
   doc.line(margin, ctx.yPos + 15, margin + 100, ctx.yPos + 15);
   
   ctx.yPos += 25;
-  // Multi-worker: generic label; single-worker: print the name
   doc.text(isMultiWorker ? 'H-1B Worker Name (Print)' : employeeName!, margin, ctx.yPos);
   
   ctx.yPos += 20;
