@@ -41,7 +41,7 @@ export function addWorkerReceiptSection(ctx: PDFContext, data: PAFData, supporti
   addSubsectionHeader(ctx, 'Payroll Statement');
   
   const annualSalary = formatCurrency(data.wage.actualWage, data.wage.actualWageUnit);
-  const payrollCycle = data.job.isFullTime ? 'bi-weekly' : 'bi-weekly';
+  const payrollCycle = 'monthly';
   
   const payrollPara1 = `The Company compensates H-1B employees at or above the required wage listed on the certified Labor Condition Application for this position, consistent with 20 CFR § 655.731.`;
   addParagraph(ctx, payrollPara1);
