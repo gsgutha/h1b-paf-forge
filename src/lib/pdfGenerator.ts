@@ -7,6 +7,7 @@ import { addCoverPage } from './pdf/sections/coverPage';
 import { addLCASection } from './pdf/sections/lcaSection';
 import { addActualWageStandardsSection } from './pdf/sections/actualWageStandardsSection';
 import { addWageMemoSection } from './pdf/sections/wageMemoSection';
+import { addPayrollStatementSection } from './pdf/sections/payrollStatementSection';
 import { addPrevailingWageSection } from './pdf/sections/prevailingWageSection';
 import { addPostingNoticeSection } from './pdf/sections/postingNoticeSection';
 import { addBenefitsSection } from './pdf/sections/benefitsSection';
