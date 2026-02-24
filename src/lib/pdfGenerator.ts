@@ -7,6 +7,7 @@ import { addCoverPage } from './pdf/sections/coverPage';
 import { addLCASection } from './pdf/sections/lcaSection';
 import { addActualWageStandardsSection } from './pdf/sections/actualWageStandardsSection';
 import { addWageMemoSection } from './pdf/sections/wageMemoSection';
+import { addPayrollStatementSection } from './pdf/sections/payrollStatementSection';
 import { addPrevailingWageSection } from './pdf/sections/prevailingWageSection';
 import { addPostingNoticeSection } from './pdf/sections/postingNoticeSection';
 import { addBenefitsSection } from './pdf/sections/benefitsSection';
@@ -18,6 +19,7 @@ export interface PAFDocumentOptions {
   includeLCA?: boolean;
   includeActualWageStandards?: boolean;
   includeWageMemo?: boolean;
+  includePayrollStatement?: boolean;
   includePrevailingWage?: boolean;
   includePostingNotice?: boolean;
   includeBenefits?: boolean;
@@ -30,6 +32,7 @@ const defaultOptions: PAFDocumentOptions = {
   includeLCA: true,
   includeActualWageStandards: true,
   includeWageMemo: true,
+  includePayrollStatement: true,
   includePrevailingWage: true,
   includePostingNotice: true,
   includeBenefits: true,
@@ -69,6 +72,11 @@ export async function generatePAFDocument(
     await addWageMemoSection(ctx, data, supportingDocs);
   }
   
+  // 4b. Payroll Compliance Statement (after Wage Determination, before Posting)
+  if (mergedOptions.includePayrollStatement) {
+    await addPayrollStatementSection(ctx, data);
+  }
+
   // 5. Prevailing Wage Rate and Source
   if (mergedOptions.includePrevailingWage) {
     addPrevailingWageSection(ctx, data);
