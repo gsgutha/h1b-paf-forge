@@ -34,11 +34,11 @@ export function addWorkerReceiptSection(ctx: PDFContext, data: PAFData, supporti
     : `By signing this form, ${employeeName} affirms that on or before the day he/she began work as an H-1B employee for ${data.employer.legalBusinessName}, he/she was provided with a copy of the Labor Condition Application as certified by the Department of Labor that was filed in support of ${employeeName}'s H-1B nonimmigrant petition.`;
   addParagraph(ctx, receiptText);
   
-  ctx.yPos += 10;
-  checkPageBreak(ctx, 60);
-  
-  // Payroll Statement subsection
-  addSubsectionHeader(ctx, 'Payroll Statement');
+  // Payroll Statement on a separate page
+  doc.addPage();
+  addPageHeader(ctx, 'Payroll Statement');
+  ctx.yPos += 15;
+  addCenteredTitle(ctx, 'PAYROLL STATEMENT', 13);
   
   const annualSalary = formatCurrency(data.wage.actualWage, data.wage.actualWageUnit);
   const payrollCycle = 'monthly';
