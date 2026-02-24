@@ -72,6 +72,11 @@ export async function generatePAFDocument(
     await addWageMemoSection(ctx, data, supportingDocs);
   }
   
+  // 4b. Payroll Compliance Statement (after Wage Determination, before Posting)
+  if (mergedOptions.includePayrollStatement) {
+    await addPayrollStatementSection(ctx, data);
+  }
+
   // 5. Prevailing Wage Rate and Source
   if (mergedOptions.includePrevailingWage) {
     addPrevailingWageSection(ctx, data);
