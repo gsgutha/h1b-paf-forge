@@ -1,4 +1,4 @@
-import { FileText, MoreHorizontal, Eye, Edit, Download, Trash2, Plus } from 'lucide-react';
+import { FileText, MoreHorizontal, Eye, Edit, Download, Trash2, Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ interface PAFRecord {
   job_title: string;
   employer_legal_name: string;
   lca_case_number: string | null;
+  lca_status: string;
   created_at: string;
   soc_code: string;
 }
@@ -99,7 +100,7 @@ export function RecentPAFs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('paf_records')
-        .select('id, job_title, employer_legal_name, lca_case_number, created_at, soc_code')
+        .select('id, job_title, employer_legal_name, lca_case_number, lca_status, created_at, soc_code')
         .order('created_at', { ascending: false })
         .limit(5);
       
@@ -199,9 +200,16 @@ export function RecentPAFs() {
               </p>
             </div>
             
-            <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
-              {paf.soc_code}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {paf.lca_status === 'in_process' && (
+                <Badge variant="secondary" className="bg-warning/20 text-warning border-warning/30 text-xs">
+                  In Process
+                </Badge>
+              )}
+              <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
+                {paf.soc_code}
+              </Badge>
+            </div>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -220,6 +228,13 @@ export function RecentPAFs() {
                     <Edit className="mr-2 h-4 w-4" /> Edit
                   </Link>
                 </DropdownMenuItem>
+                {paf.lca_status === 'in_process' && (
+                  <DropdownMenuItem asChild>
+                    <Link to={`/edit/${paf.id}`}>
+                      <Upload className="mr-2 h-4 w-4" /> Upload Certified LCA
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={(e) => handleDownload(e, paf.id)}>
                   <Download className="mr-2 h-4 w-4" /> Download
                 </DropdownMenuItem>

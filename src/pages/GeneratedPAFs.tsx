@@ -1,4 +1,4 @@
-import { FileText, Eye, Edit, Download, Trash2, ArrowLeft, Search } from 'lucide-react';
+import { FileText, Eye, Edit, Download, Trash2, ArrowLeft, Search, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -247,12 +247,28 @@ export default function GeneratedPAFs() {
                       </code>
                     </TableCell>
                     <TableCell>
-                      <Badge 
-                        variant={paf.lca_status === 'certified' ? 'default' : 'secondary'}
-                        className={paf.lca_status === 'in_process' ? 'bg-warning/20 text-warning border-warning/30' : ''}
-                      >
-                        {paf.lca_status === 'certified' ? '🟢 Certified' : '🟡 In Process'}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={paf.lca_status === 'certified' ? 'default' : 'secondary'}
+                          className={paf.lca_status === 'in_process' ? 'bg-warning/20 text-warning border-warning/30' : ''}
+                        >
+                          {paf.lca_status === 'certified' ? '🟢 Certified' : '🟡 In Process'}
+                        </Badge>
+                        {paf.lca_status === 'in_process' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 px-2 text-xs border-warning/40 text-warning hover:bg-warning/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/edit/${paf.id}`);
+                            }}
+                          >
+                            <Upload className="mr-1 h-3 w-3" />
+                            Certify
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{paf.soc_code}</Badge>
@@ -284,6 +300,13 @@ export default function GeneratedPAFs() {
                               <Edit className="mr-2 h-4 w-4" /> Edit
                             </Link>
                           </DropdownMenuItem>
+                          {paf.lca_status === 'in_process' && (
+                            <DropdownMenuItem asChild>
+                              <Link to={`/edit/${paf.id}`}>
+                                <Upload className="mr-2 h-4 w-4" /> Upload Certified LCA
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={(e) => handleDownload(e, paf.id)}>
                             <Download className="mr-2 h-4 w-4" /> Download
                           </DropdownMenuItem>
