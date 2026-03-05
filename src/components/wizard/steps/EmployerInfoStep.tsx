@@ -14,7 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { AUTHORIZED_SIGNATORIES, getSignatoryById } from '@/config/signatories';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useSignatories } from '@/hooks/useSignatories';
 import type { Employer } from '@/types/paf';
 
 const PRESET_ADDRESSES = [
