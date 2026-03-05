@@ -172,7 +172,7 @@ export async function addCompactDigitalSignature(
     try {
       const imgWidth = 70;
       const imgHeight = 25;
-      doc.addImage(imageData, 'JPEG', margin, ctx.yPos, imgWidth, imgHeight);
+      doc.addImage(imageData, 'PNG', margin, ctx.yPos, imgWidth, imgHeight);
       ctx.yPos += imgHeight + 3;
     } catch {
       // Fallback to cursive text

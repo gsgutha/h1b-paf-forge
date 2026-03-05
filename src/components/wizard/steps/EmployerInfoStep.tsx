@@ -332,40 +332,47 @@ export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps
                 Select the authorized representative whose digital signature will appear on all PAF documents
               </p>
               
-              <RadioGroup
-                value={selectedSignatoryId}
-                onValueChange={handleSignatoryChange}
-                className="grid gap-3"
-              >
-                {AUTHORIZED_SIGNATORIES.map((signatory) => (
-                  <div
-                    key={signatory.id}
-                    className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
-                      selectedSignatoryId === signatory.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-muted-foreground/50'
-                    }`}
-                    onClick={() => handleSignatoryChange(signatory.id)}
-                  >
-                    <RadioGroupItem value={signatory.id} id={signatory.id} />
-                    <div className="flex-1">
-                      <Label htmlFor={signatory.id} className="text-sm font-medium cursor-pointer">
-                        {signatory.name}
-                      </Label>
-                      <p className="text-xs text-muted-foreground">{signatory.title}</p>
+              {signatoriesLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-16 w-full rounded-lg" />
+                  <Skeleton className="h-16 w-full rounded-lg" />
+                </div>
+              ) : (
+                <RadioGroup
+                  value={selectedSignatoryId}
+                  onValueChange={handleSignatoryChange}
+                  className="grid gap-3"
+                >
+                  {signatories?.map((signatory) => (
+                    <div
+                      key={signatory.id}
+                      className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
+                        selectedSignatoryId === signatory.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-muted-foreground/50'
+                      }`}
+                      onClick={() => handleSignatoryChange(signatory.id)}
+                    >
+                      <RadioGroupItem value={signatory.id} id={signatory.id} />
+                      <div className="flex-1">
+                        <Label htmlFor={signatory.id} className="text-sm font-medium cursor-pointer">
+                          {signatory.name}
+                        </Label>
+                        <p className="text-xs text-muted-foreground">{signatory.title}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-accent">
+                        <PenTool className="h-3.5 w-3.5" />
+                        <span>Digital Signature</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-accent">
-                      <PenTool className="h-3.5 w-3.5" />
-                      <span>Digital Signature</span>
-                    </div>
-                  </div>
-                ))}
-              </RadioGroup>
+                  ))}
+                </RadioGroup>
+              )}
               
-              {selectedSignatory && (
+              {currentSignatory && (
                 <div className="mt-3 p-3 bg-muted/50 rounded-lg">
                   <p className="text-xs text-muted-foreground">
-                    <span className="font-medium">Selected:</span> {selectedSignatory.name} ({selectedSignatory.title}) 
+                    <span className="font-medium">Selected:</span> {currentSignatory.name} ({currentSignatory.title}) 
                     will digitally sign all generated PAF documents.
                   </p>
                 </div>
