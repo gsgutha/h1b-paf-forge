@@ -1,3 +1,4 @@
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,7 +15,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { AUTHORIZED_SIGNATORIES, getSignatoryById } from '@/config/signatories';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useSignatories } from '@/hooks/useSignatories';
 import type { Employer } from '@/types/paf';
 
 const PRESET_ADDRESSES = [
@@ -74,6 +76,8 @@ interface EmployerInfoStepProps {
 }
 
 export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps) {
+  const { data: signatories, isLoading: signatoriesLoading } = useSignatories();
+
   const {
     register,
     handleSubmit,
@@ -85,17 +89,25 @@ export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps
     defaultValues: {
       ...data,
       country: data.country || 'United States Of America',
-      signatoryId: data.signatoryId || AUTHORIZED_SIGNATORIES[0]?.id,
+      signatoryId: data.signatoryId || '',
     },
   });
 
+  // Set default signatory once loaded
   const selectedSignatoryId = watch('signatoryId');
-  const selectedSignatory = selectedSignatoryId ? getSignatoryById(selectedSignatoryId) : undefined;
+  const currentSignatory = signatories?.find(s => s.id === selectedSignatoryId);
 
-  // When signatory is selected, auto-populate name and title
+  // Auto-select default signatory when data loads
+  React.useEffect(() => {
+    if (signatories && signatories.length > 0 && !selectedSignatoryId) {
+      const defaultSig = signatories.find(s => s.is_default) || signatories[0];
+      handleSignatoryChange(defaultSig.id);
+    }
+  }, [signatories]);
+
   const handleSignatoryChange = (signatoryId: string) => {
     setValue('signatoryId', signatoryId);
-    const signatory = getSignatoryById(signatoryId);
+    const signatory = signatories?.find(s => s.id === signatoryId);
     if (signatory) {
       setValue('signingAuthorityName', signatory.name);
       setValue('signingAuthorityTitle', signatory.title);
@@ -103,9 +115,8 @@ export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps
   };
 
   const onSubmit = (formData: Employer) => {
-    // Ensure signatory name/title are set from selection
     if (formData.signatoryId) {
-      const signatory = getSignatoryById(formData.signatoryId);
+      const signatory = signatories?.find(s => s.id === formData.signatoryId);
       if (signatory) {
         formData.signingAuthorityName = signatory.name;
         formData.signingAuthorityTitle = signatory.title;
@@ -322,40 +333,47 @@ export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps
                 Select the authorized representative whose digital signature will appear on all PAF documents
               </p>
               
-              <RadioGroup
-                value={selectedSignatoryId}
-                onValueChange={handleSignatoryChange}
-                className="grid gap-3"
-              >
-                {AUTHORIZED_SIGNATORIES.map((signatory) => (
-                  <div
-                    key={signatory.id}
-                    className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
-                      selectedSignatoryId === signatory.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-muted-foreground/50'
-                    }`}
-                    onClick={() => handleSignatoryChange(signatory.id)}
-                  >
-                    <RadioGroupItem value={signatory.id} id={signatory.id} />
-                    <div className="flex-1">
-                      <Label htmlFor={signatory.id} className="text-sm font-medium cursor-pointer">
-                        {signatory.name}
-                      </Label>
-                      <p className="text-xs text-muted-foreground">{signatory.title}</p>
+              {signatoriesLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-16 w-full rounded-lg" />
+                  <Skeleton className="h-16 w-full rounded-lg" />
+                </div>
+              ) : (
+                <RadioGroup
+                  value={selectedSignatoryId}
+                  onValueChange={handleSignatoryChange}
+                  className="grid gap-3"
+                >
+                  {signatories?.map((signatory) => (
+                    <div
+                      key={signatory.id}
+                      className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
+                        selectedSignatoryId === signatory.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-muted-foreground/50'
+                      }`}
+                      onClick={() => handleSignatoryChange(signatory.id)}
+                    >
+                      <RadioGroupItem value={signatory.id} id={signatory.id} />
+                      <div className="flex-1">
+                        <Label htmlFor={signatory.id} className="text-sm font-medium cursor-pointer">
+                          {signatory.name}
+                        </Label>
+                        <p className="text-xs text-muted-foreground">{signatory.title}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-accent">
+                        <PenTool className="h-3.5 w-3.5" />
+                        <span>Digital Signature</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-accent">
-                      <PenTool className="h-3.5 w-3.5" />
-                      <span>Digital Signature</span>
-                    </div>
-                  </div>
-                ))}
-              </RadioGroup>
+                  ))}
+                </RadioGroup>
+              )}
               
-              {selectedSignatory && (
+              {currentSignatory && (
                 <div className="mt-3 p-3 bg-muted/50 rounded-lg">
                   <p className="text-xs text-muted-foreground">
-                    <span className="font-medium">Selected:</span> {selectedSignatory.name} ({selectedSignatory.title}) 
+                    <span className="font-medium">Selected:</span> {currentSignatory.name} ({currentSignatory.title}) 
                     will digitally sign all generated PAF documents.
                   </p>
                 </div>
