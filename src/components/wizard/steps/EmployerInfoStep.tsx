@@ -75,6 +75,8 @@ interface EmployerInfoStepProps {
 }
 
 export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps) {
+  const { data: signatories, isLoading: signatoriesLoading } = useSignatories();
+
   const {
     register,
     handleSubmit,
@@ -86,17 +88,25 @@ export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps
     defaultValues: {
       ...data,
       country: data.country || 'United States Of America',
-      signatoryId: data.signatoryId || AUTHORIZED_SIGNATORIES[0]?.id,
+      signatoryId: data.signatoryId || '',
     },
   });
 
+  // Set default signatory once loaded
   const selectedSignatoryId = watch('signatoryId');
-  const selectedSignatory = selectedSignatoryId ? getSignatoryById(selectedSignatoryId) : undefined;
+  const currentSignatory = signatories?.find(s => s.id === selectedSignatoryId);
 
-  // When signatory is selected, auto-populate name and title
+  // Auto-select default signatory when data loads
+  React.useEffect(() => {
+    if (signatories && signatories.length > 0 && !selectedSignatoryId) {
+      const defaultSig = signatories.find(s => s.is_default) || signatories[0];
+      handleSignatoryChange(defaultSig.id);
+    }
+  }, [signatories]);
+
   const handleSignatoryChange = (signatoryId: string) => {
     setValue('signatoryId', signatoryId);
-    const signatory = getSignatoryById(signatoryId);
+    const signatory = signatories?.find(s => s.id === signatoryId);
     if (signatory) {
       setValue('signingAuthorityName', signatory.name);
       setValue('signingAuthorityTitle', signatory.title);
@@ -104,9 +114,8 @@ export function EmployerInfoStep({ data, onNext, onBack }: EmployerInfoStepProps
   };
 
   const onSubmit = (formData: Employer) => {
-    // Ensure signatory name/title are set from selection
     if (formData.signatoryId) {
-      const signatory = getSignatoryById(formData.signatoryId);
+      const signatory = signatories?.find(s => s.id === formData.signatoryId);
       if (signatory) {
         formData.signingAuthorityName = signatory.name;
         formData.signingAuthorityTitle = signatory.title;
