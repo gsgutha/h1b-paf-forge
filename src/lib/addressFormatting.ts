@@ -119,23 +119,26 @@ function sanitizeWorksite(worksite: WorksiteLocation, employer: Employer): Works
 export function sanitizePAFData(data: PAFData): PAFData {
   const employer = sanitizeEmployer(data.employer);
   const worksite = sanitizeWorksite(data.worksite, employer);
+  const contact = data.contact
+    ? {
+        ...data.contact,
+        postalCode: normalizeSbsZipCode(
+          data.contact.postalCode,
+          data.contact.address1,
+          data.contact.city,
+          data.contact.state,
+          employer.legalBusinessName,
+          employer.tradeName,
+        ),
+      }
+    : undefined;
 
   return {
     ...data,
     employer,
-    contact: {
-      ...data.contact,
-      postalCode: normalizeSbsZipCode(
-        data.contact.postalCode,
-        data.contact.address1,
-        data.contact.city,
-        data.contact.state,
-        employer.legalBusinessName,
-        employer.tradeName,
-      ),
-    },
     worksite,
-  };
+    ...(contact ? { contact } : {}),
+  } as PAFData;
 }
 
 export function normalizeKnownPostalCode(

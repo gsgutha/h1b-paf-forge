@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
+import { dedupeAddress2, formatAddressLine } from '../addressFormatting';
 
 /**
  * Parse a date string as local date to avoid timezone shifts.
@@ -230,15 +231,7 @@ export function formatFullAddress(
   worksiteName?: string
 ): string {
   const prefix = worksiteName ? `${worksiteName}, ` : '';
-  const addr2Part = dedupeAddress2(address1, address2);
-  return `${prefix}${address1}${addr2Part}, ${city}, ${state} ${postalCode}`;
+  return `${prefix}${formatAddressLine(address1, address2)}, ${city}, ${state} ${postalCode}`;
 }
 
-/**
- * Returns ', address2' only if address2 is not already contained in address1.
- */
-export function dedupeAddress2(address1: string, address2?: string): string {
-  if (!address2) return '';
-  if (address1.toLowerCase().includes(address2.toLowerCase())) return '';
-  return `, ${address2}`;
-}
+export { dedupeAddress2 };

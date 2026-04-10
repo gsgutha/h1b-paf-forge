@@ -9,6 +9,7 @@ import { SupportingDocsStep, type SupportingDocs, type LCAScanResult } from './s
 import { LCAScanStep } from './steps/LCAScanStep';
 import { ReviewStep } from './steps/ReviewStep';
 import type { PAFData, Employer, JobDetails, WorksiteLocation, WageInfo } from '@/types/paf';
+import { dedupeAddress2, normalizeKnownPostalCode } from '@/lib/addressFormatting';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -360,6 +361,22 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
       const job = pafData.job;
       const worksite = pafData.worksite;
       const wage = pafData.wage;
+      const employerAddress2 = dedupeAddress2(employer.address1, employer.address2) ? employer.address2 ?? null : null;
+      const worksiteAddress2 = dedupeAddress2(worksite.address1, worksite.address2) ? worksite.address2 ?? null : null;
+      const employerPostalCode = normalizeKnownPostalCode(employer.postalCode, {
+        address1: employer.address1,
+        city: employer.city,
+        state: employer.state,
+        legalBusinessName: employer.legalBusinessName,
+        tradeName: employer.tradeName,
+      });
+      const worksitePostalCode = normalizeKnownPostalCode(worksite.postalCode, {
+        address1: worksite.address1,
+        city: worksite.city,
+        state: worksite.state,
+        legalBusinessName: employer.legalBusinessName,
+        tradeName: employer.tradeName,
+      });
 
       // Determine LCA status: manual mode uses the certified toggle, LCA mode is always certified
       const lcaStatus = isManual 
@@ -397,10 +414,10 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
           employer_legal_name: employer.legalBusinessName,
           employer_trade_name: employer.tradeName ?? null,
           employer_address1: employer.address1,
-          employer_address2: employer.address2 ?? null,
+          employer_address2: employerAddress2,
           employer_city: employer.city,
           employer_state: employer.state,
-          employer_postal_code: employer.postalCode,
+          employer_postal_code: employerPostalCode,
           employer_country: employer.country,
           employer_telephone: employer.telephone,
           employer_fein: employer.fein,
@@ -420,10 +437,10 @@ export function PAFWizard({ mode = 'lca' }: PAFWizardProps) {
           workers_needed: job.workersNeeded ?? 1,
 
           worksite_address1: worksite.address1,
-          worksite_address2: worksite.address2 ?? null,
+          worksite_address2: worksiteAddress2,
           worksite_city: worksite.city,
           worksite_state: worksite.state,
-          worksite_postal_code: worksite.postalCode,
+          worksite_postal_code: worksitePostalCode,
           worksite_county: worksite.county ?? null,
           worksite_area_code: worksite.areaCode ?? null,
           worksite_area_name: worksite.areaName ?? null,
