@@ -12,6 +12,7 @@ import {
   formatDate,
   formatCurrency,
   formatFullAddress,
+  dedupeAddress2,
 } from '../pdfHelpers';
 import { embedFile } from '../embedPdf';
 
@@ -85,7 +86,7 @@ export async function addLCASection(
   if (data.worksite.worksiteName) {
     addLabelValue(ctx, 'Worksite Name', data.worksite.worksiteName);
   }
-  addLabelValue(ctx, 'Address', formatFullAddress(data.worksite.address1, data.worksite.address2, '', '', '').replace(/, , $/, '').replace(/, $/, '').trim() || `${data.worksite.address1}${data.worksite.address2 && !data.worksite.address1.toLowerCase().includes(data.worksite.address2.toLowerCase()) ? ', ' + data.worksite.address2 : ''}`);
+  addLabelValue(ctx, 'Address', `${data.worksite.address1}${dedupeAddress2(data.worksite.address1, data.worksite.address2)}`);
   addLabelValue(ctx, 'City', data.worksite.city);
   if (data.worksite.county) {
     addLabelValue(ctx, 'County', data.worksite.county);
@@ -114,7 +115,7 @@ export async function addLCASection(
     if (secondary.worksiteName) {
       addLabelValue(ctx, 'Worksite Name', secondary.worksiteName);
     }
-    addLabelValue(ctx, 'Address', `${secondary.address1}${secondary.address2 && !secondary.address1.toLowerCase().includes(secondary.address2.toLowerCase()) ? ', ' + secondary.address2 : ''}`);
+    addLabelValue(ctx, 'Address', `${secondary.address1}${dedupeAddress2(secondary.address1, secondary.address2)}`);
     addLabelValue(ctx, 'City', secondary.city);
     if (secondary.county) {
       addLabelValue(ctx, 'County', secondary.county);

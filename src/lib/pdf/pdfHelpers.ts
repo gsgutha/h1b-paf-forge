@@ -230,10 +230,15 @@ export function formatFullAddress(
   worksiteName?: string
 ): string {
   const prefix = worksiteName ? `${worksiteName}, ` : '';
-  // Only append address2 if it exists and is NOT already contained in address1
-  const addr2Part =
-    address2 && !address1.toLowerCase().includes(address2.toLowerCase())
-      ? `, ${address2}`
-      : '';
+  const addr2Part = dedupeAddress2(address1, address2);
   return `${prefix}${address1}${addr2Part}, ${city}, ${state} ${postalCode}`;
+}
+
+/**
+ * Returns ', address2' only if address2 is not already contained in address1.
+ */
+export function dedupeAddress2(address1: string, address2?: string): string {
+  if (!address2) return '';
+  if (address1.toLowerCase().includes(address2.toLowerCase())) return '';
+  return `, ${address2}`;
 }
