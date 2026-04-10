@@ -3,6 +3,7 @@ import type { PAFData } from '@/types/paf';
 import type { SupportingDocs } from '@/components/wizard/steps/SupportingDocsStep';
 import { format } from 'date-fns';
 import { createPDFContext, addPageNumber } from './pdf/pdfHelpers';
+import { sanitizePAFData } from './addressFormatting';
 import { addCoverPage } from './pdf/sections/coverPage';
 import { addLCASection } from './pdf/sections/lcaSection';
 import { addActualWageStandardsSection } from './pdf/sections/actualWageStandardsSection';
@@ -53,58 +54,59 @@ export async function generatePAFDocument(
 ): Promise<jsPDF> {
   const ctx = createPDFContext();
   const mergedOptions = { ...defaultOptions, ...options };
+  const sanitizedData = sanitizePAFData(data);
   
   // 1. Cover Page with Table of Contents
-  addCoverPage(ctx, data, supportingDocs);
+  addCoverPage(ctx, sanitizedData, supportingDocs);
   
   // 2. LCA Section (simulated ETA-9035 form) + embedded LCA PDF
   if (mergedOptions.includeLCA) {
-    await addLCASection(ctx, data, supportingDocs);
+    await addLCASection(ctx, sanitizedData, supportingDocs);
   }
   
   // 3. Actual Wage Standards (Company-wide policy - same for all LCAs)
   if (mergedOptions.includeActualWageStandards) {
-    await addActualWageStandardsSection(ctx, data, supportingDocs);
+    await addActualWageStandardsSection(ctx, sanitizedData, supportingDocs);
   }
   
   // 4. Actual Wage Determination (Position-specific - unique per LCA)
   if (mergedOptions.includeWageMemo) {
-    await addWageMemoSection(ctx, data, supportingDocs);
+    await addWageMemoSection(ctx, sanitizedData, supportingDocs);
   }
   
   // 4b. Payroll Compliance Statement (after Wage Determination, before Posting)
   if (mergedOptions.includePayrollStatement) {
-    await addPayrollStatementSection(ctx, data);
+    await addPayrollStatementSection(ctx, sanitizedData);
   }
 
   // 5. Prevailing Wage Rate and Source
   if (mergedOptions.includePrevailingWage) {
-    addPrevailingWageSection(ctx, data);
+    addPrevailingWageSection(ctx, sanitizedData);
   }
   
   // 5. LCA Posting Notice and Display Details
   if (mergedOptions.includePostingNotice) {
-    await addPostingNoticeSection(ctx, data, supportingDocs);
+    await addPostingNoticeSection(ctx, sanitizedData, supportingDocs);
   }
   
   // 6. Benefits Summary (with embedded benefits docs if uploaded)
   if (mergedOptions.includeBenefits) {
-    await addBenefitsSection(ctx, data, supportingDocs);
+    await addBenefitsSection(ctx, sanitizedData, supportingDocs);
   }
   
   // 7. H-1B Dependency and Willful Violator Status
   if (mergedOptions.includeH1BDependency) {
-    await addH1BDependencySection(ctx, data, supportingDocs);
+    await addH1BDependencySection(ctx, sanitizedData, supportingDocs);
   }
   
   // 8. Recruitment Summary (only for H-1B dependent employers)
   if (mergedOptions.includeRecruitmentSummary) {
-    await addRecruitmentSummarySection(ctx, data, supportingDocs);
+    await addRecruitmentSummarySection(ctx, sanitizedData, supportingDocs);
   }
   
   // 9. Worker Receipt Statement
   if (mergedOptions.includeWorkerReceipt) {
-    addWorkerReceiptSection(ctx, data, supportingDocs);
+    addWorkerReceiptSection(ctx, sanitizedData, supportingDocs);
   }
   
   // Add page numbers
