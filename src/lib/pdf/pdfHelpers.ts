@@ -217,3 +217,23 @@ export function addHorizontalRule(ctx: PDFContext): void {
   ctx.doc.line(ctx.margin, ctx.yPos, ctx.pageWidth - ctx.margin, ctx.yPos);
   ctx.yPos += 5;
 }
+
+/**
+ * Build a full address string, deduplicating address2 if it's already in address1.
+ */
+export function formatFullAddress(
+  address1: string,
+  address2: string | undefined,
+  city: string,
+  state: string,
+  postalCode: string,
+  worksiteName?: string
+): string {
+  const prefix = worksiteName ? `${worksiteName}, ` : '';
+  // Only append address2 if it exists and is NOT already contained in address1
+  const addr2Part =
+    address2 && !address1.toLowerCase().includes(address2.toLowerCase())
+      ? `, ${address2}`
+      : '';
+  return `${prefix}${address1}${addr2Part}, ${city}, ${state} ${postalCode}`;
+}
