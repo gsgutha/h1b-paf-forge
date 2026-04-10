@@ -14,6 +14,7 @@ import {
   formatDate,
   formatCurrency,
   parseLocalDate,
+  formatFullAddress,
 } from '../pdfHelpers';
 import { addCompactDigitalSignature, SignatoryWithImage } from '../signatureRenderer';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,7 +117,8 @@ export async function addPostingNoticeSection(
   // Location section
   addSubsectionHeader(ctx, 'Worksite Location(s)');
   const worksiteNameText = data.worksite.worksiteName ? `${data.worksite.worksiteName}: ` : '';
-  const clientLocation = `${worksiteNameText}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`;
+  const clientLocation = formatFullAddress(data.worksite.address1, data.worksite.address2, data.worksite.city, data.worksite.state, data.worksite.postalCode, data.worksite.worksiteName ? undefined : undefined).replace(/^/, worksiteNameText ? '' : '');
+  const clientLocationFinal = `${worksiteNameText}${formatFullAddress(data.worksite.address1, data.worksite.address2, data.worksite.city, data.worksite.state, data.worksite.postalCode).replace(/^/, '')}`;
   addLabelValue(ctx, 'Primary Worksite', clientLocation, 50);
   
   // Secondary worksite if present
