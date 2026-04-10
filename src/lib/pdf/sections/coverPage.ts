@@ -5,7 +5,8 @@ import {
   PDF_CONFIG, 
   addCenteredTitle, 
   formatDate,
-  checkPageBreak 
+  checkPageBreak,
+  formatFullAddress,
 } from '../pdfHelpers';
 
 export function addCoverPage(
@@ -36,14 +37,15 @@ export function addCoverPage(
   
   ctx.yPos += 10;
   doc.setFontSize(11);
-  const worksiteAddress = `Primary Worksite: ${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`;
+  const worksiteAddress = `Primary Worksite: ${formatFullAddress(data.worksite.address1, data.worksite.address2, data.worksite.city, data.worksite.state, data.worksite.postalCode)}`;
   doc.text(worksiteAddress, pageWidth / 2, ctx.yPos, { align: 'center' });
   
   // Secondary worksite if present
   if (data.worksite.hasSecondaryWorksite && data.worksite.secondaryWorksite) {
     ctx.yPos += 8;
     doc.setFontSize(10);
-    const secondaryAddress = `Secondary Worksite: ${data.worksite.secondaryWorksite.address1}${data.worksite.secondaryWorksite.address2 ? ', ' + data.worksite.secondaryWorksite.address2 : ''}, ${data.worksite.secondaryWorksite.city}, ${data.worksite.secondaryWorksite.state} ${data.worksite.secondaryWorksite.postalCode}`;
+    const sw = data.worksite.secondaryWorksite;
+    const secondaryAddress = `Secondary Worksite: ${formatFullAddress(sw.address1, sw.address2, sw.city, sw.state, sw.postalCode)}`;
     doc.text(secondaryAddress, pageWidth / 2, ctx.yPos, { align: 'center' });
   }
   
