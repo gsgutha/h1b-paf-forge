@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import type { PAFData } from '@/types/paf';
 import { format } from 'date-fns';
 import { downloadPAF, printPAF } from '@/lib/pdfGenerator';
+import { dedupeAddress2 } from '@/lib/pdf/pdfHelpers';
 import { useToast } from '@/hooks/use-toast';
 import type { SupportingDocs } from './SupportingDocsStep';
 import { getSignatoryById } from '@/config/signatories';
@@ -164,7 +165,7 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
           <SectionCard title="Employer Information" icon={FileText} onEdit={() => onEdit(1)}>
             <DataRow label="Legal Business Name" value={data.employer.legalBusinessName} />
             <DataRow label="Trade Name / DBA" value={data.employer.tradeName} />
-            <DataRow label="Address" value={`${data.employer.address1}${data.employer.address2 ? `, ${data.employer.address2}` : ''}`} />
+            <DataRow label="Address" value={`${data.employer.address1}${dedupeAddress2(data.employer.address1, data.employer.address2)}`} />
             <DataRow label="City, State ZIP" value={`${data.employer.city}, ${data.employer.state} ${data.employer.postalCode}`} />
             <DataRow label="Telephone" value={data.employer.telephone} />
             <DataRow label="FEIN" value={data.employer.fein} />
@@ -223,7 +224,7 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
 
           <SectionCard title="Worksite Location" icon={FileText} onEdit={() => onEdit(3)}>
             <DataRow label="Worksite Name" value={data.worksite.worksiteName} />
-            <DataRow label="Address" value={`${data.worksite.address1}${data.worksite.address2 ? `, ${data.worksite.address2}` : ''}`} />
+            <DataRow label="Address" value={`${data.worksite.address1}${dedupeAddress2(data.worksite.address1, data.worksite.address2)}`} />
             <DataRow label="City, State ZIP" value={`${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`} />
             <DataRow label="County" value={data.worksite.county} />
             <DataRow label="Wage Area" value={data.worksite.areaName} />
@@ -232,7 +233,7 @@ export function ReviewStep({ data, supportingDocs, onBack, onGenerate, onEdit }:
               <div className="border-t border-border mt-3 pt-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Secondary Worksite</p>
                 <DataRow label="Worksite Name" value={data.worksite.secondaryWorksite.worksiteName} />
-                <DataRow label="Address" value={`${data.worksite.secondaryWorksite.address1}${data.worksite.secondaryWorksite.address2 ? `, ${data.worksite.secondaryWorksite.address2}` : ''}`} />
+                <DataRow label="Address" value={`${data.worksite.secondaryWorksite.address1}${dedupeAddress2(data.worksite.secondaryWorksite.address1, data.worksite.secondaryWorksite.address2)}`} />
                 <DataRow label="City, State ZIP" value={`${data.worksite.secondaryWorksite.city}, ${data.worksite.secondaryWorksite.state} ${data.worksite.secondaryWorksite.postalCode}`} />
                 <DataRow label="County" value={data.worksite.secondaryWorksite.county} />
               </div>

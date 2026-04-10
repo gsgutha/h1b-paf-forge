@@ -10,6 +10,7 @@ import {
   checkPageBreak,
   formatCurrency,
   formatDate,
+  formatFullAddress,
 } from '../pdfHelpers';
 import { addCompactDigitalSignature, SignatoryWithImage } from '../signatureRenderer';
 import { supabase } from '@/integrations/supabase/client';
@@ -132,9 +133,10 @@ export async function addWageMemoSection(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   
+  const worksiteAddr = formatFullAddress(data.worksite.address1, data.worksite.address2, data.worksite.city, data.worksite.state, data.worksite.postalCode, data.worksite.worksiteName);
   const introPara = isMultiWorker
-    ? `This Actual Wage Determination is prepared for the position of ${data.job.jobTitle} (SOC ${data.job.socCode}) in accordance with 20 CFR § 655.731 and the Company's Actual Wage Standards policy. This determination applies to all H-1B workers (${data.job.workersNeeded} positions) covered under this LCA, employed at ${data.worksite.worksiteName ? data.worksite.worksiteName + ', ' : ''}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`
-    : `This Actual Wage Determination is prepared for the position of ${data.job.jobTitle} (SOC ${data.job.socCode}) in accordance with 20 CFR § 655.731 and the Company's Actual Wage Standards policy. This determination applies specifically to ${employeeName} for employment at ${data.worksite.worksiteName ? data.worksite.worksiteName + ', ' : ''}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}.`;
+    ? `This Actual Wage Determination is prepared for the position of ${data.job.jobTitle} (SOC ${data.job.socCode}) in accordance with 20 CFR § 655.731 and the Company's Actual Wage Standards policy. This determination applies to all H-1B workers (${data.job.workersNeeded} positions) covered under this LCA, employed at ${worksiteAddr}.`
+    : `This Actual Wage Determination is prepared for the position of ${data.job.jobTitle} (SOC ${data.job.socCode}) in accordance with 20 CFR § 655.731 and the Company's Actual Wage Standards policy. This determination applies specifically to ${employeeName} for employment at ${worksiteAddr}.`;
   addParagraph(ctx, introPara);
   
   ctx.yPos += 5;

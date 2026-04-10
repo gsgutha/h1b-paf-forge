@@ -8,6 +8,7 @@ import {
   addParagraph,
   checkPageBreak,
   formatDate,
+  formatFullAddress,
 } from '../pdfHelpers';
 
 interface WageReportData {
@@ -236,7 +237,7 @@ export function addPrevailingWageSection(ctx: PDFContext, data: PAFData): void {
   const primaryWorksite = data.worksite;
   const primaryWage: WageReportData = {
     locationLabel: 'Primary Worksite',
-    locationName: `${primaryWorksite.worksiteName ? primaryWorksite.worksiteName + ', ' : ''}${primaryWorksite.address1}${primaryWorksite.address2 ? ', ' + primaryWorksite.address2 : ''}, ${primaryWorksite.city}, ${primaryWorksite.state} ${primaryWorksite.postalCode}`,
+    locationName: formatFullAddress(primaryWorksite.address1, primaryWorksite.address2, primaryWorksite.city, primaryWorksite.state, primaryWorksite.postalCode, primaryWorksite.worksiteName),
     areaCode: primaryWorksite.areaCode || '',
     areaName: primaryWorksite.areaName || `${primaryWorksite.city}, ${primaryWorksite.state}`,
     county: primaryWorksite.county,
@@ -268,7 +269,7 @@ export function addPrevailingWageSection(ctx: PDFContext, data: PAFData): void {
     
     const secondaryWageData: WageReportData = {
       locationLabel: 'Secondary Worksite',
-      locationName: `${secondaryWorksite.worksiteName ? secondaryWorksite.worksiteName + ', ' : ''}${secondaryWorksite.address1}${secondaryWorksite.address2 ? ', ' + secondaryWorksite.address2 : ''}, ${secondaryWorksite.city}, ${secondaryWorksite.state} ${secondaryWorksite.postalCode}`,
+      locationName: formatFullAddress(secondaryWorksite.address1, secondaryWorksite.address2, secondaryWorksite.city, secondaryWorksite.state, secondaryWorksite.postalCode, secondaryWorksite.worksiteName),
       areaCode: secondaryWage.areaCode || '',
       areaName: secondaryWage.areaName || `${secondaryWorksite.city}, ${secondaryWorksite.state}`,
       county: secondaryWorksite.county,

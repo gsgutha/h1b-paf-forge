@@ -14,6 +14,7 @@ import {
   formatDate,
   formatCurrency,
   parseLocalDate,
+  formatFullAddress,
 } from '../pdfHelpers';
 import { addCompactDigitalSignature, SignatoryWithImage } from '../signatureRenderer';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,14 +117,14 @@ export async function addPostingNoticeSection(
   // Location section
   addSubsectionHeader(ctx, 'Worksite Location(s)');
   const worksiteNameText = data.worksite.worksiteName ? `${data.worksite.worksiteName}: ` : '';
-  const clientLocation = `${worksiteNameText}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`;
+  const clientLocation = `${worksiteNameText}${formatFullAddress(data.worksite.address1, data.worksite.address2, data.worksite.city, data.worksite.state, data.worksite.postalCode)}`;
   addLabelValue(ctx, 'Primary Worksite', clientLocation, 50);
   
   // Secondary worksite if present
   if (data.worksite.hasSecondaryWorksite && data.worksite.secondaryWorksite) {
     const secondary = data.worksite.secondaryWorksite;
     const secondaryNameText = secondary.worksiteName ? `${secondary.worksiteName}: ` : '';
-    const secondaryLocation = `${secondaryNameText}${secondary.address1}${secondary.address2 ? ', ' + secondary.address2 : ''}, ${secondary.city}, ${secondary.state} ${secondary.postalCode}`;
+    const secondaryLocation = `${secondaryNameText}${formatFullAddress(secondary.address1, secondary.address2, secondary.city, secondary.state, secondary.postalCode)}`;
     addLabelValue(ctx, 'Secondary Worksite', secondaryLocation, 50);
     
     if (secondary.county) {
@@ -178,14 +179,14 @@ export async function addPostingNoticeSection(
   }
   
   // ----- Page 2: LCA Posting Notice (Primary Worksite) -----
-  const primaryLocation = `${worksiteNameText}${data.worksite.address1}${data.worksite.address2 ? ', ' + data.worksite.address2 : ''}, ${data.worksite.city}, ${data.worksite.state} ${data.worksite.postalCode}`;
+  const primaryLocation = `${worksiteNameText}${formatFullAddress(data.worksite.address1, data.worksite.address2, data.worksite.city, data.worksite.state, data.worksite.postalCode)}`;
   addPostingNoticePage(ctx, data, primaryLocation, hasSecondary ? 'Primary Worksite' : undefined);
   
   // ----- Page 3: LCA Posting Notice (Secondary Worksite) - only if secondary exists -----
   if (hasSecondary) {
     const secondary = data.worksite.secondaryWorksite!;
-    const secondaryNameText = secondary.worksiteName ? `${secondary.worksiteName}: ` : '';
-    const secondaryFullLocation = `${secondaryNameText}${secondary.address1}${secondary.address2 ? ', ' + secondary.address2 : ''}, ${secondary.city}, ${secondary.state} ${secondary.postalCode}`;
+    const secondaryNameText2 = secondary.worksiteName ? `${secondary.worksiteName}: ` : '';
+    const secondaryFullLocation = `${secondaryNameText2}${formatFullAddress(secondary.address1, secondary.address2, secondary.city, secondary.state, secondary.postalCode)}`;
     addPostingNoticePage(ctx, data, secondaryFullLocation, 'Secondary Worksite');
   }
 }
