@@ -1081,41 +1081,10 @@ export function SupportingDocsStep({ data, onNext, onBack, isManualMode, hasSeco
                   </div>
                 </div>
 
-                {/* Secondary worksite posting locations */}
-                {hasSecondaryWorksite && (
-                  <div className="space-y-4 rounded-lg border border-accent/30 p-4 bg-accent/5">
-                    <div className="flex items-center gap-2">
-                      <Bell className="h-4 w-4 text-accent" />
-                      <p className="text-sm font-medium text-foreground">Secondary Worksite Posting Locations</p>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="noticePostingLocation3">Secondary Location 1 *</Label>
-                        <Input
-                          id="noticePostingLocation3"
-                          placeholder="e.g., Client site reception area"
-                          value={formData.noticePostingLocation3}
-                          onChange={(e) => updateField('noticePostingLocation3', e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          First conspicuous location at secondary worksite
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="noticePostingLocation4">Secondary Location 2 *</Label>
-                        <Input
-                          id="noticePostingLocation4"
-                          placeholder="e.g., Client site break room"
-                          value={formData.noticePostingLocation4}
-                          onChange={(e) => updateField('noticePostingLocation4', e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Second conspicuous location at secondary worksite
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Note: Per DOL guidance, LCA posting is required only at the
+                    employer's principal place of business (the public disclosure
+                    location listed in Section 5 of the LCA), even when the H-1B
+                    worker is placed at secondary/client worksites. */}
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">

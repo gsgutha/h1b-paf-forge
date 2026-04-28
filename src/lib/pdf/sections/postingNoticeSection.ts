@@ -120,36 +120,17 @@ export async function addPostingNoticeSection(
   const clientLocation = `${worksiteNameText}${formatFullAddress(data.worksite.address1, data.worksite.address2, data.worksite.city, data.worksite.state, data.worksite.postalCode)}`;
   addLabelValue(ctx, 'Primary Worksite', clientLocation, 50);
   
-  // Secondary worksite if present
-  if (data.worksite.hasSecondaryWorksite && data.worksite.secondaryWorksite) {
-    const secondary = data.worksite.secondaryWorksite;
-    const secondaryNameText = secondary.worksiteName ? `${secondary.worksiteName}: ` : '';
-    const secondaryLocation = `${secondaryNameText}${formatFullAddress(secondary.address1, secondary.address2, secondary.city, secondary.state, secondary.postalCode)}`;
-    addLabelValue(ctx, 'Secondary Worksite', secondaryLocation, 50);
-    
-    if (secondary.county) {
-      addLabelValue(ctx, 'Secondary County', secondary.county, 50);
-    }
-  }
-  
   ctx.yPos += 5;
   
-  // Display Areas - Two conspicuous locations per worksite as per DOL requirements
-  const hasSecondary = data.worksite.hasSecondaryWorksite && data.worksite.secondaryWorksite;
-  addSubsectionHeader(ctx, hasSecondary ? 'Display Areas (Primary Worksite)' : 'Display Areas (Two Conspicuous Locations)');
+  // Display Areas - Per DOL guidance (Section 5 of LCA), the LCA is publicly
+  // disclosed at the employer's principal place of business. Therefore, posting
+  // is only required at TWO conspicuous locations at the HQ, regardless of
+  // whether the worker is placed at secondary/client worksites.
+  addSubsectionHeader(ctx, 'Display Areas (Two Conspicuous Locations at Principal Place of Business)');
   const location1 = supportingDocs?.noticePostingLocation || `${data.employer.legalBusinessName} - Location 1`;
   const location2 = supportingDocs?.noticePostingLocation2 || `${data.employer.legalBusinessName} - Location 2`;
   addLabelValue(ctx, 'Display Area 1', location1, 45);
   addLabelValue(ctx, 'Display Area 2', location2, 45);
-  
-  if (hasSecondary) {
-    ctx.yPos += 5;
-    addSubsectionHeader(ctx, 'Display Areas (Secondary Worksite)');
-    const location3 = supportingDocs?.noticePostingLocation3 || `${data.employer.legalBusinessName} - Secondary Location 1`;
-    const location4 = supportingDocs?.noticePostingLocation4 || `${data.employer.legalBusinessName} - Secondary Location 2`;
-    addLabelValue(ctx, 'Display Area 3', location3, 45);
-    addLabelValue(ctx, 'Display Area 4', location4, 45);
-  }
   
   ctx.yPos += 10;
   
@@ -178,17 +159,9 @@ export async function addPostingNoticeSection(
     }, data.employer.legalBusinessName, false);
   }
   
-  // ----- Page 2: LCA Posting Notice (Primary Worksite) -----
+  // ----- LCA Posting Notice page (single, at HQ / principal place of business) -----
   const primaryLocation = `${worksiteNameText}${formatFullAddress(data.worksite.address1, data.worksite.address2, data.worksite.city, data.worksite.state, data.worksite.postalCode)}`;
-  addPostingNoticePage(ctx, data, primaryLocation, hasSecondary ? 'Primary Worksite' : undefined);
-  
-  // ----- Page 3: LCA Posting Notice (Secondary Worksite) - only if secondary exists -----
-  if (hasSecondary) {
-    const secondary = data.worksite.secondaryWorksite!;
-    const secondaryNameText2 = secondary.worksiteName ? `${secondary.worksiteName}: ` : '';
-    const secondaryFullLocation = `${secondaryNameText2}${formatFullAddress(secondary.address1, secondary.address2, secondary.city, secondary.state, secondary.postalCode)}`;
-    addPostingNoticePage(ctx, data, secondaryFullLocation, 'Secondary Worksite');
-  }
+  addPostingNoticePage(ctx, data, primaryLocation);
 }
 
 function addPostingNoticePage(
